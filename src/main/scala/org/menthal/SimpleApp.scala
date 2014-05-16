@@ -4,6 +4,10 @@ import org.apache.spark.SparkContext._
 
 object SimpleApp {
   def main(args: Array[String]) {
+    if (args.length == 0) {
+      System.err.println("Usage: SparkPi <master> [<slices>]")
+      System.exit(1)
+    }
     val logFile = "/home/hduser/spark/README.md" // Should be some file on your system
     val sc = new SparkContext(args(0 ), "SimpleApp",
         System.getenv("SPARK_HOME"), SparkContext.jarOfClass(this.getClass))
@@ -11,5 +15,6 @@ object SimpleApp {
     val numAs = logData.filter(line => line.contains("a")).count()
     val numBs = logData.filter(line => line.contains("b")).count()
     println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
+    sc.stop()
   }
 }

@@ -1,13 +1,11 @@
-name := "Data Import"
+name := "simpleapp"
 
 version := "0.1"
 
 scalaVersion := "2.10.4"
 
-
-libraryDependencies +=
-
 libraryDependencies ++= Seq(
+  "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
   ("org.apache.spark" %% "spark-core" % "0.9.1" % "provided").
     exclude("org.mortbay.jetty", "servlet-api").
     exclude("commons-beanutils", "commons-beanutils-core").
