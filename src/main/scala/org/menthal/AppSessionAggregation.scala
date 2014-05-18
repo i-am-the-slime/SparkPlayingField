@@ -22,6 +22,5 @@ object AppSessionAggregation {
     appSessions.saveAsTextFile("/results.txt")
     //println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
     sc.stop()
-
   }
 }

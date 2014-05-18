@@ -10,6 +10,20 @@ version := "0.1"
 
 scalaVersion := "2.10.4"
 
+
+resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
+
+resolvers += "spray" at "http://repo.spray.io/"
+
+libraryDependencies ++= Seq( //Dates and Times
+  "org.joda" % "joda-convert" % "1.6"
+  ,"joda-time" % "joda-time" % "2.3"
+)
+
+libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
+
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //MONADS
+
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
   ("org.apache.spark" %% "spark-core" % "0.9.1" % "provided").
@@ -20,7 +34,6 @@ libraryDependencies ++= Seq(
     exclude("com.esotericsoftware.minlog", "minlog")
 )
 
-resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
 val scpTask = TaskKey[String]("scp", "Copies assembly jar to remote location")
 
