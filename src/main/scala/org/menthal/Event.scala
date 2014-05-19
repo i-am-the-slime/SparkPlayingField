@@ -14,7 +14,7 @@ case class MarkEventOne(points:Int)
 case class WindowStateChanged(appName:String, packageName:String, windowTitle:String)
   extends EventData(Event.TYPE_WINDOW_STATE_CHANGED)
 
-case class Event(id:Long, userId:Long, data:EventData, time:DateTime){
+case class Event[T <: EventData](id:Long, userId:Long, data:T, time:DateTime){
   override def toString:String = {
     val dataString = data.toString
     s"Event: id: $id, user: $userId, time: $time, data: $dataString)"

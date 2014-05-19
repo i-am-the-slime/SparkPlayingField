@@ -24,6 +24,8 @@ libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //MONADS
 
+libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0"
+
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
   ("org.apache.spark" %% "spark-core" % "0.9.1" % "provided").
