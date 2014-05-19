@@ -26,6 +26,8 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //MONADS
 
 libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0"
 
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
+
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
   ("org.apache.spark" %% "spark-core" % "0.9.1" % "provided").

@@ -6,31 +6,33 @@ import DefaultJsonProtocol._
 import org.joda.time.DateTime
 import com.twitter.algebird.Operators._
 import scala.util.{Failure, Success, Try}
+import org.apache.spark.rdd.RDD
 
 /**
  * Created by mark on 18.05.14.
  */
-object MarksAppSessionAggregations {
+object Aggregations {
 
   def main(args:Array[String]) {
     if (args.length == 0) {
-      System.err.println("Usage: AppSessions <master> [<slices>]")
+      System.err.println("Usage: Aggregations <master> [<slices>]")
       System.exit(1)
     }
-    val sc = new SparkContext(args(0), "AppSessions",
-      System.getenv("SPARK_HOME"), SparkContext.jarOfClass(this.getClass))
+    val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"), SparkContext.jarOfClass(this.getClass))
     val dumpFile = "/data"
     val eventsDump = sc.textFile(dumpFile,2)
-    val events = eventsDump.flatMap(e => cookEvent(e.split("\t")))
-
-    val points = events.filter(_.data.eventType == Event.TYPE_MARK_EVENT_ONE)
-    val buckets = points.map {case e:Event[MarkEventOne] => ((e.userId, roundTime(e.time)), Map("points" -> e.data.points))}
-    val aggregations = buckets.reduceByKey(_ + _)
-    val someEvents = events.sample(withReplacement = false, 0.01, 12)
-    System.err.println(someEvents.collect())
-//    appSessions.saveAsTextFile("/results.txt")
-    //println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
+    aggregate(eventsDump)
     sc.stop()
+  }
+
+  def aggregate(lines:RDD[String]):RDD[(((Long, DateTime), Map[String, Int]))] = {
+    val events = lines.flatMap(e => cookEvent(e.split("\t")))
+    val points = events.filter(_.data.eventType == Event.TYPE_MARK_EVENT_ONE)
+    val buckets = points.map {
+      case e:Event[MarkEventOne] =>
+        ((e.userId, roundTime(e.time)), Map("points" -> e.data.points))
+    }
+    buckets.reduceByKey(_ + _)
   }
 
   def roundTime(time:DateTime): DateTime = {
