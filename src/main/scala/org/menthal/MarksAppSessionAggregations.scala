@@ -1,11 +1,8 @@
 package org.menthal
 import org.apache.spark.SparkContext
-import Event._
 import spray.json._
 import DefaultJsonProtocol._
 import org.joda.time.DateTime
-import org.apache.spark.rdd.RDD
-import scala.util.Try
 
 /**
  * Created by mark on 18.05.14.
@@ -22,6 +19,7 @@ object MarksAppSessionAggregations {
     val dumpFile = "/data"
     val eventsDump = sc.textFile(dumpFile,2)
     val events = eventsDump.flatMap(rawEvent => cookEvent(rawEvent.split("\t")))
+    val markEvents = events.filter(_.data.eventType == Event.TYPE_MARK_EVENT_ONE)
     val someEvents = events.sample(withReplacement = false, 0.01, 12)
     System.err.println(someEvents.collect())
 //    appSessions.saveAsTextFile("/results.txt")
@@ -48,6 +46,9 @@ object MarksAppSessionAggregations {
           Some(ScreenLock())
         case Event.TYPE_SCREEN_UNLOCK =>
           Some(ScreenUnlock())
+        case Event.TYPE_MARK_EVENT_ONE =>
+          val d = data.parseJson.convertTo[Map[String, Int]]
+          Some(MarkEventOne(d.get("points").getOrElse(0)))
         case Event.TYPE_WINDOW_STATE_CHANGED =>
           val d = data.parseJson.convertTo[List[String]]
           Some(WindowStateChanged(d(0), d(1), d(2)))
