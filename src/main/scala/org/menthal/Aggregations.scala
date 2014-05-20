@@ -6,7 +6,9 @@ import DefaultJsonProtocol._
 import org.joda.time.DateTime
 import com.twitter.algebird.Operators._
 import scala.util.{Failure, Success, Try}
+import org.menthal.EventData
 import org.apache.spark.rdd.RDD
+import org.menthal
 
 /**
  * Created by mark on 18.05.14.
@@ -21,19 +23,51 @@ object Aggregations {
     val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"), SparkContext.jarOfClass(this.getClass))
     val dumpFile = "/data"
     val eventsDump = sc.textFile(dumpFile,2)
-    aggregate(eventsDump)
+    aggregate(eventsDump, marksFilter)
     sc.stop()
   }
 
-  def aggregate(lines:RDD[String]):RDD[(((Long, DateTime), Map[String, Int]))] = {
-    val events = lines.flatMap(e => cookEvent(e.split("\t")))
-    val points = events.filter(_.data.eventType == Event.TYPE_MARK_EVENT_ONE)
+
+  def getEventsFromLines(lines:RDD[String], filter: Event[_ <: EventData] => Boolean):RDD[Event[_ <: EventData]] = {
+    for {
+      line <- lines
+      event <- cookEvent(line.split("\t"))
+      if filter(event)
+    } yield event
+  }
+
+  def marksFilter(event: Event[ _ <: EventData ]):Boolean =
+    event.data.eventType == Event.TYPE_MARK_EVENT_ONE
+
+  def aggregate(lines:RDD[String], filter: Event[_ <: EventData] => Boolean):RDD[(((Long, DateTime), Map[String, Int]))] = {
+    val points = getEventsFromLines(lines, filter)
+    //TODO: Maybe generalize more.
     val buckets = points.map {
       case e:Event[MarkEventOne] =>
         ((e.userId, roundTime(e.time)), Map("points" -> e.data.points))
     }
-    buckets.reduceByKey(_ + _)
+    buckets reduceByKey (_ + _)
   }
+
+  case class Begin(time:DateTime, appName:String)
+  case class End(time:DateTime)
+
+//  def aggregateAppSessions(lines:RDD[String]):RDD[AppSession] = {
+//    def filter(e: Event[_ <: EventData]):Boolean = {
+//      List(
+//      Event.TYPE_SCREEN_LOCK,
+//      Event.TYPE_SCREEN_UNLOCK,
+//      Event.TYPE_WINDOW_STATE_CHANGED
+//      ).contains(e.data.eventType)
+//    }
+//    val events = getEventsFromLines(lines, filter)
+//    events.flatMap{
+//      case b:Event[ScreenUnlock] => Begin(b.time, b.data)
+//      case e:Event[ScreenLock] =>
+//      case c:Event[WindowStateChanged] => List()
+//    }
+//    val appSessions = events.filter(_data.eventType ==)
+//  }
 
   def roundTime(time:DateTime): DateTime = {
     time.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
