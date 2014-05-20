@@ -1,16 +1,15 @@
 package org.menthal
 
-import org.scalatest._
 import Aggregations._
 import org.joda.time.DateTime
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.log4j._
-import org.apache.spark
+import org.scalatest.FlatSpec
 
 /**
  * Created by mark on 19.05.14.
  */
-class AggregationsSpec extends FlatSpec{
+
+class AggregationsSpec extends FlatSpec {
   def getLocalSparkContext:SparkContext = {
     val conf = new SparkConf()
       .setMaster("local")
@@ -22,14 +21,32 @@ class AggregationsSpec extends FlatSpec{
 
   "An example dump" should "be parsed correctly" in {
     val sc = getLocalSparkContext
-    val mockData = "251589\t154\t2013-07-22 13:43:29.332+02\t1007\t\"[\\\\\"gps\\\\\",\\\\\"29.0\\\\\",\\\\\"7.12153107\\\\\",\\\\\"50.73606839\\\\\"]\"\n251590\t154\t2013-07-22 13:33:05.36+02\t64\t\"[\\\\\"Hangouts\\\\\",\\\\\"com.google.android.talk\\\\\",20]\"\n251591\t2\t2013-07-22 15:41:19+02\t3000\t{\"start\":1374500463000,\"app\":\"com.menthal.nyx\",\"end\":1374500479000}\n251592\t2\t2013-07-22 15:41:19+02\t3001\t{\"points\":221601}\n251593\t2\t2013-07-22 15:41:19+02\t3000\t{\"start\":1374500479000,\"app\":\"android\",\"end\":1374500479000}\n251594\t2\t2013-07-22 15:56:20+02\t3001\t{\"points\":221601}\n251595\t2\t2013-07-22 16:01:53+02\t3001\t{\"points\":221934}\n251596\t2\t2013-07-22 16:01:54+02\t3000\t{\"start\":1374501712000,\"app\":\"com.menthal.nyx\",\"end\":1374501714000}\n251597\t2\t2013-07-22 16:01:56+02\t3000\t{\"start\":1374501714000,\"app\":\"com.menthal.nyx\",\"end\":1374501716000}\n251598\t2\t2013-07-22 16:02:57+02\t3000\t{\"start\":1374501716000,\"app\":\"com.menthal.nyx\",\"end\":1374501777000}\n251599\t2\t2013-07-22 16:02:57+02\t3001\t{\"points\":221934}"
+    val mockData = ("251589\t154\t2013-07-22 13:43:29.332+02\t1007\t\"[\\\\\"gps\\\\\",\\\\\"29.0\\\\\",\\\\\"7.12153107\\\\\",\\\\\"50.73606839\\\\\"]\"" +
+      "\n251590\t154\t2013-07-22 13:33:05.36+02\t64\t\"[\\\\\"Hangouts\\\\\",\\\\\"com.google.android.talk\\\\\",20]\"" +
+      "\n251591\t2\t2013-07-22 15:41:19+02\t3000\t{\"start\":1374500463000,\"app\":\"com.menthal.nyx\",\"end\":1374500479000}" +
+      "\n251592\t2\t2013-07-22 15:41:19+02\t3001\t{\"points\":5}" +
+      "\n251593\t2\t2013-07-22 15:41:19+02\t3000\t{\"start\":1374500479000,\"app\":\"android\",\"end\":1374500479000}" +
+      "\n251594\t2\t2013-07-22 15:56:20+02\t3001\t{\"points\":8}" +
+      "\n251595\t2\t2013-07-22 16:01:53+02\t3001\t{\"points\":2}" +
+      "\n251596\t2\t2013-07-22 16:01:54+02\t3000\t{\"start\":1374501712000,\"app\":\"com.menthal.nyx\",\"end\":1374501714000}" +
+      "\n251597\t2\t2013-07-22 16:01:56+02\t3000\t{\"start\":1374501714000,\"app\":\"com.menthal.nyx\",\"end\":1374501716000}" +
+      "\n251598\t2\t2013-07-22 16:02:57+02\t3000\t{\"start\":1374501716000,\"app\":\"com.menthal.nyx\",\"end\":1374501777000}" +
+      "\n251599\t2\t2013-07-22 16:02:57+02\t3001\t{\"points\":3}")
       .split("\n")
     val mockRDDs = sc.parallelize(mockData)
     val aggr = aggregate(mockRDDs)
     val collected = aggr.collect()
-    info(collected.length.toString)
+
+    val time1 = DateTime.parse("2013-07-22T15:00:00+02")
+    val time2 = DateTime.parse("2013-07-22T16:00:00+02")
     collected.foreach{
-      case ((long, datetime), map) => info(s"long: $long, datetime, $datetime, map $map")
+      case ((long, datetime), map) =>
+        if(datetime == time1)
+          assert(map.getOrElse("points",0) == 13)
+        else if(datetime == time2)
+          assert(map.getOrElse("points",0) == 5)
+        else
+          fail(s"Hours do not get parsed correctly. Expected the date to be either $time1 or $time2")
     }
 
     assert(collected.length > 0)
@@ -56,7 +73,5 @@ class AggregationsSpec extends FlatSpec{
     assert(zeroedDateTime.getSecondOfMinute == 0)
     assert(zeroedDateTime.getMillisOfSecond == 0)
   }
-  
-  
 
 }
