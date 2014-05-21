@@ -36,7 +36,7 @@ class AggregationsSpec extends FlatSpec {
       "\n251599\t2\t2013-07-22 16:02:57+02\t3001\t{\"points\":3}")
       .split("\n")
     val mockRDDs = sc.parallelize(mockData)
-    val aggr = aggregate(mockRDDs)
+    val aggr = aggregate(mockRDDs, e => e.data.eventType == Event.TYPE_MARK_EVENT_ONE)
     val collected = aggr.collect()
 
     val time1 = DateTime.parse("2013-07-22T15:00:00+02")
@@ -88,5 +88,7 @@ class AggregationsSpec extends FlatSpec {
     val dump = "111966\t7\t2013-03-22 12:28:43+01\t32\t[\"Winamp\",\"com.nullsoft.winamp/com.nullsoft.winamp.TrackBrowserActivity\",\"[Songs…]\"]\n111965\t7\t2013-03-22 12:28:42+01\t32\t[\"Winamp\",\"com.nullsoft.winamp/com.nullsoft.winamp.PlaylistBrowserActivity\",\"[Playlists]\"]\n111963\t7\t2013-03-22 12:28:35+01\t64\t[\"Winamp\",\"com.nullsoft.winamp\",\"[Play Queue is now cleared.]\"]\n111964\t7\t2013-03-22 12:28:35+01\t32\t[\"Winamp\",\"com.nullsoft.winamp/com.nullsoft.winamp.MusicBrowserActivity\",\"[Winamp]\"]\n111952\t7\t2013-03-22 12:28:27+01\t32\t[\"Launcher\",\"com.android.launcher/com.android.launcher2.Launcher\",\"[Home]\"]"
       .split("\t")
   }
+
+
 
 }
