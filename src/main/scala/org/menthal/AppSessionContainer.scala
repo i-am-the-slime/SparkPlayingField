@@ -14,31 +14,55 @@ case class AppSessionContainer(xs:Vector[AppSession]) {
      case (None, Some(b:AppSession)) => other
 
      case (Some(a:Start), Some(b:Stop)) =>
-       val session = Session(a.time, b.time, a.app.get)
-       AppSessionContainer(this.xs.dropRight(1) ++ (session :: Nil)) + AppSessionContainer(other.xs.tail)
+       //Recursive!
+       if(a.app.isDefined){
+         val session = Session(a.time, b.time, a.app.get)
+         AppSessionContainer(this.xs.dropRight(1) :+ session) + AppSessionContainer(other.xs.tail)
+       }
+       else {
+         AppSessionContainer(this.xs.dropRight(1) ++ other.xs.tail)
+       }
 
      case (Some(a:Lock), Some(b:Unlock)) =>
+       //Recursive!
        val app = { if(b.app.isDefined) b.app else a.app }
        AppSessionContainer(this.xs.dropRight(1)) + AppSessionContainer(other.xs.updated(0, Start(b.time, app)))
 
      case (Some(a:Session), Some(b:Unlock)) =>
-       AppSessionContainer(this.xs ++ other.xs.updated(0, Unlock(b.time, Some(a.app))))
+       val updatedUnlock = Unlock(b.time, Some(a.app))
+       AppSessionContainer(this.xs ++ (updatedUnlock +: other.xs.tail))
 
      case (Some(a:Session), Some(b:Lock)) =>
-       AppSessionContainer(this.xs ++ other.xs.updated(0, Lock(b.time, Some(a.app))))
+       val updatedLock = Lock(b.time, Some(a.app))
+       AppSessionContainer(this.xs ++ (updatedLock +: other.xs.tail))
 
      case (Some(a:Lock), Some(b:Session)) =>
-       AppSessionContainer(this.xs.dropRight(1) ++ other.xs.updated(0, Lock(a.time, Some(b.app))))
+       val updatedLock = Lock(a.time, Some(b.app))
+       AppSessionContainer(this.xs.dropRight(1) ++ (updatedLock +: other.xs.tail))
 
      case (Some(a:Start), Some(b:Unlock)) =>
        AppSessionContainer(this.xs.dropRight(1) ++ other.xs.updated(0, Unlock(b.time, a.app)))
 
      case (Some(a:Lock), Some(b:Stop)) =>
+       //Recursive!
        AppSessionContainer(this.xs) + AppSessionContainer(other.xs.drop(1))
 
+     case (Some(a:Lock), Some(b:Lock)) =>
+       AppSessionContainer(this.xs ++ other.xs.drop(1))
+
      case (Some(a:Lock), Some(b:Start)) =>
+       //Recursive!
        val i = this.xs.length-1
        AppSessionContainer(this.xs.updated(i,Lock(a.time, b.app))) + AppSessionContainer(other.xs.drop(1))
+
+     case (Some(a:Unlock), Some(b:Stop)) =>
+       //TODO: Think about and test this
+       if(a.app.isDefined){
+         val updatedSession = Session(a.time, b.time, a.app.get)
+         AppSessionContainer(this.xs.dropRight(1) ++ (updatedSession +: other.xs.tail))
+       } else {
+         AppSessionContainer(this.xs ++ other.xs.tail)
+       }
 
      //Base case: Just join the two
      case (Some(a:AppSession), Some(b:AppSession)) =>

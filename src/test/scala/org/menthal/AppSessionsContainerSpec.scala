@@ -173,17 +173,17 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     val eventData= rand.nextInt() % 5 match {
       case 0 => ScreenLock()
       case 1 => ScreenUnlock()
-      case _ => WindowStateChanged("","App Name","")
+      case _ => WindowStateChanged("","AppName","")
     }
     time = time plusMinutes rand.nextInt()%5+1
     Event[eventData.type](1,1,eventData, time)
   }
 
   "A super long example with random events" should "not break" in {
-    val basic = (1 to 50).map(x => generateEvent())
-    basic.foreach(x=>info(x.toString))
-    info("--")
+    val basic = (1 to 1000000).map(x => generateEvent())
+//    basic.foreach(x=>info(x.toString))
+//    info("--")
     val events = basic.map(x => AppSessionContainer(x)) reduce (_+_)
-    events.xs.foreach(x => info(x.toString))
+//    events.xs.foreach(x => info(x.toString))
   }
 }
