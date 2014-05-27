@@ -3,6 +3,8 @@ package org.menthal
 import org.scalatest.{Matchers, BeforeAndAfterAll, FlatSpec}
 import org.joda.time.DateTime
 import scala.util.Random
+import com.twitter.algebird.Operators._
+import org.menthal.Implicits._
 
 /**
  * Created by mark on 20.05.14.
@@ -12,15 +14,15 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   val now = DateTime.now()
   val later = now plusMinutes 1
 
-  val sessionA1 = Session(start=now, end=now.plusMinutes(5), app="com.beer")
-  val sessionA2 = Session(start=now plusMinutes 10 , end=now plusMinutes 11 , app="com.meat")
+  val sessionA1 = Session(time=now, end=now.plusMinutes(5), app=Some("com.beer"))
+  val sessionA2 = Session(time=now plusMinutes 10 , end=now plusMinutes 11 , app=Some("com.meat"))
 
-  val sessionB1 = Session(start=now plusMinutes 15 , end=now plusMinutes 16 , app="com.beer")
-  val sessionB2 = Session(start=now plusMinutes 20 , end=now plusMinutes 21 , app="com.beer")
+  val sessionB1 = Session(time=now plusMinutes 15 , end=now plusMinutes 16 , app=Some("com.beer"))
+  val sessionB2 = Session(time=now plusMinutes 20 , end=now plusMinutes 21 , app=Some("com.beer"))
 
   it should "convert ScreenLock to Stop(_), Lock(_)" in {
     AppSessionContainer(Event[ScreenLock](0, 0, ScreenLock(), now)) should be (
-    AppSessionContainer(Stop(now), Lock(now, None)))
+    AppSessionContainer(Lock(now,None)))
   }
   it should "convert ScreenUnlock to Unlock(_), Start(_)" in {
     AppSessionContainer(Event[ScreenUnlock](0, 0, ScreenUnlock(), now)) should be(
@@ -29,7 +31,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   it should "convert WindowStateChange to Stop(_), Start(A)" in {
     val wsc = WindowStateChanged("", "com.app", "")
     AppSessionContainer(Event[WindowStateChanged](0, 0, wsc, now)) should be(
-    AppSessionContainer(Stop(now), Start(now, Some("com.app"))))
+    AppSessionContainer(Start(now, Some("com.app"))))
   }
 
 //  it should "add lists of AppSessions" in {
@@ -39,15 +41,15 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
 //    sessionsA + sessionsB should be (correct)
 //  }
 
-  it should "add Start(A) and Stop(_)" in {
-    val result = AppSessionContainer(Start(now, Some("app"))) +
-      AppSessionContainer(Stop(later))
-    val correct = AppSessionContainer(Session(now, later, "app"))
-    result should be (correct)
-  }
+//  it should "add Start(A) and Stop(_)" in {
+//    val result = AppSessionContainer(Start(now, Some("app"))) +
+//      AppSessionContainer(Stop(later))
+//    val correct = AppSessionContainer(Session(now, later, "app"))
+//    result should be (correct)
+//  }
 
   it should "add Session(A) + Unlock(_)" in {
-    val sessionOfA = Session(now, later, "A")
+    val sessionOfA = Session(now, later, Some("A"))
     val result = AppSessionContainer(sessionOfA) +
     AppSessionContainer(Unlock(later, None))
     val correct = AppSessionContainer(sessionOfA, Unlock(later, Some("A")))
@@ -55,7 +57,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   }
 
   it should "add Session(A) + Lock(_)" in {
-    val sessionOfA = Session(now, later, "A")
+    val sessionOfA = Session(now, later, Some("A"))
     val result = AppSessionContainer(sessionOfA) +
     AppSessionContainer(Lock(later, None))
     val correct = AppSessionContainer(sessionOfA, Lock(later, Some("A")))
@@ -64,7 +66,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
 
   it should "add Lock(A) + Session(B)" in {
     val lockOfA =  Lock(now, Some("A"))
-    val sessionOfB = Session(later, later plusMinutes 1, "B")
+    val sessionOfB = Session(later, later plusMinutes 1, Some("B"))
     val result = AppSessionContainer(lockOfA) + AppSessionContainer(sessionOfB)
     val correct = AppSessionContainer(Lock(now, Some("B")))
     result should be (correct)
@@ -74,7 +76,8 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     val lockOfA = Lock(now, Some("A"))
     val unlockOfNothing = Unlock(later, None)
     val result = AppSessionContainer(lockOfA) + AppSessionContainer(unlockOfNothing)
-    val correct = AppSessionContainer(Start(later, Some("A")))
+    val correct = AppSessionContainer(lockOfA, Unlock(later, Some("A")))
+    //val correct = AppSessionContainer(Start(later, Some("A")))
     result should be (correct)
   }
 
@@ -82,17 +85,18 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     val start = Start(now, Some("A"))
     val unlockOfA = Unlock(later, None)
     val result = AppSessionContainer(start) + AppSessionContainer(unlockOfA)
-    val correct = AppSessionContainer(Unlock(later, Some("A")))
+    //val correct = AppSessionContainer(Unlock(later, Some("A")))
+    val correct = AppSessionContainer(start, Unlock(later, Some("A")))
     result should be (correct)
   }
 
-  it should "discard Stop in Lock() + Stop(_)" in {
-    val lockOfNone = Lock(now, None)
-    val stop = Stop(later)
-    val result = AppSessionContainer(lockOfNone) + AppSessionContainer(stop)
-    val correct = AppSessionContainer(Lock(now, None))
-    result should be (correct)
-  }
+//  it should "discard Stop in Lock() + Stop(_)" in {
+//    val lockOfNone = Lock(now, None)
+//    val stop = Stop(later)
+//    val result = AppSessionContainer(lockOfNone) //+ AppSessionContainer(stop)
+//    val correct = AppSessionContainer(Lock(now, None))
+//    result should be (correct)
+//  }
 
   it should "update the start app for Lock() + Start() and discard the start" in {
     val lockOfNone = Lock(now, None)
@@ -114,11 +118,13 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Event[WindowStateChanged](0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
-      Stop(now),
-      Session(now, now plusMinutes 1, "A"),
-      Session(now plusMinutes 1, now plusMinutes 2, "B"),
-      Session(now plusMinutes 2, now plusMinutes 3, "C"),
-      Session(now plusMinutes 4, now plusMinutes 5, "C"),
+      //Stop(now),
+      Session(now, now plusMinutes 1, Some("A")),
+      Session(now plusMinutes 1, now plusMinutes 2, Some("B")),
+      Session(now plusMinutes 2, now plusMinutes 3, Some("C")),
+      Lock(now plusMinutes 3, Some("C")), //added
+      Unlock(now plusMinutes 4, Some("C")), //added
+      Session(now plusMinutes 4, now plusMinutes 5, Some("C")),
       Start(now plusMinutes 5, Some("E"))
     )
 //    events.xs.foreach(x => info(x.toString))
@@ -136,10 +142,12 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Event[WindowStateChanged](0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
-      Stop(now plusMinutes 1),
-      Session(now plusMinutes 1, now plusMinutes 2, "B"),
-      Session(now plusMinutes 2, now plusMinutes 3, "C"),
-      Session(now plusMinutes 4, now plusMinutes 5, "C"),
+      //Stop(now plusMinutes 1),
+      Session(now plusMinutes 1, now plusMinutes 2, Some("B")),
+      Session(now plusMinutes 2, now plusMinutes 3, Some("C")),
+      Lock(now plusMinutes 3, Some("C")), //added
+      Unlock(now plusMinutes 4, Some("C")), //added
+      Session(now plusMinutes 4, now plusMinutes 5, Some("C")),
       Start(now plusMinutes 5, Some("E"))
     )
     events should be (correct)
@@ -157,11 +165,12 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Event[WindowStateChanged](0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
-      Stop(now),
-      Session(now, now plusMinutes 1, "A"),
-      Session(now plusMinutes 1, now plusMinutes 2, "B"),
-      Session(now plusMinutes 2, now plusMinutes 3, "C"),
-      Session(now plusMinutes 4, now plusMinutes 5, "D"),
+      Session(now, now plusMinutes 1, Some("A")),
+      Session(now plusMinutes 1, now plusMinutes 2, Some("B")),
+      Session(now plusMinutes 2, now plusMinutes 3, Some("C")),
+      Lock(now plusMinutes 3, Some("D")), //added
+      Unlock(now plusMinutes 4, Some("D")), //added
+      Session(now plusMinutes 4, now plusMinutes 5, Some("D")),
       Start(now plusMinutes 5, Some("E"))
     )
     events should be (correct)
