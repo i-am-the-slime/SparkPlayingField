@@ -86,7 +86,7 @@ case class Unlock(time: DateTime, app: Option[String] = None) extends AppSession
 object AppSessionContainer {
   def eventToAppSessionFragment[A <: EventData](ev: Event[A]): AppSessionFragment = {
     ev.data match {
-      case d: ScreenLock => Lock(ev.time, None)
+      case d: ScreenOff => Lock(ev.time, None)
       case d: ScreenUnlock => Unlock(ev.time, None)
       case d: WindowStateChanged => Start(ev.time, Some(d.packageName))
     }

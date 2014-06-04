@@ -23,31 +23,31 @@ object Aggregations {
     val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"), SparkContext.jarOfClass(this.getClass))
     val dumpFile = "/data"
     val eventsDump = sc.textFile(dumpFile,2)
-    aggregate(eventsDump, marksFilter)
+//    aggregate(eventsDump, marksFilter)
     sc.stop()
   }
 
 
-  def getEventsFromLines(lines:RDD[String], filter: Event[_ <: EventData] => Boolean):RDD[Event[_ <: EventData]] = {
-    for {
-      line <- lines
-      event <- cookEvent(line.split("\t"))
-      if filter(event)
-    } yield event
-  }
+//  def getEventsFromLines(lines:RDD[String], filter: Event[_ <: EventData] => Boolean):RDD[Event[_ <: EventData]] = {
+//    for {
+//      line <- lines
+//      event <- cookEvent(line.split("\t"))
+//      if filter(event)
+//    } yield event
+//  }
 
   def marksFilter(event: Event[ _ <: EventData ]):Boolean =
-    event.data.eventType == Event.TYPE_MARK_EVENT_ONE
+    event.data.eventType == Event.TYPE_SCREEN_UNLOCK
 
-  def aggregate(lines:RDD[String], filter: Event[_ <: EventData] => Boolean):RDD[(((Long, DateTime), Map[String, Int]))] = {
-    val points = getEventsFromLines(lines, filter)
-    //TODO: Maybe generalize more.
-    val buckets = points.map {
-      case e:Event[MarkEventOne] =>
-        ((e.userId, roundTime(e.time)), Map("points" -> e.data.points))
-    }
-    buckets reduceByKey (_ + _)
-  }
+//  def aggregate(lines:RDD[String], filter: Event[_ <: EventData] => Boolean):RDD[(((Long, DateTime), Map[String, Int]))] = {
+//    val points = getEventsFromLines(lines, filter)
+//    //TODO: Maybe generalize more.
+//    val buckets = points.map {
+//      case e:Event[MarkEventOne] =>
+//        ((e.userId, roundTime(e.time)), Map("points" -> e.data.points))
+//    }
+//    buckets reduceByKey (_ + _)
+//  }
 
   case class Begin(time:DateTime, appName:String)
   case class End(time:DateTime)
@@ -74,34 +74,34 @@ object Aggregations {
   }
 
 
-  def cookEvent(rawData:Seq[String]):Option[Event[_ <: EventData]] = {
-    val event = for {
-      eventData <-  Try(getEventDataType(rawData(3), rawData(4)))
-      id <- Try(rawData(0).toLong)
-      userId <- Try(rawData(1).toLong)
-      time <- Try(DateTime.parse(rawData(2).replace(" ", "T")))
-      data <- Try(eventData.get)
-     } yield Some(Event[data.type](id, userId, data, time))
-    event getOrElse None
-  }
+//  def cookEvent(rawData:Seq[String]):Option[Event[_ <: EventData]] = {
+//    val event = for {
+//      eventData <-  Try(getEventDataType(rawData(3), rawData(4)))
+//      id <- Try(rawData(0).toLong)
+//      userId <- Try(rawData(1).toLong)
+//      time <- Try(DateTime.parse(rawData(2).replace(" ", "T")))
+//      data <- Try(eventData.get)
+//     } yield Some(Event[data.type](id, userId, data, time))
+//    event getOrElse None
+//  }
 
 
 
-  def getEventDataType(typeString:String, data:String):Option[EventData] = {
-    val typeNumber = typeString.toInt
-    typeNumber match {
-      case Event.TYPE_SCREEN_LOCK =>
-        Some(ScreenLock())
-      case Event.TYPE_SCREEN_UNLOCK =>
-        Some(ScreenUnlock())
-      case Event.TYPE_MARK_EVENT_ONE =>
-        val d = data.parseJson.convertTo[Map[String, Int]]
-        Some(MarkEventOne(d.get("points").getOrElse(0)))
-      case Event.TYPE_WINDOW_STATE_CHANGED =>
-        val d = data.parseJson.convertTo[List[String]]
-        Some(WindowStateChanged(d(0), d(1), d(2)))
-      case _ => None
-    }
-  }
+//  def getEventDataType(typeString:String, data:String):Option[EventData] = {
+//    val typeNumber = typeString.toInt
+//    typeNumber match {
+//      case Event.TYPE_SCREEN_LOCK =>
+//        Some(ScreenOff())
+//      case Event.TYPE_SCREEN_UNLOCK =>
+//        Some(ScreenUnlock())
+//      case Event.TYPE_MARK_EVENT_ONE =>
+//        val d = data.parseJson.convertTo[Map[String, Int]]
+//        Some(MarkEventOne(d.get("points").getOrElse(0)))
+//      case Event.TYPE_WINDOW_STATE_CHANGED =>
+//        val d = data.parseJson.convertTo[List[String]]
+//        Some(WindowStateChanged(d(0), d(1), d(2)))
+//      case _ => None
+//    }
+//  }
 
 }

@@ -1,28 +1,65 @@
 package org.menthal
 
 import org.joda.time.DateTime
+import spray.json._
 
 /**
  * Created by mark on 18.05.14.
  */
 sealed abstract class EventData(val eventType:Long)
 
-case class ScreenLock() extends EventData(Event.TYPE_SCREEN_LOCK)
+case class ScreenOff() extends EventData(Event.TYPE_SCREEN_OFF)
 case class ScreenUnlock() extends EventData(Event.TYPE_SCREEN_UNLOCK)
-case class MarkEventOne(points:Int)
-  extends EventData(Event.TYPE_MARK_EVENT_ONE)
 case class WindowStateChanged(appName:String, packageName:String, windowTitle:String)
   extends EventData(Event.TYPE_WINDOW_STATE_CHANGED)
 
-case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime){
+case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime) {
   override def toString:String = {
     val dataString = data.toString
     s"Event: id: $id, user: $userId, time: $time, data: $dataString)"
   }
 }
 object Event{
-  val TYPE_SCREEN_UNLOCK = 1005
-  val TYPE_SCREEN_LOCK = 1006
+//  def fromJSON(json:String):Option[Event] = {
+//
+//    val parsed = json.parseJson.convertTo[Map[String, Int]]
+//  }
+//  val TYPE_VIEW_CLICKED = 1
+//  val TYPE_VIEW_LONG_CLICKED = 2
+//  val TYPE_VIEW_SELECTED = 4
+//  val TYPE_VIEW_FOCUSED = 8
+//  val TYPE_VIEW_TEXT_CHANGED = 16
   val TYPE_WINDOW_STATE_CHANGED = 32
-  val TYPE_MARK_EVENT_ONE = 3001
+//  val TYPE_NOTIFICATION_STATE_CHANGED = 64
+//  val TYPE_VIEW_HOVER_ENTER = 128
+  val TYPE_WINDOW_STATE_CHANGE_BASIC = 132
+//  val TYPE_APP_SESSION_TEST = 256
+//  val TYPE_SMS_RECEIVED = 1000
+//  val TYPE_SMS_SENT = 1001
+//  val TYPE_CALL_RECEIVED = 1002
+//  val TYPE_CALL_OUTGOING = 1003
+//  val TYPE_CALL_MISSED = 1004
+//  val TYPE_SCREEN_ON = 1005
+  val TYPE_SCREEN_OFF = 1006
+//  val TYPE_LOCALISATION = 1007
+//  val TYPE_APP_LIST = 1008
+//  val TYPE_APP_INSTALL = 1009
+//  val TYPE_APP_REMOVAL = 1010
+//  val TYPE_MOOD = 1011
+//  val TYPE_PHONE_BOOT = 1012
+//  val TYPE_PHONE_SHUTDOWN = 1013
+  val TYPE_SCREEN_UNLOCK = 1014
+//  val TYPE_APP_UPDATE = 1015
+//  val TYPE_ACCESSIBILITY_SERVICE_UPDATE = 1016
+  val TYPE_DREAMING_STARTED = 1017
+  val TYPE_DREAMING_STOPPED = 1018
+//  val TYPE_WHATSAPP_SENT = 1019
+//  val TYPE_WHATSAPP_RECEIVED = 1020
+//  val TYPE_DEVICE_FEATURES = 1021
+//  val TYPE_MENTHAL_APP_ACTION = 1022
+//  val TYPE_TIMEZONE = 1023
+//  val TYPE_TRAFFIC_DATA = 1025
+  val TYPE_APP_SESSION = 1032
+//  val TYPE_QUESTIONNAIRE = 1100
+//  val TYPE_UNKNOWN = 999999
 }
