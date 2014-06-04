@@ -2,6 +2,7 @@ package org.menthal
 
 import org.joda.time.DateTime
 import spray.json._
+import DefaultJsonProtocol._
 import scala.util.Try
 
 /**
@@ -50,10 +51,13 @@ object Event{
          Some(DreamingStopped())
        case Event.TYPE_APP_SESSION =>
          None
-       case Event.TYPE_WINDOW_STATE_CHANGED | Event.TYPE_WINDOW_STATE_CHANGE_BASIC =>
+       case a if a == Event.TYPE_WINDOW_STATE_CHANGED || a == Event.TYPE_WINDOW_STATE_CHANGE_BASIC =>
+         println("fuck")
          val d = data.parseJson.convertTo[List[String]]
          Some(WindowStateChanged(d(0), d(1), d(2)))
-       case _ => None
+       case _ =>
+         println("shit")
+         None
      }
    }
 //  def fromJSON(json:String):Option[Event] = {
