@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 import scala.util.Random
 import com.twitter.algebird.Operators._
 import org.menthal.Implicits._
+import scala.collection.immutable.Queue
 
 /**
  * Created by mark on 20.05.14.
@@ -20,7 +21,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   val sessionB1 = Session(time=now plusMinutes 15 , end=now plusMinutes 16 , app=Some("com.beer"))
   val sessionB2 = Session(time=now plusMinutes 20 , end=now plusMinutes 21 , app=Some("com.beer"))
 
-  it should "convert ScreenLock to Stop(_), Lock(_)" in {
+  "Calling AppSessionContainer(...)" should "convert ScreenLock to Stop(_), Lock(_)" in {
     AppSessionContainer(Event[ScreenLock](0, 0, ScreenLock(), now)) should be (
     AppSessionContainer(Lock(now,None)))
   }
@@ -34,21 +35,33 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     AppSessionContainer(Start(now, Some("com.app"))))
   }
 
-//  it should "add lists of AppSessions" in {
-//    val sessionsA = AppSessionContainer(sessionA1, sessionA2)
-//    val sessionsB = AppSessionContainer(sessionB1, sessionB2)
-//    val correct = AppSessionContainer(sessionA1, sessionA2, sessionB1, sessionB2)
-//    sessionsA + sessionsB should be (correct)
-//  }
+  val container = Container(Queue(sessionA1, sessionA2), sessionB1)
+  val containerWithEmptyQueue = Container(Queue(), sessionA1)
 
-//  it should "add Start(A) and Stop(_)" in {
-//    val result = AppSessionContainer(Start(now, Some("app"))) +
-//      AppSessionContainer(Stop(later))
-//    val correct = AppSessionContainer(Session(now, later, "app"))
-//    result should be (correct)
-//  }
+  "The Container data structure" should
+    "have a toQueue function that returns the internal queue with the last element appended" in {
+     assert(container.toQueue == Queue(sessionA1, sessionA2, sessionB1))
+     assert(containerWithEmptyQueue.toQueue == Queue(sessionA1))
+  }
 
-  it should "add Session(A) + Unlock(_)" in {
+  it should "have a head function that returns the first element in the queue or the last variable instead" in {
+    assert(container.head == sessionA1)
+    assert(containerWithEmptyQueue.head == sessionA1)
+  }
+
+  it should "have a tail function that returns itself without the first element" in {
+    assert(container.tail == Container(Queue(sessionA2), sessionB1))
+    assert(containerWithEmptyQueue.tail == Empty())
+  }
+
+  it should "have a merge function which creates a new AppSession from this and another one" in {
+    val result1 = Container(Queue(sessionA1, sessionA2, sessionB1), sessionA1)
+    val result2 = Container(Queue(sessionA1, sessionA2), sessionB1)
+    assert(container.merge(containerWithEmptyQueue) == result1)
+    assert(container.merge(Empty()) == result2)
+  }
+
+  "Arithmetic on AppSession containers" should "add Session(A) + Unlock(_)" in {
     val sessionOfA = Session(now, later, Some("A"))
     val result = AppSessionContainer(sessionOfA) +
     AppSessionContainer(Unlock(later, None))
@@ -89,14 +102,6 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     val correct = AppSessionContainer(start, Unlock(later, Some("A")))
     result should be (correct)
   }
-
-//  it should "discard Stop in Lock() + Stop(_)" in {
-//    val lockOfNone = Lock(now, None)
-//    val stop = Stop(later)
-//    val result = AppSessionContainer(lockOfNone) //+ AppSessionContainer(stop)
-//    val correct = AppSessionContainer(Lock(now, None))
-//    result should be (correct)
-//  }
 
   it should "update the start app for Lock() + Start() and discard the start" in {
     val lockOfNone = Lock(now, None)
@@ -176,23 +181,28 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     events should be (correct)
   }
 
+  val apps = List("ShitApp", "FuckApp", "WhoreFace", "KabelJau")
   val rand = new Random()
   var time = DateTime.now()
   def generateEvent():Event[_ <: EventData] = {
     val eventData= rand.nextInt() % 5 match {
       case 0 => ScreenLock()
       case 1 => ScreenUnlock()
-      case _ => WindowStateChanged("","AppName","")
+      case _ => WindowStateChanged("", apps(Math.abs(rand.nextInt()) % 4) ,"")
     }
     time = time plusMinutes rand.nextInt()%5+1
     Event[eventData.type](1,1,eventData, time)
   }
 
-  "A super long example with random events" should "not break" in {
-    val basic = (1 to 1000000).map(x => generateEvent())
-//    basic.foreach(x=>info(x.toString))
-//    info("--")
+  "A long example with random events" should "not break" in {
+    val basic = (1 to 30).map(x => generateEvent())
+    basic.foreach(x=>
+      info(x.time.toString("HH:MM:SS  ") + x.data.toString)
+    )
+    info("--")
     val events = basic.map(x => AppSessionContainer(x)) reduce (_+_)
-//    events.xs.foreach(x => info(x.toString))
+    events.sessions.foreach(x =>
+      info(x.time.toString("HH:MM:SS  ") + x.toString)
+    )
   }
 }
