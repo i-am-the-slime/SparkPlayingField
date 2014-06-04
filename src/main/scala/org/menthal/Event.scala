@@ -32,28 +32,26 @@ object Event{
           id <- Try(rawData(0).toLong)
           userId <- Try(rawData(1).toLong)
           time <- Try(DateTime.parse(rawData(2).replace(" ", "T")))
-          data <- Try(eventData.get)
-    } yield Some(Event[data.type](id, userId, data, time))
+    } yield Some(Event[eventData.type](id, userId, eventData, time))
     event getOrElse None
   }
 
-   def getEventDataType(typeString:String, data:String):Option[EventData] = {
+   def getEventDataType(typeString:String, data:String):EventData = {
      val typeNumber = typeString.toInt
      typeNumber match {
        case Event.TYPE_SCREEN_OFF =>
-         Some(ScreenOff())
+         ScreenOff()
        case Event.TYPE_SCREEN_UNLOCK =>
-         Some(ScreenUnlock())
+         ScreenUnlock()
        case Event.TYPE_DREAMING_STARTED =>
-         Some(DreamingStarted())
+         DreamingStarted()
        case Event.TYPE_DREAMING_STOPPED =>
-         Some(DreamingStopped())
-       case Event.TYPE_APP_SESSION =>
-         None
-       case Event.TYPE_WINDOW_STATE_CHANGED | Event.TYPE_WINDOW_STATE_CHANGE_BASIC =>
+         DreamingStopped()
+       case  _ @ (Event.TYPE_WINDOW_STATE_CHANGED |  Event.TYPE_WINDOW_STATE_CHANGE_BASIC) =>
          val d = data.parseJson.convertTo[List[String]]
-         Some(WindowStateChanged(d(0), d(1), d(2)))
-       case _ => None
+         WindowStateChanged(d(0), d(1), d(2))
+       case _ =>
+         throw new Exception("Shit")
      }
    }
 //  def fromJSON(json:String):Option[Event] = {
