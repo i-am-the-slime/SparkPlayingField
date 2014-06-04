@@ -106,6 +106,7 @@ object AppSessionContainer {
 }
 
 object AppSessionMonoid extends Monoid[AppSessionContainer] {
+  implicit val appSessionMonoid : Monoid[AppSessionContainer] = AppSessionMonoid
   override def zero = Empty()
 
   override def plus(left: AppSessionContainer, right: AppSessionContainer): AppSessionContainer = (left, right) match {
@@ -122,6 +123,3 @@ object AppSessionMonoid extends Monoid[AppSessionContainer] {
   }
 }
 
-object Implicits {
-  implicit val appSessionMonoid : Monoid[AppSessionContainer] = AppSessionMonoid
-}

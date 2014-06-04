@@ -4,7 +4,7 @@ import org.scalatest.{Matchers, BeforeAndAfterAll, FlatSpec}
 import org.joda.time.DateTime
 import scala.util.Random
 import com.twitter.algebird.Operators._
-import org.menthal.Implicits._
+import org.menthal.AppSessionMonoid.appSessionMonoid
 import scala.collection.immutable.Queue
 
 /**
