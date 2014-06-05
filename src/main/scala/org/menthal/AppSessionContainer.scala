@@ -53,14 +53,10 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
       //Apps
       case (Session(t1, _, app1), Session(_, tEnd2, app2)) if app1 == app2 => //Merge same apps together
         Container(sessions, Session(t1, tEnd2, app1))
-      case (Session(t1, _, app1), Start(t2, app2)) if app1 == app2 => //Eat same app start
-        Container(sessions, Session(t1, t2, app1))
       case (Session(t1, _, app1), Lock(t2, None)) => //We extend session and set app kept in lock
         Container(sessions enqueue Session(t1, t2, app1), Lock(t2, app1))
       case (Session(t, _, app), _) => //We extend session
         Container(sessions enqueue Session(t, newFragment.time, app), newFragment)
-      case (Start(t, app), _) => //if we hit anything not being UNLOCK we create session
-        Container(sessions, Session(t, newFragment.time, app)) update newFragment
 
       //Default case - if list covers only Unlocks, Lock, Start and Sessions it is unnecessary
       case _ => Container(this.toQueue, newFragment)
@@ -76,19 +72,33 @@ sealed abstract class AppSessionFragment {
 }
 
 case class Session(time: DateTime, end: DateTime, app: Option[String]) extends AppSessionFragment
-
-case class Start(time: DateTime, app: Option[String]) extends AppSessionFragment
+{
+  override def toString = "\nSession\t" + time.toString("hh:mm:ss\t") + app.getOrElse("") + end.minus(time.getMillis).toString("mm:ss\t")
+}
 
 case class Lock(time: DateTime, app: Option[String] = None) extends AppSessionFragment
+{
+  override def toString = "\nLock\t" + time.toString("hh:mm:ss\t") + app.getOrElse("")
+}
 
 case class Unlock(time: DateTime, app: Option[String] = None) extends AppSessionFragment
+{
+  override def toString = "\nUnlock\t" + time.toString("hh:mm:ss\t") + app.getOrElse("")
+}
 
 object AppSessionContainer {
+  val handledEvents = Set[Long](
+    Event.TYPE_SCREEN_OFF,
+    Event.TYPE_WINDOW_STATE_CHANGED,
+    Event.TYPE_WINDOW_STATE_CHANGE_BASIC,
+    Event.TYPE_SCREEN_UNLOCK,
+    Event.TYPE_DREAMING_STARTED
+  )
   def eventToAppSessionFragment[A <: EventData](ev: Event[A]): AppSessionFragment = {
     ev.data match {
-      case d: ScreenOff => Lock(ev.time, None)
-      case d: ScreenUnlock => Unlock(ev.time, None)
-      case d: WindowStateChanged => Start(ev.time, Some(d.packageName))
+      case _: ScreenOff | _: DreamingStarted => Lock(ev.time, None)
+      case _: ScreenUnlock => Unlock(ev.time, None)
+      case d: WindowStateChanged => Session(ev.time, ev.time, Some(d.packageName))
     }
   }
 

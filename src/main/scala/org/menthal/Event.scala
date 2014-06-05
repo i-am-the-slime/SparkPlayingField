@@ -18,7 +18,7 @@ case class DreamingStarted() extends EventData(Event.TYPE_DREAMING_STARTED)
 case class WindowStateChanged(appName:String, packageName:String, windowTitle:String)
   extends EventData(Event.TYPE_WINDOW_STATE_CHANGED)
 
-case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime) {
+case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime){
 
   override def toString:String = {
     val dataString = data.toString
@@ -52,11 +52,10 @@ object Event{
        case Event.TYPE_APP_SESSION =>
          None
        case a if a == Event.TYPE_WINDOW_STATE_CHANGED || a == Event.TYPE_WINDOW_STATE_CHANGE_BASIC =>
-         println("fuck")
-         val d = data.parseJson.convertTo[List[String]]
-         Some(WindowStateChanged(d(0), d(1), d(2)))
+         val modifiedData = data.substring(1, data.length()-1).replace("\\","")
+         val d = modifiedData.parseJson.convertTo[List[String]]
+         Some(WindowStateChanged(d(0), d(1).split("/")(0), d(2)))
        case _ =>
-         println("shit")
          None
      }
    }

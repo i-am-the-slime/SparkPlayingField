@@ -29,10 +29,16 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     AppSessionContainer(Event[ScreenUnlock](0, 0, ScreenUnlock(), now)) should be(
     AppSessionContainer(Unlock(now, None)))
   }
-  it should "convert WindowStateChange to Stop(_), Start(A)" in {
+
+  it should "convert ScreenLock to Unlock(_), Start(_)" in {
+    AppSessionContainer(Event[ScreenUnlock](0, 0, ScreenUnlock(), now)) should be(
+      AppSessionContainer(Unlock(now, None)))
+  }
+
+  it should "convert WindowStateChange to Session(A)" in {
     val wsc = WindowStateChanged("", "com.app", "")
     AppSessionContainer(Event[WindowStateChanged](0, 0, wsc, now)) should be(
-    AppSessionContainer(Start(now, Some("com.app"))))
+    AppSessionContainer(Session(now, now, Some("com.app"))))
   }
 
   val container = Container(Queue(sessionA1, sessionA2), sessionB1)
@@ -94,8 +100,8 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     result should be (correct)
   }
 
-  it should "update Unlock and discard Start in Start(A) + Unlock(_)" in {
-    val start = Start(now, Some("A"))
+  it should "update Unlock in Session(A) + Unlock(_)" in {
+    val start = Session(now, now, Some("A"))
     val unlockOfA = Unlock(later, None)
     val result = AppSessionContainer(start) + AppSessionContainer(unlockOfA)
     //val correct = AppSessionContainer(Unlock(later, Some("A")))
@@ -103,9 +109,9 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     result should be (correct)
   }
 
-  it should "update the start app for Lock() + Start() and discard the start" in {
+  it should "update the start app for Lock() + Session() and discard the start" in {
     val lockOfNone = Lock(now, None)
-    val start = Start(later, Some("Pig"))
+    val start = Session(later, later, Some("Pig"))
     val result = AppSessionContainer(lockOfNone) + AppSessionContainer(start)
     val correct = AppSessionContainer(Lock(now, Some("Pig")))
     result should be (correct)
@@ -130,7 +136,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Lock(now plusMinutes 3, Some("C")), //added
       Unlock(now plusMinutes 4, Some("C")), //added
       Session(now plusMinutes 4, now plusMinutes 5, Some("C")),
-      Start(now plusMinutes 5, Some("E"))
+      Session(now plusMinutes 5, now plusMinutes 5, Some("E"))
     )
 //    events.xs.foreach(x => info(x.toString))
     events should be (correct)
@@ -153,7 +159,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Lock(now plusMinutes 3, Some("C")), //added
       Unlock(now plusMinutes 4, Some("C")), //added
       Session(now plusMinutes 4, now plusMinutes 5, Some("C")),
-      Start(now plusMinutes 5, Some("E"))
+      Session(now plusMinutes 5, now plusMinutes 5, Some("E"))
     )
     events should be (correct)
   }
@@ -176,7 +182,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Lock(now plusMinutes 3, Some("D")), //added
       Unlock(now plusMinutes 4, Some("D")), //added
       Session(now plusMinutes 4, now plusMinutes 5, Some("D")),
-      Start(now plusMinutes 5, Some("E"))
+      Session(now plusMinutes 5, now plusMinutes 5, Some("E"))
     )
     events should be (correct)
   }
