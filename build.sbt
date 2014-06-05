@@ -30,7 +30,7 @@ libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
-  ("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
+  ("org.apache.spark" %% "spark-core" % "1.0.0").
     exclude("org.mortbay.jetty", "servlet-api").
     exclude("commons-beanutils", "commons-beanutils-core").
     exclude("commons-collections", "commons-collections").

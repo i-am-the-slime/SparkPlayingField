@@ -11,6 +11,7 @@ import scala.util.Try
 sealed abstract class EventData(val eventType:Long)
 sealed abstract class MappableEventData[A](override val eventType:Long) extends EventData(eventType) {
   def toMap:Map[String, A]
+  def toCountingMap:Map[String,Int]
 }
 
 
@@ -25,7 +26,7 @@ case class WindowStateChanged(appName:String, packageName:String, windowTitle:St
 case class SmsReceived(contactHash:String, msgLength:Int) extends MappableEventData[Int](Event.TYPE_SMS_RECEIVED)  {
 
    def toMap = Map(contactHash -> msgLength)
-
+   def toCountingMap = Map(contactHash -> 1)
 }
 
 case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime) {
