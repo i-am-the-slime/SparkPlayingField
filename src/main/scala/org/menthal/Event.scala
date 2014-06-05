@@ -61,15 +61,14 @@ object Event{
          Some(DreamingStopped())
        case Event.TYPE_APP_SESSION =>
          None
-       case a if a == Event.TYPE_WINDOW_STATE_CHANGED || a == Event.TYPE_WINDOW_STATE_CHANGE_BASIC =>
-         println("fuck")
-         val d = data.parseJson.convertTo[List[String]]
-         Some(WindowStateChanged(d(0), d(1), d(2)))
        case Event.TYPE_SMS_RECEIVED =>
          val d = data.parseJson.convertTo[List[String]]
          Some(SmsReceived(d(0), d(1).toInt))
+       case a if a == Event.TYPE_WINDOW_STATE_CHANGED || a == Event.TYPE_WINDOW_STATE_CHANGE_BASIC =>
+         val modifiedData = data.substring(1, data.length()-1).replace("\\","")
+         val d = modifiedData.parseJson.convertTo[List[String]]
+         Some(WindowStateChanged(d(0), d(1).split("/")(0), d(2)))
        case _ =>
-         println("shit")
          None
      }
    }
