@@ -9,6 +9,10 @@ import scala.util.Try
  * Created by mark on 18.05.14.
  */
 sealed abstract class EventData(val eventType:Long)
+sealed abstract class MappableEventData[A](override val eventType:Long) extends EventData(eventType) {
+  def toMap:Map[String, A]
+}
+
 
 case class ScreenOff() extends EventData(Event.TYPE_SCREEN_OFF)
 case class ScreenUnlock() extends EventData(Event.TYPE_SCREEN_UNLOCK)
@@ -17,6 +21,12 @@ case class DreamingStarted() extends EventData(Event.TYPE_DREAMING_STARTED)
 
 case class WindowStateChanged(appName:String, packageName:String, windowTitle:String)
   extends EventData(Event.TYPE_WINDOW_STATE_CHANGED)
+
+case class SmsReceived(contactHash:String, msgLength:Int) extends MappableEventData[Int](Event.TYPE_SMS_RECEIVED)  {
+
+   def toMap = Map(contactHash -> msgLength)
+
+}
 
 case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime) {
 
@@ -55,6 +65,9 @@ object Event{
          println("fuck")
          val d = data.parseJson.convertTo[List[String]]
          Some(WindowStateChanged(d(0), d(1), d(2)))
+       case Event.TYPE_SMS_RECEIVED =>
+         val d = data.parseJson.convertTo[List[String]]
+         Some(SmsReceived(d(0), d(1).toInt))
        case _ =>
          println("shit")
          None
@@ -74,8 +87,8 @@ object Event{
 //  val TYPE_VIEW_HOVER_ENTER = 128
   val TYPE_WINDOW_STATE_CHANGE_BASIC = 132
 //  val TYPE_APP_SESSION_TEST = 256
-//  val TYPE_SMS_RECEIVED = 1000
-//  val TYPE_SMS_SENT = 1001
+  val TYPE_SMS_RECEIVED = 1000
+  val TYPE_SMS_SENT = 1001
 //  val TYPE_CALL_RECEIVED = 1002
 //  val TYPE_CALL_OUTGOING = 1003
 //  val TYPE_CALL_MISSED = 1004
