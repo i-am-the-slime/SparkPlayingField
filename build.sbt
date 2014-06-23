@@ -4,7 +4,7 @@ import java.io.{FileNotFoundException, File}
 
 val configPath = "conf/sshconfig"
 
-name := "simpleapp"
+name := "sparkplayingfield"
 
 version := "0.1"
 
@@ -27,6 +27,8 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //MONADS
 libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0"
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
+
+libraryDependencies += "com.gensler" %% "scalavro" % "0.6.2" //
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",

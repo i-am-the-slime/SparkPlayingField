@@ -37,17 +37,17 @@ class NewAggregationsSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
       e(1, now plusMinutes 9, wsc1)
     )
 
-    "aggregate" should "take an RDD of String and return another RDD of String" in {
-      val sc = getLocalSparkContext
-      val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList.take(60)
-//      val eventLines = fabricatedEvents
-      val mockRDDs = sc.parallelize(eventLines)
-      val events = NewAggregations.linesToEvents(mockRDDs)
-      val result = NewAggregations.reduceToAppContainers(events)
-      result.take(20).foreach(
-        x => info(x.toString())
-      )
-    }
+//    "aggregate" should "take an RDD of String and return another RDD of String" in {
+//      val sc = getLocalSparkContext
+//      val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList.take(60)
+////      val eventLines = fabricatedEvents
+//      val mockRDDs = sc.parallelize(eventLines)
+//      val events = NewAggregations.linesToEvents(mockRDDs)
+//      val result = NewAggregations.reduceToAppContainers(events)
+//      result.take(20).foreach(
+//        x => info(x.toString())
+//      )
+//    }
 }
   //Take all the file
   //filter

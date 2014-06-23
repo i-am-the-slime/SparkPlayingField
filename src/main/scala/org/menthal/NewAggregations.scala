@@ -29,11 +29,10 @@ object NewAggregations {
 
   def reduceToAppContainers(events:RDD[Event[_ <: EventData]]):RDD[Pair[Long, AppSessionContainer]] = {
     val containers: RDD[Pair[Pair[Long, Long],AppSessionContainer]] = for {
-      event <- events
+      event <- events if AppSessionContainer.handledEvents.contains(event.data.eventType)
       time = event.time.getMillis
       user = event.userId
       container = AppSessionContainer(event)
-      if AppSessionContainer.handledEvents.contains(event.data.eventType)
     } yield ((time, user), container)
 
     val sortedAndGrouped = containers.sortByKey().map{case ((time,user), container) => (user,container)}
