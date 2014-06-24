@@ -18,13 +18,13 @@ class NewAggregationsSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
       sc
     }
 
-    def e[A <: EventData](user:Int, t:DateTime, data:A):Event[A]= Event(0, user, data, t)
+    def e[A <: EventData](user:Int, t:DateTime, data:A):Event= Event(0, user, data, t)
     val now = DateTime.now()
     val wsc1 = WindowStateChanged("", "com.angrybirds", "")
     val wsc2 = WindowStateChanged("", "com.whatsapp", "")
     val lock = ScreenOff()
     val unlock = ScreenUnlock()
-    val fabricatedEvents:List[Event[_ <: EventData]] = List(
+    val fabricatedEvents:List[Event] = List(
       e(1, now plusMinutes 0, wsc1),
       e(1, now plusMinutes 7, unlock),
       e(1, now plusMinutes 1, wsc2),

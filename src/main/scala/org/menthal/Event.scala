@@ -9,11 +9,11 @@ import scala.util.Try
  * Created by mark on 18.05.14.
  */
 sealed abstract class EventData(val eventType:Long)
+
 sealed abstract class MappableEventData[A](override val eventType:Long) extends EventData(eventType) {
   def toMap:Map[String, A]
   def toCountingMap:Map[String,Int]
 }
-
 
 case class ScreenOff() extends EventData(Event.TYPE_SCREEN_OFF)
 case class ScreenUnlock() extends EventData(Event.TYPE_SCREEN_UNLOCK)
@@ -29,7 +29,7 @@ case class SmsReceived(contactHash:String, msgLength:Int) extends MappableEventD
    def toCountingMap = Map(contactHash -> 1)
 }
 
-case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime) {
+case class Event(id:Long, userId:Long, data:EventData, time:DateTime) {
 
   override def toString:String = {
     val dataString = data.toString
@@ -37,7 +37,7 @@ case class Event[A <: EventData](id:Long, userId:Long, data:A, time:DateTime) {
   }
 }
 object Event{
-  def tryToParseLine(dumpLine: String): Option[Event[_ <: EventData]] = {
+  def tryToParseLine(dumpLine: String): Option[Event] = {
     val rawData = dumpLine.split("\t")
     val event = for {
           eventData <-  Try(getEventDataType(rawData(3), rawData(4)))
@@ -45,7 +45,7 @@ object Event{
           userId <- Try(rawData(1).toLong)
           time <- Try(DateTime.parse(rawData(2).replace(" ", "T")))
           data <- Try(eventData.get)
-    } yield Some(Event[data.type](id, userId, data, time))
+    } yield Some(Event(id, userId, data, time))
     event getOrElse None
   }
 

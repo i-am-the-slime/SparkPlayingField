@@ -1,5 +1,6 @@
 import com.gensler.scalavro.types.AvroType
+import org.apache.spark.SparkContext
 import org.menthal.EventData
 
-AvroType[EventData]
+println(AvroType[EventData].schema().prettyPrint)
 

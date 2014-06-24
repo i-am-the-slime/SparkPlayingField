@@ -24,10 +24,10 @@ object NewAggregations {
     sc.stop()
   }
 
-  def linesToEvents(lines:RDD[String]):RDD[Event[_ <: EventData]] = 
+  def linesToEvents(lines:RDD[String]):RDD[Event] =
     lines.flatMap(Event.tryToParseLine) 
 
-  def reduceToAppContainers(events:RDD[Event[_ <: EventData]]):RDD[Pair[Long, AppSessionContainer]] = {
+  def reduceToAppContainers(events:RDD[Event]):RDD[Pair[Long, AppSessionContainer]] = {
     val containers: RDD[Pair[Pair[Long, Long],AppSessionContainer]] = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.data.eventType)
       time = event.time.getMillis

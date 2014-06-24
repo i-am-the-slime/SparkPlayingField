@@ -94,7 +94,7 @@ object AppSessionContainer {
     Event.TYPE_SCREEN_UNLOCK,
     Event.TYPE_DREAMING_STARTED
   )
-  def eventToAppSessionFragment[A <: EventData](ev: Event[A]): AppSessionFragment = {
+  def eventToAppSessionFragment(ev: Event): AppSessionFragment = {
     ev.data match {
       case _: ScreenOff | _: DreamingStarted => Lock(ev.time, None)
       case _: ScreenUnlock => Unlock(ev.time, None)
@@ -110,7 +110,7 @@ object AppSessionContainer {
     Container(sessions, last)
   }
 
-  def apply[A <: EventData](ev: Event[A]): AppSessionContainer = {
+  def apply(ev: Event): AppSessionContainer = {
     Container(Queue(), eventToAppSessionFragment(ev))
   }
 }

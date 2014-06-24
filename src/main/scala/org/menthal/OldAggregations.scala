@@ -30,7 +30,7 @@ object OldAggregations {
   }
 
 
-  def getEventsFromLines(lines: RDD[String], filter: Event[_ <: EventData] => Boolean): RDD[Event[_ <: EventData]] = {
+  def getEventsFromLines(lines: RDD[String], filter: Event => Boolean): RDD[Event] = {
     for {
       line <- lines
       event <- Event.tryToParseLine(line)
@@ -38,27 +38,23 @@ object OldAggregations {
     } yield event
   }
 
-  def receivedSmsFilter(event: Event[_ <: EventData]): Boolean =
+  def receivedSmsFilter(event: Event): Boolean =
     event.data.eventType == Event.TYPE_SMS_RECEIVED
-
 
   //def aggregate(lines: RDD[String], filter: Event[_ <: EventData] => Boolean): RDD[(((Long, DateTime), Map[String, Int]))] = {
   //  val events = getEventsFromLines(lines, filter)
   //  toMapOne(events)
   //}
 
-
-
   type UserBucketsRDD[A] = RDD[(((Long, DateTime), A))]
   //type MapsShit[A] = UserBucketsRDD[Map[String, A]]
   //type EventPredicate[A] = Event[A] => Boolean
 
-
-
-  def toSomeMap[A <: MappableEventData[B], B:Semigroup](events: RDD[Event[A]]): UserBucketsRDD[Map[String, B]] = {
+  def toSomeMap[A <: MappableEventData[B], B:Semigroup](events: RDD[Event]): UserBucketsRDD[Map[String, B]] = {
     val buckets = events.map {
-      case e: Event[A] =>
-        ((e.userId, roundTime(e.time)), e.data.toMap)
+      case e: Event => e.data match {
+        case d:A => ((e.userId, roundTime(e.time)), d.toMap)
+      }
     }
     buckets reduceByKey (_ + _)
   }
@@ -70,10 +66,11 @@ object OldAggregations {
   //def toMapOne[A <: MappableEventData](events: RDD[Event[A]]): UserBucketsRDD[Map[String, Float]] =
   //  toSomeMap(getMap, events)
 
-  def toCounterMap[B, A <: MappableEventData[B]](events: RDD[Event[A]]): UserBucketsRDD[Map[String, Int]] = {
+  def toCounterMap[B, A <: MappableEventData[B]](events: RDD[Event]): UserBucketsRDD[Map[String, Int]] = {
     val buckets = events.map {
-      case e: Event[A] =>
-        ((e.userId, roundTime(e.time)), e.data.toCountingMap)
+      case e: Event => e.data match {
+        case d:A => ((e.userId, roundTime(e.time)), d.toCountingMap)
+      }
     }
     buckets reduceByKey (_ + _)
   }
@@ -81,6 +78,5 @@ object OldAggregations {
   def roundTime(time: DateTime): DateTime = {
     time.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
   }
-
 }
 

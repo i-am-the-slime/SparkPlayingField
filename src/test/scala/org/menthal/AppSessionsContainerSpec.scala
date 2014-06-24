@@ -6,6 +6,7 @@ import scala.util.Random
 import com.twitter.algebird.Operators._
 import org.menthal.AppSessionMonoid.appSessionMonoid
 import scala.collection.immutable.Queue
+import com.gensler._
 
 /**
  * Created by mark on 20.05.14.
@@ -22,22 +23,22 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   val sessionB2 = Session(time=now plusMinutes 20 , end=now plusMinutes 21 , app=Some("com.beer"))
 
   "Calling AppSessionContainer(...)" should "convert ScreenLock to Stop(_), Lock(_)" in {
-    AppSessionContainer(Event[ScreenOff](0, 0, ScreenOff(), now)) should be (
+    AppSessionContainer(Event(0, 0, ScreenOff(), now)) should be (
     AppSessionContainer(Lock(now,None)))
   }
   it should "convert ScreenUnlock to Unlock(_), Start(_)" in {
-    AppSessionContainer(Event[ScreenUnlock](0, 0, ScreenUnlock(), now)) should be(
+    AppSessionContainer(Event(0, 0, ScreenUnlock(), now)) should be(
     AppSessionContainer(Unlock(now, None)))
   }
 
   it should "convert ScreenLock to Unlock(_), Start(_)" in {
-    AppSessionContainer(Event[ScreenUnlock](0, 0, ScreenUnlock(), now)) should be(
+    AppSessionContainer(Event(0, 0, ScreenUnlock(), now)) should be(
       AppSessionContainer(Unlock(now, None)))
   }
 
   it should "convert WindowStateChange to Session(A)" in {
     val wsc = WindowStateChanged("", "com.app", "")
-    AppSessionContainer(Event[WindowStateChanged](0, 0, wsc, now)) should be(
+    AppSessionContainer(Event(0, 0, wsc, now)) should be(
     AppSessionContainer(Session(now, now, Some("com.app"))))
   }
 
@@ -120,13 +121,13 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   "A long example" should "work" in {
     val now = DateTime.now
     val events = Vector(
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "A", ""), now),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "B", ""), now plusMinutes 1),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "C", ""), now plusMinutes 2),
-      Event[ScreenOff](0,0, ScreenOff(), now plusMinutes 3),
+      Event(0,0,WindowStateChanged("", "A", ""), now),
+      Event(0,0,WindowStateChanged("", "B", ""), now plusMinutes 1),
+      Event(0,0,WindowStateChanged("", "C", ""), now plusMinutes 2),
+      Event(0,0, ScreenOff(), now plusMinutes 3),
 //      Event[WindowStateChanged](0,0,WindowStateChanged("", "D", ""), now plusMinutes 2),
-      Event[ScreenUnlock](0,0, ScreenUnlock(), now plusMinutes 4),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
+      Event(0,0, ScreenUnlock(), now plusMinutes 4),
+      Event(0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
       //Stop(now),
@@ -145,12 +146,12 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   "A long example starting somewhere else" should "still work" in {
     val now = DateTime.now
     val events = Vector(
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "B", ""), now plusMinutes 1),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "C", ""), now plusMinutes 2),
-      Event[ScreenOff](0,0, ScreenOff(), now plusMinutes 3),
+      Event(0,0,WindowStateChanged("", "B", ""), now plusMinutes 1),
+      Event(0,0,WindowStateChanged("", "C", ""), now plusMinutes 2),
+      Event(0,0, ScreenOff(), now plusMinutes 3),
       //      Event[WindowStateChanged](0,0,WindowStateChanged("", "D", ""), now plusMinutes 2),
-      Event[ScreenUnlock](0,0, ScreenUnlock(), now plusMinutes 4),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
+      Event(0,0, ScreenUnlock(), now plusMinutes 4),
+      Event(0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
       //Stop(now plusMinutes 1),
@@ -167,13 +168,13 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   "WindowStateChanges during locked state" should "still reduce fine" in {
     val now = DateTime.now
     val events = Vector(
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "A", ""), now),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "B", ""), now plusMinutes 1),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "C", ""), now plusMinutes 2),
-      Event[ScreenOff](0,0, ScreenOff(), now plusMinutes 3),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "D", ""), now plusMinutes 2),
-      Event[ScreenUnlock](0,0, ScreenUnlock(), now plusMinutes 4),
-      Event[WindowStateChanged](0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
+      Event(0,0,WindowStateChanged("", "A", ""), now),
+      Event(0,0,WindowStateChanged("", "B", ""), now plusMinutes 1),
+      Event(0,0,WindowStateChanged("", "C", ""), now plusMinutes 2),
+      Event(0,0, ScreenOff(), now plusMinutes 3),
+      Event(0,0,WindowStateChanged("", "D", ""), now plusMinutes 2),
+      Event(0,0, ScreenUnlock(), now plusMinutes 4),
+      Event(0,0,WindowStateChanged("", "E", ""), now plusMinutes 5)
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
       Session(now, now plusMinutes 1, Some("A")),
@@ -190,14 +191,14 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   val apps = List("ShitApp", "FuckApp", "WhoreFace", "KabelJau")
   val rand = new Random()
   var time = DateTime.now()
-  def generateEvent():Event[_ <: EventData] = {
+  def generateEvent():Event = {
     val eventData= rand.nextInt() % 5 match {
       case 0 => ScreenOff()
       case 1 => ScreenUnlock()
       case _ => WindowStateChanged("", apps(Math.abs(rand.nextInt()) % 4) ,"")
     }
     time = time plusMinutes rand.nextInt()%5+1
-    Event[eventData.type](1,1,eventData, time)
+    Event(1,1,eventData, time)
   }
 
   "A long example with random events" should "not break" in {
