@@ -1,6 +1,8 @@
 import sbtassembly.Plugin.AssemblyKeys._
 import scala.io.Source.fromFile
 
+net.virtualvoid.sbt.graph.Plugin.graphSettings
+
 val configPath = "conf/sshconfig"
 
 name := "sparkplayingfield"
@@ -27,18 +29,19 @@ libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test" //Testing
 
-libraryDependencies += "com.gensler" %% "scalavro" % "0.6.2" //Model generation and reading
+libraryDependencies += ("com.gensler" %% "scalavro" % "0.6.2").
+                            exclude("ch.qos.logback", "logback-classic")
 
 libraryDependencies ++= Seq(
-  "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
+  "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
   ("org.apache.spark" %% "spark-core" % "1.0.0").
+    exclude("log4j", "log4j").
     exclude("org.mortbay.jetty", "servlet-api").
     exclude("commons-beanutils", "commons-beanutils-core").
     exclude("commons-collections", "commons-collections").
     exclude("commons-collections", "commons-collections").
     exclude("com.esotericsoftware.minlog", "minlog")
 )
-
 
 val scpTask = TaskKey[String]("scp", "Copies assembly jar to remote location")
 
@@ -76,4 +79,3 @@ scpTask <<= (assembly, streams) map { (asm, s) =>
     ""
   }
 }
-

@@ -1,15 +1,35 @@
-import java.io.File
+import java.io.{FileInputStream, FileOutputStream, OutputStreamWriter, File}
+import com.gensler.scalavro.io.AvroTypeIO
 import com.gensler.scalavro.types.AvroType
+import org.apache.spark.{SparkConf, SparkContext}
 import org.menthal.model.events.EventData
 import org.menthal.model.events.EventData._
 import scala.reflect.runtime.universe._
 import spray.json.DefaultJsonProtocol._
 import spray.json._
+import scala.util.Success
 
-//println(AvroType[SmsReceived].schema().prettyPrint)
-val data = "\"[\\\\\"719b886597f64e0c48c087848c676fde59a5a61cd3ee5940461ce3b1c0d9b602b706427d532a24badf32ec499de09a8098ad8e0e56aa0bfef1facea603ac5a09\\\\\",17,1]\""
-val guy = data.substring(1, data.length()-1).replace("\\","").parseJson.asInstanceOf[JsArray].elements(1).convertTo[Int]
+def getLocalSparkContext: SparkContext = {
+  val conf = new SparkConf()
+    .setMaster("local")
+    .setAppName("NewAggregationsSpec")
+    .set("spark.executor.memory", "1g")
+  val sc = new SparkContext(conf)
+  sc
+}
 
-val nuy = data.substring(1, data.length()-1).replace("\\", "").parseJson.asInstanceOf[(String, Int, Int)]
+val sc = getLocalSparkContext
 
+val smsType = AvroType[SmsReceived]
 
+val io:AvroTypeIO[SmsReceived] = smsType.io
+
+val filePath = "/Users/mark/Desktop/test"
+
+val outputStream = new FileOutputStream(filePath)
+
+io.write(new SmsReceived("hitler", 2), outputStream)
+
+val inputStream = new FileInputStream(filePath)
+
+val Success(readResult) = io read inputStream

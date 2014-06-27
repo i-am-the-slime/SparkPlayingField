@@ -85,7 +85,6 @@ object EventData {
   case class DreamingStarted() extends EventData(TYPE_DREAMING_STARTED)
 
   val TYPE_WHATSAPP_SENT = 1019
-  case class Ass(li:List[(String, Int, Int)])
   case class WhatsAppSent(contactHash:String, messageLength:Int, isGroupMessage:Boolean) extends EventData(TYPE_WHATSAPP_SENT)
 
   val TYPE_WHATSAPP_RECEIVED = 1020

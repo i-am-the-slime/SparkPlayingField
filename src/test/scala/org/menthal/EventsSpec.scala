@@ -160,9 +160,5 @@ class EventsSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
       Some(Event(79815450, 18930, DreamingStopped(), DateTime.parse("2014-01-24T00:43:29.716+01")))
     )
     events.zip(correct).foreach{ case (read, expected) => read shouldBe expected}
-//    events.foreach(e => info(e+"\n"))
-//    info("---------------------------")
-//    correct.foreach(e => info(e+"\n"))
-//    assert(correct==events)
   }
 }

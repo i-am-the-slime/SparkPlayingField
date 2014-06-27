@@ -64,7 +64,7 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
       case _ => Container(this.toQueue, newFragment)
     }
   }
-  override def toString:String = "\n" + sessions.toString + last.toString
+  override def toString:String = "\n" + sessions.toString + " " +  last.toString
 }
 
 
@@ -75,7 +75,7 @@ sealed abstract class AppSessionFragment {
 
 case class Session(time: DateTime, end: DateTime, app: Option[String]) extends AppSessionFragment
 {
-  override def toString = "\nSession\t" + time.toString("hh:mm:ss\t") + app.getOrElse("") + end.minus(time.getMillis).toString("mm:ss\t")
+  override def toString = "\nSession\t" + time.toString("hh:mm:ss\t") + app.getOrElse("") + "\t" + end.minus(time.getMillis).toString("mm:ss\t")
 }
 
 case class Lock(time: DateTime, app: Option[String] = None) extends AppSessionFragment
