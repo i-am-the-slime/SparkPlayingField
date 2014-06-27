@@ -6,6 +6,8 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Operators._
 import org.joda.time.DateTime
+import org.menthal.model.events.Event
+import org.menthal.model.events.adapters.PostgresDump
 
 /**
  * Created by mark on 04.06.14.
@@ -25,7 +27,7 @@ object NewAggregations {
   }
 
   def linesToEvents(lines:RDD[String]):RDD[Event] =
-    lines.flatMap(Event.tryToParseLine) 
+    lines.flatMap(PostgresDump.tryToParseLineFromDump)
 
   def reduceToAppContainers(events:RDD[Event]):RDD[Pair[Long, AppSessionContainer]] = {
     val containers: RDD[Pair[Pair[Long, Long],AppSessionContainer]] = for {

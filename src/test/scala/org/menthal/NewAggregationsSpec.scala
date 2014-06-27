@@ -1,8 +1,9 @@
 package org.menthal
 
+import org.menthal.model.events._
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import org.apache.spark.{SparkConf, SparkContext}
-import scala.io.Source
+import org.menthal.model.events.EventData._
 import org.joda.time.DateTime
 
 /**

@@ -2,15 +2,13 @@ package org.menthal
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
-import spray.json._
-import DefaultJsonProtocol._
+import org.menthal.model.events.Event
+import org.menthal.model.events.EventData._
 import org.joda.time.DateTime
 import com.twitter.algebird.Operators._
-import scala.util.{Failure, Success, Try}
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Semigroup
-
-//import scala.math.Numeric.Implicits
+import org.menthal.model.events.adapters.PostgresDump
 
 /**
  * Created by mark on 18.05.14.
@@ -33,13 +31,13 @@ object OldAggregations {
   def getEventsFromLines(lines: RDD[String], filter: Event => Boolean): RDD[Event] = {
     for {
       line <- lines
-      event <- Event.tryToParseLine(line)
+      event <- PostgresDump.tryToParseLineFromDump(line)
       if filter(event)
     } yield event
   }
 
   def receivedSmsFilter(event: Event): Boolean =
-    event.data.eventType == Event.TYPE_SMS_RECEIVED
+    event.data.eventType == TYPE_SMS_RECEIVED
 
   //def aggregate(lines: RDD[String], filter: Event[_ <: EventData] => Boolean): RDD[(((Long, DateTime), Map[String, Int]))] = {
   //  val events = getEventsFromLines(lines, filter)
@@ -50,10 +48,10 @@ object OldAggregations {
   //type MapsShit[A] = UserBucketsRDD[Map[String, A]]
   //type EventPredicate[A] = Event[A] => Boolean
 
-  def toSomeMap[A <: MappableEventData[B], B:Semigroup](events: RDD[Event]): UserBucketsRDD[Map[String, B]] = {
+  def toSomeMap[A:Semigroup](events: RDD[Event]): UserBucketsRDD[Map[String, A]] = {
     val buckets = events.map {
       case e: Event => e.data match {
-        case d:A => ((e.userId, roundTime(e.time)), d.toMap)
+        case d:MappableEventData[A] => ((e.userId, roundTime(e.time)), d.toMap)
       }
     }
     buckets reduceByKey (_ + _)
@@ -66,10 +64,10 @@ object OldAggregations {
   //def toMapOne[A <: MappableEventData](events: RDD[Event[A]]): UserBucketsRDD[Map[String, Float]] =
   //  toSomeMap(getMap, events)
 
-  def toCounterMap[B, A <: MappableEventData[B]](events: RDD[Event]): UserBucketsRDD[Map[String, Int]] = {
+  def toCounterMap[B](events: RDD[Event]): UserBucketsRDD[Map[String, Int]] = {
     val buckets = events.map {
       case e: Event => e.data match {
-        case d:A => ((e.userId, roundTime(e.time)), d.toCountingMap)
+        case d:MappableEventData[B] => ((e.userId, roundTime(e.time)), d.toCountingMap)
       }
     }
     buckets reduceByKey (_ + _)

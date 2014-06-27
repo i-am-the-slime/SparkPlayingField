@@ -2,6 +2,8 @@ package org.menthal
 
 import org.joda.time.DateTime
 import com.twitter.algebird.Monoid
+import org.menthal.model.events.EventData._
+import org.menthal.model.events._
 import scala.collection.immutable.Queue
 
 
@@ -88,11 +90,10 @@ case class Unlock(time: DateTime, app: Option[String] = None) extends AppSession
 
 object AppSessionContainer {
   val handledEvents = Set[Long](
-    Event.TYPE_SCREEN_OFF,
-    Event.TYPE_WINDOW_STATE_CHANGED,
-    Event.TYPE_WINDOW_STATE_CHANGE_BASIC,
-    Event.TYPE_SCREEN_UNLOCK,
-    Event.TYPE_DREAMING_STARTED
+    TYPE_SCREEN_OFF,
+    TYPE_WINDOW_STATE_CHANGED,
+    TYPE_SCREEN_UNLOCK,
+    TYPE_DREAMING_STARTED
   )
   def eventToAppSessionFragment(ev: Event): AppSessionFragment = {
     ev.data match {

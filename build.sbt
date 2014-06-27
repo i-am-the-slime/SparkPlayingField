@@ -1,6 +1,5 @@
 import sbtassembly.Plugin.AssemblyKeys._
 import scala.io.Source.fromFile
-import java.io.{FileNotFoundException, File}
 
 val configPath = "conf/sshconfig"
 
@@ -22,13 +21,13 @@ libraryDependencies ++= Seq( //Dates and Times
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
-libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //MONADS
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
 
-libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0"
+libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test" //Testing
 
-libraryDependencies += "com.gensler" %% "scalavro" % "0.6.2" //
+libraryDependencies += "com.gensler" %% "scalavro" % "0.6.2" //Model generation and reading
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided",
@@ -44,6 +43,8 @@ libraryDependencies ++= Seq(
 val scpTask = TaskKey[String]("scp", "Copies assembly jar to remote location")
 
 traceLevel in scpTask := -1
+
+scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
 
 scpTask <<= (assembly, streams) map { (asm, s) =>
   if(new java.io.File(configPath).exists){
