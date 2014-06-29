@@ -109,10 +109,10 @@ class EventsSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
     val result = WhatsAppReceived(hash, 10, isGroupMessage = true)
     edt.get shouldBe result
   }
-  it should "parse type 1021 (Device Features)" in {
+  ignore it should "parse type 1021 (Device Features)" in {
     //TODO: Find an example from a dump to test this.
   }
-  it should "parse type 1022 (Menthal App Action)" in {
+  ignore it should "parse type 1022 (Menthal App Action)" in {
     //TODO: Find an example from a dump to test this.
   }
   it should "parse type 1023 (Timezone)" in {
