@@ -5,7 +5,7 @@ import java.io.{ByteArrayOutputStream, ByteArrayInputStream}
 import com.gensler.scalavro.types.AvroType
 import org.joda.time.DateTime
 import org.menthal.model.events.Event
-import org.menthal.model.events.EventData.{EventData, WindowStateChanged, ScreenOff}
+import org.menthal.model.events.EventData._
 import org.scalatest.{Matchers, FlatSpec}
 
 import scala.reflect.io.File
@@ -65,15 +65,35 @@ class AvroIOSpec extends FlatSpec with Matchers {
 
     io read in should equal (Success(wsc))
   }
+  it should "read and write union members derived from class hierarchies as JSON" in {
+    val classUnion = AvroType[Alpha].io
 
-  it should "read and write a Sequence of EventData as JSON" in {
+    val first = Delta()
+    val second: Alpha = Gamma(123.45)
+
+    val json1 = classUnion writeJson first
+    val json2 = classUnion writeJson second
+
+    classUnion readJson json1 should equal (Success(first))
+    classUnion readJson json2 should equal (Success(second))
+  }
+
+  ignore should "fuck around" in {
+    val stuff:Alpha = Gamma(2.0)
+
+    val io = AvroType[Alpha].io
+    val out = new ByteArrayOutputStream()
+
+    io.write(stuff, out)
+  }
+
+  ignore should "read and write a Sequence of EventData as JSON" in {
     val x = AvroType[Seq[EventData]]
-    info(x.schema().prettyPrint)
     val io = x.io
 
     val out = new ByteArrayOutputStream
 
-    val stuff = Seq(ScreenOff(), WindowStateChanged("","",""))
+    val stuff:Seq[EventData] = Seq(ScreenOff(), WindowStateChanged("","",""))
     io.write(stuff, out)
     val bytes = out.toByteArray
     val in = new ByteArrayInputStream(bytes)

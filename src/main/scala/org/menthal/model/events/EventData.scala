@@ -1,6 +1,14 @@
 package org.menthal.model.events
 
 object EventData {
+
+  //REMOVE FROM HERE
+  abstract class Alpha { def magic: Double }
+  class Beta extends Alpha { val magic = math.Pi }
+  case class Gamma(magic: Double) extends Alpha
+  case class Delta() extends Beta
+  case class Epsilon[T]() extends Beta
+  //REMOVE UNTIL HERE
   sealed abstract class EventData(val eventType:Long)
 
   trait MappableEventData[A] {
