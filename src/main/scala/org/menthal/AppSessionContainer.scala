@@ -1,7 +1,7 @@
 package org.menthal
 
-import org.joda.time.DateTime
 import com.twitter.algebird.Monoid
+import org.joda.time.DateTime
 import org.menthal.model.events.EventData._
 import org.menthal.model.events._
 import scala.collection.immutable.Queue
@@ -11,7 +11,10 @@ import scala.collection.immutable.Queue
  * Created by mark on 20.05.14.
  * Update by Konrad 26.05.14
  */
-
+object DateTimeImplicits {
+  implicit def longToDateTime(timestamp:Long) = new DateTime(timestamp)
+}
+import DateTimeImplicits._
 
 sealed abstract class AppSessionContainer {
   def sessions: Queue[AppSessionFragment]
@@ -69,23 +72,27 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
 
 
 sealed abstract class AppSessionFragment {
-  val time: DateTime
+  val time: Long
   val app: Option[String]
 }
 
-case class Session(time: DateTime, end: DateTime, app: Option[String]) extends AppSessionFragment
+case class Session(time: Long, end: Long, app: Option[String]) extends AppSessionFragment
 {
-  override def toString = "\nSession\t" + time.toString("hh:mm:ss\t") + app.getOrElse("") + "\t" + end.minus(time.getMillis).toString("mm:ss\t")
+  override def toString = "\nSession\t" +
+    time.toString("HH:mm:ss:ms\t") +
+    app.getOrElse("") +
+    "\t" + end.minus(time.getMillis+7200000).toString("HH:mm:ss\t") +
+    end.toString("\n\t\tHH:mm:ss:ms\t")
 }
 
-case class Lock(time: DateTime, app: Option[String] = None) extends AppSessionFragment
+case class Lock(time: Long, app: Option[String] = None) extends AppSessionFragment
 {
-  override def toString = "\nLock\t" + time.toString("hh:mm:ss\t") + app.getOrElse("")
+  override def toString = "\nLock\t" + time.toString("HH:mm:ss:ms\t") + app.getOrElse("")
 }
 
-case class Unlock(time: DateTime, app: Option[String] = None) extends AppSessionFragment
+case class Unlock(time: Long, app: Option[String] = None) extends AppSessionFragment
 {
-  override def toString = "\nUnlock\t" + time.toString("hh:mm:ss\t") + app.getOrElse("")
+  override def toString = "\nUnlock\t" + time.toString("HH:mm:ss:ms\t") + app.getOrElse("")
 }
 
 object AppSessionContainer {

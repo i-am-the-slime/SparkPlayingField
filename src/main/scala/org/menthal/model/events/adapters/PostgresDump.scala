@@ -15,9 +15,9 @@ object PostgresDump {
       eventData <-  Try(getEventDataType(rawData(3), rawData(4)))
       id <- Try(rawData(0).toLong)
       userId <- Try(rawData(1).toLong)
-      time <- Try(DateTime.parse(rawData(2).replace(" ", "T")))
+      time <- Try(DateTime.parse(rawData(2).replace(" ", "T")).getMillis)
       data <- Try(eventData.get)
-    } yield Some(Event(id, userId, data, time))
+    } yield Some(Event(id, userId, time, data))
     event getOrElse None
   }
 
@@ -80,7 +80,7 @@ object PostgresDump {
         val ld = data.substring(1, data.length()-1).replace("\\","").parseJson.asInstanceOf[JsArray].elements
         Some(WhatsAppReceived(ld(0).convertTo[String], ld(1).convertTo[Int], if(ld(2).convertTo[Int] == 0) false else true))
       case TYPE_QUESTIONNAIRE =>
-        Some(Questionnaire(ld.map(_.toInt)))
+        Some(Questionnaire(ld(0).toInt, ld(1).toInt, ld(2).toInt))
       case a if a == TYPE_WINDOW_STATE_CHANGED || a == TYPE_WINDOW_STATE_CHANGED_BASIC =>
         Some(WindowStateChanged(ld(0), ld(1).split("/")(0), ld(2)))
       case _ =>

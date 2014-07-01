@@ -32,7 +32,7 @@ object NewAggregations {
   def reduceToAppContainers(events:RDD[Event]):RDD[Pair[Long, AppSessionContainer]] = {
     val containers: RDD[Pair[Pair[Long, Long],AppSessionContainer]] = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.data.eventType)
-      time = event.time.getMillis
+      time = event.time
       user = event.userId
       container = AppSessionContainer(event)
     } yield ((time, user), container)

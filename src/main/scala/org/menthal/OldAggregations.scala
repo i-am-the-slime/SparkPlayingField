@@ -51,7 +51,7 @@ object OldAggregations {
   def toSomeMap[A:Semigroup](events: RDD[Event]): UserBucketsRDD[Map[String, A]] = {
     val buckets = events.map {
       case e: Event => e.data match {
-        case d:MappableEventData[A] => ((e.userId, roundTime(e.time)), d.toMap)
+        case d:MappableEventData[A] => ((e.userId, roundTime(new DateTime(e.time))), d.toMap)
       }
     }
     buckets reduceByKey (_ + _)
@@ -67,7 +67,7 @@ object OldAggregations {
   def toCounterMap[B](events: RDD[Event]): UserBucketsRDD[Map[String, Int]] = {
     val buckets = events.map {
       case e: Event => e.data match {
-        case d:MappableEventData[B] => ((e.userId, roundTime(e.time)), d.toCountingMap)
+        case d:MappableEventData[B] => ((e.userId, roundTime(new DateTime(e.time))), d.toCountingMap)
       }
     }
     buckets reduceByKey (_ + _)

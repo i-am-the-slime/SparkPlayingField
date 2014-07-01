@@ -1,35 +1,31 @@
-import java.io.{FileInputStream, FileOutputStream, OutputStreamWriter, File}
-import com.gensler.scalavro.io.AvroTypeIO
+import java.io.ByteArrayOutputStream
+
 import com.gensler.scalavro.types.AvroType
-import org.apache.spark.{SparkConf, SparkContext}
-import org.menthal.model.events.EventData
-import org.menthal.model.events.EventData._
-import scala.reflect.runtime.universe._
-import spray.json.DefaultJsonProtocol._
-import spray.json._
-import scala.util.Success
+import org.menthal.model.events.Event
+import org.menthal.model.events.EventData.{EventData, ScreenOff}
 
-def getLocalSparkContext: SparkContext = {
-  val conf = new SparkConf()
-    .setMaster("local")
-    .setAppName("NewAggregationsSpec")
-    .set("spark.executor.memory", "1g")
-  val sc = new SparkContext(conf)
-  sc
-}
+val event = Event(12, 12, 12, ScreenOff())
+//val baos = new ByteArrayOutputStream
+val hey = AvroType[Event].io.writeJson(event) + "hohoho"
+//AvroType[Event].io.write(event, baos)
+//baos.toByteArray
 
-val sc = getLocalSparkContext
+//def getLocalSparkContext: SparkContext = {
+//  val conf = new SparkConf()
+//    .setMaster("local")
+//    .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+//    .set("spark.kryo.registrator", "org.menthal.model.serialization.MenthalKryoRegistrator")
+//    .setAppName("NewAggregationsSpec")
+//    .set("spark.executor.memory", "1g")
+//  val sc = new SparkContext(conf)
+//  sc
+//}
+//val sc = getLocalSparkContext
+//val smsType = AvroType[SmsReceived]
+//val io:AvroTypeIO[SmsReceived] = smsType.io
+//val filePath = "/Users/mark/Desktop/test"
+//val outputStream = new FileOutputStream(filePath)
+//io.write(new SmsReceived("contacthash", 2), outputStream)
+//val inputStream = new FileInputStream(filePath)
+//val Success(readResult) = io read inputStream
 
-val smsType = AvroType[SmsReceived]
-
-val io:AvroTypeIO[SmsReceived] = smsType.io
-
-val filePath = "/Users/mark/Desktop/test"
-
-val outputStream = new FileOutputStream(filePath)
-
-io.write(new SmsReceived("hitler", 2), outputStream)
-
-val inputStream = new FileInputStream(filePath)
-
-val Success(readResult) = io read inputStream

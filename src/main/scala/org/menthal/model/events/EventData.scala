@@ -58,7 +58,7 @@ object EventData {
 
   val TYPE_APP_LIST = 1008
   case class AppListItem(packageName:String, appName:String)
-  case class AppList(list:List[AppListItem]) extends EventData(TYPE_APP_LIST)
+  case class AppList(list:Seq[AppListItem]) extends EventData(TYPE_APP_LIST)
 
   val TYPE_APP_INSTALL = 1009
   case class AppInstall(appName:String, packageName:String) extends EventData(TYPE_APP_INSTALL)
@@ -135,7 +135,7 @@ object EventData {
   case class AppSession(startTimestamp:Long, durationInMillis:Long, appName:String, packageName:String)
 
   val TYPE_QUESTIONNAIRE = 1100
-  case class Questionnaire(answers:List[Int]) extends EventData(TYPE_QUESTIONNAIRE)
+  case class Questionnaire(answer1:Int, answer2:Int, answer3:Int) extends EventData(TYPE_QUESTIONNAIRE)
 
   //  val TYPE_VIEW_CLICKED = 1
   //  val TYPE_VIEW_LONG_CLICKED = 2

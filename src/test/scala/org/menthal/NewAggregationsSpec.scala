@@ -1,36 +1,25 @@
 package org.menthal
 
-import org.menthal.model.events._
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.menthal.model.events.EventData._
-import org.joda.time.DateTime
 
 import scala.io.Source
 
 class NewAggregationsSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
-    def getLocalSparkContext: SparkContext = {
-      val conf = new SparkConf()
-        .setMaster("local")
-        .setAppName("NewAggregationsSpec")
-        .set("spark.executor.memory", "1g")
-      val sc = new SparkContext(conf)
-      sc
-    }
 
     "The function aggregate" should "take an RDD of String and return another RDD of String" in {
-      val sc = getLocalSparkContext
-      val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList.take(60)
+      val sc = SparkTestHelper.getLocalSparkContext
+      val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList
       val mockRDDs = sc.parallelize(eventLines)
       val events = NewAggregations.linesToEvents(mockRDDs)
       val result = NewAggregations.reduceToAppContainers(events)
-      result.take(1).foreach(
-        x => info(x.toString())
-      )
+
+      result.take(10).foreach{
+        case (id, container) =>
+          val sessions = container.sessions.filter(_.isInstanceOf[Session])
+//          info(s"User $id\nSessions $sessions")
+      }
       "beer" shouldBe "here"
+      sc.stop()
     }
 }
-  //Take all the file
-  //filter
-  //aggregate
-  //write the result back
