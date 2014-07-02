@@ -2,7 +2,7 @@ package org.menthal
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
-import org.menthal.model.events.Event
+import org.menthal.model.events._
 import org.menthal.model.events.EventData._
 import org.joda.time.DateTime
 import com.twitter.algebird.Operators._

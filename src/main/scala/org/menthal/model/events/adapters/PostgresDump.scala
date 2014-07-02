@@ -1,7 +1,7 @@
 package org.menthal.model.events.adapters
 
 import org.joda.time.DateTime
-import org.menthal.model.events.Event
+import org.menthal.model.events._
 import org.menthal.model.events.EventData._
 import spray.json._
 import spray.json.DefaultJsonProtocol._
