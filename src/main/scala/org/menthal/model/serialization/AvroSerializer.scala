@@ -23,8 +23,8 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
 import com.esotericsoftware.kryo.io.{Input, Output}
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory, BinaryEncoder, EncoderFactory}
 import org.apache.spark.serializer.KryoRegistrator
-import org.menthal.model.events.Event
-import org.menthal.model.events.EventData.{EventData, WindowStateChanged, ScreenOn}
+import org.menthal.model.events._
+import org.menthal.model.events.EventData._
 import scala.reflect.runtime.universe._
 
 import scala.reflect.ClassTag

@@ -1,7 +1,6 @@
 package org.menthal
 
-import org.menthal.model.events.Event
-import org.menthal.model.events.EventData._
+import org.menthal.model.events._
 import org.scalatest.{Matchers, BeforeAndAfterAll, FlatSpec}
 import org.joda.time.DateTime
 import scala.util.Random
