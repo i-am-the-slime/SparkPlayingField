@@ -25,6 +25,8 @@ libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
 
+libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Columnar Storage for Hadoop
+
 libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test" //Testing
