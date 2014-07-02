@@ -4,12 +4,19 @@ import java.io.{ByteArrayOutputStream, ByteArrayInputStream}
 
 import com.gensler.scalavro.types.AvroType
 import org.joda.time.DateTime
-import org.menthal.model.events.Event
+import org.menthal.model.events._
 import org.menthal.model.events.EventData._
 import org.scalatest.{Matchers, FlatSpec}
 
 import scala.reflect.io.File
 import scala.util.Success
+import org.menthal.model.events.Gamma
+import org.menthal.model.events.Event
+import org.menthal.model.events.Delta
+import scala.util.Success
+import org.menthal.model.events.EventData.EventData
+import org.menthal.model.events.EventData.ScreenOff
+import org.menthal.model.events.EventData.WindowStateChanged
 
 class AvroIOSpec extends FlatSpec with Matchers {
 
@@ -87,13 +94,13 @@ class AvroIOSpec extends FlatSpec with Matchers {
     io.write(stuff, out)
   }
 
-  ignore should "read and write a Sequence of EventData as JSON" in {
-    val x = AvroType[Seq[EventData]]
+  it should "read and write a Sequence of EventData as JSON" in {
+    val x = AvroType[Seq[EventData2]]
     val io = x.io
 
     val out = new ByteArrayOutputStream
 
-    val stuff:Seq[EventData] = Seq(ScreenOff(), WindowStateChanged("","",""))
+    val stuff:Seq[EventData2] = Seq(WindowStateChanged2("","",""))
     io.write(stuff, out)
     val bytes = out.toByteArray
     val in = new ByteArrayInputStream(bytes)

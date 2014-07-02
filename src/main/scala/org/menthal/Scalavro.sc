@@ -1,15 +1,15 @@
-import java.io.ByteArrayOutputStream
-
 import com.gensler.scalavro.types.AvroType
-import org.menthal.model.events.Event
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import org.menthal.model.events.{Alpha, Gamma, Event}
 import org.menthal.model.events.EventData.{EventData, ScreenOff}
+val event = Gamma(1.2)
+val baos = new ByteArrayOutputStream
+AvroType[Alpha].io.write(event, baos)
+val in = new ByteArrayInputStream(baos.toByteArray)
+AvroType[Alpha].io.read(in)
 
-val event = Event(12, 12, 12, ScreenOff())
-//val baos = new ByteArrayOutputStream
-val hey = AvroType[Event].io.writeJson(event) + "hohoho"
 //AvroType[Event].io.write(event, baos)
 //baos.toByteArray
-
 //def getLocalSparkContext: SparkContext = {
 //  val conf = new SparkConf()
 //    .setMaster("local")

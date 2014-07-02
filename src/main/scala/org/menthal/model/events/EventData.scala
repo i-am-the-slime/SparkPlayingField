@@ -1,13 +1,27 @@
 package org.menthal.model.events
 
-object EventData {
-
-  //REMOVE FROM HERE
-  abstract class Alpha { def magic: Double }
+  abstract class Alpha { def magic: Double}
   class Beta extends Alpha { val magic = math.Pi }
   case class Gamma(magic: Double) extends Alpha
   case class Delta() extends Beta
   case class Epsilon[T]() extends Beta
+
+sealed abstract class EventData2(val eventType:Long)
+
+
+case class WindowStateChanged2(appName:String, packageName:String, windowTitle:String)
+  extends EventData2(EventData.TYPE_WINDOW_STATE_CHANGED)
+
+case class SmsReceived2(contactHash:String, msgLength:Int)
+  extends EventData2(EventData.TYPE_SMS_RECEIVED) {
+  def toMap = Map(contactHash -> msgLength)
+  def toCountingMap = Map(contactHash -> 1)
+}
+
+object EventData {
+
+  //REMOVE FROM HERE
+
   //REMOVE UNTIL HERE
   sealed abstract class EventData(val eventType:Long)
 
