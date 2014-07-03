@@ -22,14 +22,6 @@ libraryDependencies ++= Seq( //Dates and Times
   ,"joda-time" % "joda-time" % "2.3"
 )
 
-com.twitter.scrooge.ScroogeSBT.newSettings
-
-libraryDependencies ++= Seq( //Thrift serialization and Scrooge Scala Addons
-  "org.apache.thrift" % "libthrift" % "0.8.0",
-  "com.twitter" %% "scrooge-core" % "3.3.2",
-  "com.twitter" %% "finagle-thrift" % "6.5.0"
-)
-
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
