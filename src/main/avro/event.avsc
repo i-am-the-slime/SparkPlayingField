@@ -1,0 +1,247 @@
+{
+  "name": "org.menthal.model.events.Event",
+  "type": "record",
+  "fields": [{
+    "name": "id",
+    "type": "long"
+  }, {
+    "name": "userId",
+    "type": "long"
+  }, {
+    "name": "time",
+    "type": "long"
+  }, {
+    "name": "data",
+    "type": [
+    {
+      "name": "org.menthal.model.events.SmsReceived",
+      "type": "record",
+      "fields": [{
+        "name": "contactHash",
+        "type": "string"
+      }, {
+        "name": "msgLength",
+        "type": "int"
+      }]
+    }, 
+    {
+          "name": "org.menthal.model.events.AppInstall",
+          "type": "record",
+          "fields": [{
+            "name": "appName",
+            "type": "string"
+          }, {
+            "name": "packageName",
+            "type": "string"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.SmsSent",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "msgLength",
+            "type": "int"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.PhoneBoot",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.WhatsAppReceived",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "messageLength",
+            "type": "int"
+          }, {
+            "name": "isGroupMessage",
+            "type": "boolean"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.CallOutgoing",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "startTimestamp",
+            "type": "long"
+          }, {
+            "name": "durationInMillis",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.TrafficData",
+          "type": "record",
+          "fields": [{
+            "name": "connectionType",
+            "type": "int"
+          }, {
+            "name": "name",
+            "type": "string"
+          }, {
+            "name": "networkType",
+            "type": "int"
+          }, {
+            "name": "bytesReceived",
+            "type": "long"
+          }, {
+            "name": "bytesTransferred",
+            "type": "long"
+          }, {
+            "name": "bytesTransferredOverMobile",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.ScreenUnlock",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.Localisation",
+          "type": "record",
+          "fields": [{
+            "name": "signalType",
+            "type": "string"
+          }, {
+            "name": "accuracy",
+            "type": "float"
+          }, {
+            "name": "longitude",
+            "type": "double"
+          }, {
+            "name": "latitude",
+            "type": "double"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.CallMissed",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "timestamp",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.WindowStateChanged",
+          "type": "record",
+          "fields": [{
+            "name": "appName",
+            "type": "string"
+          }, {
+            "name": "packageName",
+            "type": "string"
+          }, {
+            "name": "windowTitle",
+            "type": "string"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.Mood",
+          "type": "record",
+          "fields": [{
+            "name": "moodValue",
+            "type": "float"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.WhatsAppSent",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "messageLength",
+            "type": "int"
+          }, {
+            "name": "isGroupMessage",
+            "type": "boolean"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.ScreenOn",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.PhoneShutdown",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.DreamingStopped",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.DreamingStarted",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.AppRemoval",
+          "type": "record",
+          "fields": [{
+            "name": "appName",
+            "type": "string"
+          }, {
+            "name": "packageName",
+            "type": "string"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.Questionnaire",
+          "type": "record",
+          "fields": [{
+            "name": "answer1",
+            "type": "int"
+          }, {
+            "name": "answer2",
+            "type": "int"
+          }, {
+            "name": "answer3",
+            "type": "int"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.ScreenOff",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.events.TimeZone",
+          "type": "record",
+          "fields": [{
+            "name": "offsetInMillis",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.events.CallReceived",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "startTimestamp",
+            "type": "long"
+          }, {
+            "name": "durationInMillis",
+            "type": "long"
+          }]
+    }]
+  }]
+}
