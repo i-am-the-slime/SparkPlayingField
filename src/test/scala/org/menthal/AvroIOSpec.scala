@@ -9,8 +9,10 @@ import org.menthal.model.events.EventData._
 import org.scalatest.{Matchers, FlatSpec}
 
 import org.menthal.model.events.Event
+import scala.reflect.io.File
 import scala.util.Success
 import org.menthal.model.events._
+import org.apache.spark.SparkContext._
 
 import parquet.avro.{AvroWriteSupport, AvroParquetOutputFormat}
 import parquet.hadoop.ParquetOutputFormat
