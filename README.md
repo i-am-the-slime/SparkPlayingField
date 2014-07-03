@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/i-am-the-slime/SparkPlayingField.svg?branch=master)](https://travis-ci.org/i-am-the-slime/SparkPlayingField)
+
 SparkPlayingField
 =================
 

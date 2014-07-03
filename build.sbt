@@ -11,6 +11,7 @@ version := "0.1"
 
 scalaVersion := "2.10.4"
 
+resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
 resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
@@ -19,6 +20,14 @@ resolvers += "spray" at "http://repo.spray.io/"
 libraryDependencies ++= Seq( //Dates and Times
   "org.joda" % "joda-convert" % "1.6"
   ,"joda-time" % "joda-time" % "2.3"
+)
+
+com.twitter.scrooge.ScroogeSBT.newSettings
+
+libraryDependencies ++= Seq( //Thrift serialization and Scrooge Scala Addons
+  "org.apache.thrift" % "libthrift" % "0.8.0",
+  "com.twitter" %% "scrooge-core" % "3.3.2",
+  "com.twitter" %% "finagle-thrift" % "6.5.0"
 )
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
