@@ -210,13 +210,13 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
 
   "A long example with random events" should "not break" in {
     val basic = (1 to 30).map(x => generateEvent())
-    basic.foreach(x=>
-      info(new DateTime(x.time).toString("HH:MM:SS  ") + x.data.toString)
-    )
-    info("--")
+//    basic.foreach(x=>
+//      info(new DateTime(x.time).toString("HH:MM:SS  ") + x.data.toString)
+//    )
+//    info("--")
     val events = basic.map(x => AppSessionContainer(x)) reduce (_+_)
-    events.sessions.foreach(x =>
-      info(new DateTime(x.time).toString("HH:MM:SS  ") + x.toString)
-    )
+//    events.sessions.foreach(x =>
+//      info(new DateTime(x.time).toString("HH:MM:SS  ") + x.toString)
+//    )
   }
 }

@@ -162,5 +162,3 @@ class EventsSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
     events.zip(correct).foreach{ case (read, expected) => read shouldBe expected }
   }
 }
-
-
