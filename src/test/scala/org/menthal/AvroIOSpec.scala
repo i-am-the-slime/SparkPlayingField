@@ -2,6 +2,7 @@ package org.menthal
 
 import java.io.{ByteArrayOutputStream, ByteArrayInputStream}
 
+import org.menthal.model._
 import com.gensler.scalavro.types.AvroType
 import org.joda.time.DateTime
 import org.menthal.model.events._
@@ -75,7 +76,7 @@ class AvroIOSpec extends FlatSpec with Matchers {
   }
 
 //  "RDDs of Events" should "be serializable to disk in binary format" in {
-  it should "be serializable to disk in binary format" in {
+  ignore should "be serializable to disk in binary format 2" in {
 
     val sc = SparkTestHelper.getLocalSparkContext
     val data = Seq(
@@ -92,18 +93,18 @@ class AvroIOSpec extends FlatSpec with Matchers {
 
   }
 
-  ignore should "use parquet" in {
+  it should "use parquet" in {
     val sc = SparkTestHelper.getLocalSparkContext
     val job = new Job
     // Configure the ParquetOutputFormat to use Avro as the serialization format
     ParquetOutputFormat.setWriteSupportClass(job, classOf[AvroWriteSupport])
     // You need to pass the schema to AvroParquet when you are writing objects but not when you
     // are reading them. The schema is saved in Parquet file for future readers to use.
-    val avroSchema = AvroType[Int].schema().compactPrint
-    val schema = Schema.parse(avroSchema)
+    //val avroSchema = AvroType[jevents.AppInstall].schema().compactPrint
+    val schema = jevents.AppInstall.SCHEMA$
     AvroParquetOutputFormat.setSchema(job, schema)
     // Create a PairRDD with all keys set to null and wrap each amino acid in serializable objects
-    val data = List( 1,2,4 )
+    val data = List(new jevents.AppInstall("s", "a"), new jevents.AppInstall("s", "a"))
     val events = sc.parallelize(data)
     val pairs = events.map( (null, _) )
     // Save the RDD to a Parquet file in our temporary output directory
