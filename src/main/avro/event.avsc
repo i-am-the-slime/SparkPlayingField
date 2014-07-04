@@ -1,0 +1,247 @@
+{
+  "name": "org.menthal.model.jevents.Event",
+  "type": "record",
+  "fields": [{
+    "name": "id",
+    "type": "long"
+  }, {
+    "name": "userId",
+    "type": "long"
+  }, {
+    "name": "time",
+    "type": "long"
+  }, {
+    "name": "data",
+    "type": [
+    {
+      "name": "org.menthal.model.jevents.SmsReceived",
+      "type": "record",
+      "fields": [{
+        "name": "contactHash",
+        "type": "string"
+      }, {
+        "name": "msgLength",
+        "type": "int"
+      }]
+    }, 
+    {
+          "name": "org.menthal.model.jevents.AppInstall",
+          "type": "record",
+          "fields": [{
+            "name": "appName",
+            "type": "string"
+          }, {
+            "name": "packageName",
+            "type": "string"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.SmsSent",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "msgLength",
+            "type": "int"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.PhoneBoot",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.WhatsAppReceived",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "messageLength",
+            "type": "int"
+          }, {
+            "name": "isGroupMessage",
+            "type": "boolean"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.CallOutgoing",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "startTimestamp",
+            "type": "long"
+          }, {
+            "name": "durationInMillis",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.TrafficData",
+          "type": "record",
+          "fields": [{
+            "name": "connectionType",
+            "type": "int"
+          }, {
+            "name": "name",
+            "type": "string"
+          }, {
+            "name": "networkType",
+            "type": "int"
+          }, {
+            "name": "bytesReceived",
+            "type": "long"
+          }, {
+            "name": "bytesTransferred",
+            "type": "long"
+          }, {
+            "name": "bytesTransferredOverMobile",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.ScreenUnlock",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.Localisation",
+          "type": "record",
+          "fields": [{
+            "name": "signalType",
+            "type": "string"
+          }, {
+            "name": "accuracy",
+            "type": "float"
+          }, {
+            "name": "longitude",
+            "type": "double"
+          }, {
+            "name": "latitude",
+            "type": "double"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.CallMissed",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "timestamp",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.WindowStateChanged",
+          "type": "record",
+          "fields": [{
+            "name": "appName",
+            "type": "string"
+          }, {
+            "name": "packageName",
+            "type": "string"
+          }, {
+            "name": "windowTitle",
+            "type": "string"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.Mood",
+          "type": "record",
+          "fields": [{
+            "name": "moodValue",
+            "type": "float"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.WhatsAppSent",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "messageLength",
+            "type": "int"
+          }, {
+            "name": "isGroupMessage",
+            "type": "boolean"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.ScreenOn",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.PhoneShutdown",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.DreamingStopped",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.DreamingStarted",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.AppRemoval",
+          "type": "record",
+          "fields": [{
+            "name": "appName",
+            "type": "string"
+          }, {
+            "name": "packageName",
+            "type": "string"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.Questionnaire",
+          "type": "record",
+          "fields": [{
+            "name": "answer1",
+            "type": "int"
+          }, {
+            "name": "answer2",
+            "type": "int"
+          }, {
+            "name": "answer3",
+            "type": "int"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.ScreenOff",
+          "type": "record",
+          "fields": []
+    },
+    {
+          "name": "org.menthal.model.jevents.TimeZone",
+          "type": "record",
+          "fields": [{
+            "name": "offsetInMillis",
+            "type": "long"
+          }]
+    },
+    {
+          "name": "org.menthal.model.jevents.CallReceived",
+          "type": "record",
+          "fields": [{
+            "name": "contactHash",
+            "type": "string"
+          }, {
+            "name": "startTimestamp",
+            "type": "long"
+          }, {
+            "name": "durationInMillis",
+            "type": "long"
+          }]
+    }]
+  }]
+}    

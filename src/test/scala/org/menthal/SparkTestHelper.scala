@@ -8,7 +8,7 @@ object SparkTestHelper {
       .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.kryo.registrator", "org.menthal.model.serialization.MenthalKryoRegistrator")
-      .setAppName("NewAggregationsSpec")
+      .setAppName("LocalTests")
       .set("spark.executor.memory", "1g")
     val sc = new SparkContext(conf)
     sc
