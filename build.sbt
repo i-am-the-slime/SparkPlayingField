@@ -34,13 +34,12 @@ libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
 
 libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Parquet
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test" //Testing
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
+libraryDependencies += "com.julianpeeters" %% "avro-scala-macro-annotations" % "0.1"
 
 libraryDependencies += ("com.gensler" %% "scalavro" % "0.6.2").
                             exclude("ch.qos.logback", "logback-classic")
-
-
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
@@ -52,6 +51,8 @@ libraryDependencies ++= Seq(
     exclude("commons-collections", "commons-collections").
     exclude("com.esotericsoftware.minlog", "minlog")
 )
+
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
 
 val scpTask = TaskKey[String]("scp", "Copies assembly jar to remote location")
 
