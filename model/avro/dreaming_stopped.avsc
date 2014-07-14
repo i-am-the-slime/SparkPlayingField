@@ -1,0 +1,9 @@
+{
+   "name":"DreamingStopped",
+   "type":"record",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" }
+   ]
+}

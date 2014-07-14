@@ -1,9 +1,7 @@
 package org.menthal.model.events
 
-import com.julianpeeters.avro.annotations.AvroTypeProvider
+import com.julianpeeters.avro.annotations._
 
-@AvroTypeProvider("src/test/resources/AvroTypeProviderTest16.avro")
-case class AvroTypeProviderTest16()
-
-@AvroTypeProvider("src/test/resources/shitisasshitdoes.avro")
-case class ShitIsAsShitDoes()
+@AvroTypeProvider("model/avro/app_install.avsc")
+@AvroRecord
+case class AppInstall(var id:Long, var userId:Long, var time:Long, var appName:String, var packageName:String)

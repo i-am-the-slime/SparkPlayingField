@@ -50,7 +50,7 @@ case class Localisation(signalType:String, accuracy:Float, longitude:Double, lat
 case class AppListItem(packageName:String, appName:String)
 case class AppList(list:Seq[AppListItem]) extends EventData(TYPE_APP_LIST)
 
-case class AppInstall(appName:String, packageName:String) extends EventData(TYPE_APP_INSTALL)
+//case class AppInstall(appName:String, packageName:String) extends EventData(TYPE_APP_INSTALL)
 
 case class AppRemoval(appName:String, packageName:String) extends EventData(TYPE_APP_REMOVAL)
 

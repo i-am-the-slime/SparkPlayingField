@@ -1,0 +1,12 @@
+{
+   "name":"WhatsAppSent",
+   "type":"record",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"contactHash", "type":"string" },
+      { "name":"messageLength", "type":"int" },
+      { "name":"isGroupMessage", "type":"boolean" }
+   ]
+}

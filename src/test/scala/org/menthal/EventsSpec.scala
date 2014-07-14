@@ -1,5 +1,10 @@
 package org.menthal
 
+import java.io.File
+import java.io.File
+
+import org.apache.avro.file.DataFileWriter
+import org.apache.avro.specific.SpecificDatumWriter
 import org.menthal.model.events._
 import org.menthal.model.events.adapters.PostgresDump
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
@@ -8,13 +13,15 @@ import org.joda.time.DateTime
 import spray.json._
 import org.menthal.model.events.EventData._
 
+import scala.reflect.io.File
+
 /**
  * Created by mark on 04.06.14.
  */
 class EventsSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
   "Creating events from the generated code" should "be possible" in {
-    val screenOff = org.menthal.model.events.ScreenOff()
-    info("" + screenOff)
+    val siasd = AppInstall(1,2,3,"appName", "pkgName")
+    info("" + siasd)
   }
   "Creating events " should "work." in {
     val eventLines = Source.fromURL(getClass.getResource("/raw_events")).getLines()

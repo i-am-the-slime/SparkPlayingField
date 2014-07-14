@@ -89,30 +89,36 @@ class AvroIOSpec extends FlatSpec with Matchers {
     events.saveAsObjectFile(path)
   }
 
-  it should "be deserializable from disk" in {
+  it should "be serializable to disk in binary format 3" in {
 
+    val sc = SparkTestHelper.getLocalSparkContext
+    val data = Seq( AppInstall(1,2,3,"appName", "pkgName") )
+    val events = sc.parallelize(data).map( (1, _) )
+    val path = "./src/test/resources/avro-io-results"
+    File(path).deleteRecursively()
+    events.saveAsObjectFile(path)
   }
 
-//  it should "use parquet" in {
-//    val sc = SparkTestHelper.getLocalSparkContext
-//    val job = new Job
-//    // Configure the ParquetOutputFormat to use Avro as the serialization format
-//    ParquetOutputFormat.setWriteSupportClass(job, classOf[AvroWriteSupport])
-//    // You need to pass the schema to AvroParquet when you are writing objects but not when you
-//    // are reading them. The schema is saved in Parquet file for future readers to use.
-//    //val avroSchema = AvroType[jevents.AppInstall].schema().compactPrint
-//    val schema = jevents.AppInstall.SCHEMA$
-//    AvroParquetOutputFormat.setSchema(job, schema)
-//    // Create a PairRDD with all keys set to null and wrap each amino acid in serializable objects
-//    val data = List(new jevents.AppInstall("s", "a"), new jevents.AppInstall("s", "a"))
-//    val events = sc.parallelize(data)
-//    val pairs = events.map( (null, _) )
-//    // Save the RDD to a Parquet file in our temporary output directory
-//    val path = "./src/test/resources/api_hadoop_file"
-//    File(path).deleteRecursively()
-//    pairs.saveAsNewAPIHadoopFile(path, classOf[Void], classOf[Int],
-//      classOf[ParquetOutputFormat[Int]], job.getConfiguration)
-//  }
+  it should "use parquet" in {
+    val sc = SparkTestHelper.getLocalSparkContext
+    val job = new Job
+    // Configure the ParquetOutputFormat to use Avro as the serialization format
+    ParquetOutputFormat.setWriteSupportClass(job, classOf[AvroWriteSupport])
+    // You need to pass the schema to AvroParquet when you are writing objects but not when you
+    // are reading them. The schema is saved in Parquet file for future readers to use.
+    //val avroSchema = AvroType[jevents.AppInstall].schema().compactPrint
+    val schema = AppInstall.getSchema()
+    AvroParquetOutputFormat.setSchema(job, schema)
+    // Create a PairRDD with all keys set to null and wrap each amino acid in serializable objects
+    val data = List(AppInstall(1, 2, 3,"s", "a"), AppInstall(1, 2, 3, "s", "a"))
+    val events = sc.parallelize(data)
+    val pairs = events.map( (null, _) )
+    // Save the RDD to a Parquet file in our temporary output directory
+    val path = "./src/test/resources/api_hadoop_file"
+    File(path).deleteRecursively()
+    pairs.saveAsNewAPIHadoopFile(path, classOf[Void], classOf[AppInstall],
+      classOf[ParquetOutputFormat[AppInstall]], job.getConfiguration)
+  }
 
   it should "please work" in {
 //    def writeAvroFile[T <: SpecificRecord]( file: File,

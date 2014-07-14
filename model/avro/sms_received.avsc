@@ -1,0 +1,11 @@
+ {
+    "name":"SmsReceived",
+    "type":"record",
+    "fields":[
+       { "name":"id", "type":"long" },
+       { "name":"userId", "type":"long" },
+       { "name":"time", "type":"long" },
+       { "name":"contactHash", "type":"string" },
+       { "name":"msgLength", "type":"int" }
+    ]
+ }

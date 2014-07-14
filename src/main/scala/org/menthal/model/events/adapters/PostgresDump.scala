@@ -62,8 +62,8 @@ object PostgresDump {
             appName <- dict.get("appName")
           } yield new AppListItem(pkgName, appName) )
         Some(AppList(list))
-      case TYPE_APP_INSTALL =>
-        Some(AppInstall(ld(0), ld(1)))
+//      case TYPE_APP_INSTALL =>
+//        Some(AppInstall(ld(0), ld(1)))
       case TYPE_APP_REMOVAL =>
         Some(AppRemoval(ld(0), ld(1)))
       case TYPE_PHONE_BOOT =>

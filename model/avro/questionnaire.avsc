@@ -1,0 +1,12 @@
+{
+   "name":"Questionnaire",
+   "type":"record",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"answer1", "type":"int" },
+      { "name":"answer2", "type":"int" },
+      { "name":"answer3", "type":"int" }
+   ]
+}

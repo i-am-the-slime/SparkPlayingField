@@ -13,8 +13,6 @@ scalaVersion := "2.10.4"
 
 resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
-resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
-
 resolvers += "spray" at "http://repo.spray.io/"
 
 libraryDependencies ++= Seq( //Dates and Times
@@ -36,7 +34,9 @@ libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Parquet
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
-libraryDependencies += "com.julianpeeters" %% "avro-scala-macro-annotations" % "0.1"
+libraryDependencies += "com.julianpeeters" %% "avro-scala-macro-annotations" % "0.2"
+
+libraryDependencies += "it.unimi.dsi" % "fastutil" % "6.5.15"
 
 libraryDependencies += ("com.gensler" %% "scalavro" % "0.6.2").
                             exclude("ch.qos.logback", "logback-classic")

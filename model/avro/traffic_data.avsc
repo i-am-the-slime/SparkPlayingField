@@ -1,0 +1,15 @@
+{
+   "name":"TrafficData",
+   "type":"record",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"connectionType", "type":"int" },
+      { "name":"name", "type":"string" },
+      { "name":"networkType", "type":"int" },
+      { "name":"bytesReceived", "type":"long" },
+      { "name":"bytesTransferred", "type":"long" },
+      { "name":"bytesTransferredOverMobile", "type":"long" }
+   ]
+}

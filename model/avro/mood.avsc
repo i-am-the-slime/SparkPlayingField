@@ -1,0 +1,10 @@
+{
+   "name":"Mood",
+   "type":"record",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"moodValue", "type":"float" }
+   ]
+}

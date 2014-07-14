@@ -1,0 +1,10 @@
+{
+   "name":"TimeZone",
+   "type":"record",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"offsetInMillis", "type":"long" }
+   ]
+}
