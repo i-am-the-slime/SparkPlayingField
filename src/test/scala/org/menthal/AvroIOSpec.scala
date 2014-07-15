@@ -2,6 +2,7 @@ package org.menthal
 
 import java.io.{ByteArrayOutputStream, ByteArrayInputStream}
 
+import org.apache.avro.Schema.Parser
 import org.menthal.model._
 import com.gensler.scalavro.types.AvroType
 import org.joda.time.DateTime
@@ -107,7 +108,9 @@ class AvroIOSpec extends FlatSpec with Matchers {
     // You need to pass the schema to AvroParquet when you are writing objects but not when you
     // are reading them. The schema is saved in Parquet file for future readers to use.
     //val avroSchema = AvroType[jevents.AppInstall].schema().compactPrint
-    val schema = AppInstall.getSchema()
+    val f = new java.io.File("model/avro/app_install.avsc")
+    val schema = new Parser().parse(f)
+//    val schema = AppInstall.getSchema()
     AvroParquetOutputFormat.setSchema(job, schema)
     // Create a PairRDD with all keys set to null and wrap each amino acid in serializable objects
     val data = List(AppInstall(1, 2, 3,"s", "a"), AppInstall(1, 2, 3, "s", "a"))
