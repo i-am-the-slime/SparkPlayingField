@@ -1,5 +1,8 @@
 import sbtassembly.Plugin.AssemblyKeys._
+import scala.io.{Codec, Source}
 import scala.io.Source.fromFile
+import scala.reflect.io.File
+import scala.util.parsing.json.JSON
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
@@ -20,7 +23,11 @@ libraryDependencies ++= Seq( //Dates and Times
   ,"joda-time" % "joda-time" % "2.3"
 )
 
-seq( sbtavro.SbtAvro.avroSettings : _*)
+Seq( sbtavro.SbtAvro.avroSettings : _*)
+
+(sourceDirectory in avroConfig) := new java.io.File("model/avro")
+
+(stringType in avroConfig) := "String"
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
@@ -30,20 +37,21 @@ libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Columnar Stora
 
 libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
 
-libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Parquet
+libraryDependencies += "com.twitter" %% "chill-bijection" % "0.4.0"
+
+libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
 libraryDependencies += "com.julianpeeters" %% "avro-scala-macro-annotations" % "0.2"
 
-libraryDependencies += "it.unimi.dsi" % "fastutil" % "6.5.15"
+libraryDependencies += "it.unimi.dsi" % "fastutil" % "6.5.15" //Faster serialization
 
-libraryDependencies += ("com.gensler" %% "scalavro" % "0.6.2").
-                            exclude("ch.qos.logback", "logback-classic")
+libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
-  ("org.apache.spark" %% "spark-core" % "1.0.0").
+  ("org.apache.spark" %% "spark-core" % "1.0.1").
     exclude("log4j", "log4j").
     exclude("org.mortbay.jetty", "servlet-api").
     exclude("commons-beanutils", "commons-beanutils-core").
@@ -54,39 +62,71 @@ libraryDependencies ++= Seq(
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
 
-val scpTask = TaskKey[String]("scp", "Copies assembly jar to remote location")
-
-traceLevel in scpTask := -1
-
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
 
-scpTask <<= (assembly, streams) map { (asm, s) =>
-  if(new java.io.File(configPath).exists){
-    val account = fromFile(configPath).mkString
-    val local = asm.getPath
-    val remote = account + ":" + asm.getName
-    s.log.info(s"Copying: $local -> $account:$remote")
-    println("To run on the remote server copy, paste, adjust and run this: ")
-    println("=============================")
-    println("ssh " + account)
-    println("=============================")
-    println("cd spark")
-    println("bin/spark-class org.apache.spark.deploy.yarn.Client \\")
-    println("--jar /home/hduser/"+asm.getName+" \\")
-    println("--args yarn-standalone \\")
-    println("--master-memory 512M \\")
-    println("--worker-memory 512M \\")
-    println("--num-workers 1 \\")
-    println("--worker-cores 1 \\")
-    s.log.error("--class org.menthal.CLASSNAME")
-    println("=============================")
-    Process(s"rsync $local $remote") !! s.log
-  }
-  else {
-    sys.error(s"$configPath not found.\n" +
-    s"Please make sure you have password-less access to the hadoop/spark machine.\n" +
-    s"Then create $configPath in the project root.\n" +
-    "The line should contain nothing but the host (e.g. hduser@hd)\n")
-    ""
-  }
-}
+sourceGenerators in Compile += Def.task {
+  val path = "/Users/mark/Documents/SparkPlayingField/model/avro"
+  val directory = File(path).toDirectory
+  val nameNamespaceFields = directory.files.filter(_.extension == "avsc").toList.flatMap( file => {
+    val schema = Source.fromFile(file.path).getLines().reduce(_ + _)
+    val json = JSON.parseFull(schema)
+    json.flatMap{
+      case m:Map[String, Any] =>
+        val triple = for {
+          name <- m.get("name")
+          namespace = m.getOrElse("namespace", "").asInstanceOf[String]
+          f <- m.get("fields")
+          fields = f.asInstanceOf[Seq[Map[String, String]]]
+        } yield (name, namespace, fields)
+        if(triple.isEmpty){
+          sys.error(s"File $file is missing required fields name or fields")
+          None
+        }
+        else {
+          triple match {
+            case Some((name:String, namespace:String, fields:Seq[Map[String, String]])) =>
+              val fieldTuples = for{
+                field <- fields
+                name <- field.get("name")
+                t <- field.get("type")
+                tpe = t.charAt(0).toUpper + t.tail
+              } yield (name, tpe)
+              Some((name, namespace, fieldTuples))
+          }
+        }
+      case _ =>
+        sys.error(s"Could not parse file $file")
+        None
+    }
+  }).groupBy(_._2)
+  var lines:List[String] = List()
+  nameNamespaceFields.keys.map{ ns =>
+    lines = s"package $ns" :: lines
+    lines = "trait MenthalEvent { " :: lines
+    lines = "  def id:Long" :: lines
+    lines = "  def userId:Long" :: lines
+    lines = "  def time:Long" :: lines
+    lines = "}" :: lines
+    val classes = nameNamespaceFields.get(ns).get
+    classes.foreach{ cl =>
+      val name = cl._1
+      val fields = cl._3.map{case (nm:String,tp:String) => nm+":"+tp}.mkString(", ")
+      lines = s"case class CC$name($fields) extends MenthalEvent" :: lines
+    }
+    lines = "\nobject Implicits{" :: lines
+    classes.foreach{ cl =>
+      val name = cl._1
+      val fields = cl._3.map("x."+_._1).mkString(", ")
+      val getFields = cl._3.map{x =>
+        val firstLetterUppercased = x._1.charAt(0).toUpper + x._1.tail
+        "x.get"+firstLetterUppercased
+      }.mkString(", ")
+      lines = s" implicit def toCC$name(x:$name):CC$name = CC$name($getFields)" :: lines
+      lines = s" implicit def to$name(x:CC$name):$name = new $name($fields)" :: lines
+    }
+    lines = "}" :: lines
+    val path = (sourceManaged in Compile).value / "org" / "menthal" / "model" / "events" / "FuckingName.scala"
+    IO.write(path, lines.reverse.mkString("\n"))
+    path
+  }.toSeq
+}.taskValue

@@ -2,7 +2,6 @@ package org.menthal
 
 import com.twitter.algebird.Monoid
 import org.joda.time.DateTime
-import org.menthal.model.events.EventData._
 import org.menthal.model.events._
 import scala.collection.immutable.Queue
 
@@ -96,17 +95,19 @@ case class Unlock(time: Long, app: Option[String] = None) extends AppSessionFrag
 }
 
 object AppSessionContainer {
-  val handledEvents = Set[Long](
-    TYPE_SCREEN_OFF,
-    TYPE_WINDOW_STATE_CHANGED,
-    TYPE_SCREEN_UNLOCK,
-    TYPE_DREAMING_STARTED
+  val handledEvents = Set[Class[_]](
+    classOf[ScreenOff],
+    classOf[WindowStateChanged],
+    classOf[ScreenUnlock],
+    classOf[DreamingStarted]
   )
-  def eventToAppSessionFragment(ev: Event): AppSessionFragment = {
-    ev.data match {
-      case _: ScreenOff | _: DreamingStarted => Lock(ev.time, None)
-      case _: ScreenUnlock => Unlock(ev.time, None)
-      case d: WindowStateChanged => Session(ev.time, ev.time, Some(d.packageName))
+
+  def eventToAppSessionFragment(ev: MenthalEvent): AppSessionFragment = {
+    ev match {
+      case so: CCScreenOff => Lock(so.time, None)
+      case ds: CCDreamingStarted => Lock(ds.time, None)
+      case su: CCScreenUnlock => Unlock(su.time, None)
+      case d: CCWindowStateChanged => Session(d.time, d.time, Some(d.packageName))
     }
   }
 
@@ -118,7 +119,7 @@ object AppSessionContainer {
     Container(sessions, last)
   }
 
-  def apply(ev: Event): AppSessionContainer = {
+  def apply(ev: MenthalEvent): AppSessionContainer = {
     Container(Queue(), eventToAppSessionFragment(ev))
   }
 }

@@ -1,6 +1,7 @@
 {
    "name":"ScreenOn",
    "type":"record",
+  "namespace":"org.menthal.model.events",
    "fields":[
       { "name":"id", "type":"long" },
       { "name":"userId", "type":"long" },
