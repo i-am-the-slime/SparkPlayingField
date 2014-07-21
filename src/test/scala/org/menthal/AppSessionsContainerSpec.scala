@@ -13,10 +13,7 @@ import scala.collection.immutable.Queue
  * Created by mark on 20.05.14.
  */
 
-object Impliciter {
-  implicit def dateToLong(dt:DateTime):Long = dt.getMillis
-}
-import Impliciter._
+
 
 class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
 
