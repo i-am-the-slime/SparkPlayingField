@@ -9,9 +9,6 @@ import org.joda.time.DateTime
 import org.menthal.model.events.MenthalEvent
 import org.menthal.model.scalaevents.adapters.PostgresDump
 
-/**
- * Created by mark on 04.06.14.
- */
 object NewAggregations {
   def main(args:Array[String]) {
     if (args.length < 2) {

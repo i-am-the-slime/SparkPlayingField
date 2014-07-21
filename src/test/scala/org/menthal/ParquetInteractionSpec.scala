@@ -3,9 +3,9 @@ package org.menthal
 import org.apache.avro.Schema.{Parser => AvroParser}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapreduce.Job
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql
 import org.menthal.model.events.{CCAppInstall, WindowStateChanged, AppInstall}
-import org.menthal.model.events.Implicits._
 import parquet.column.ColumnReader
 import parquet.filter.ColumnRecordFilter._
 import org.menthal.model._
@@ -30,7 +30,7 @@ class ParquetInteractionSpec extends FlatSpec with Matchers{
     val install1 = new AppInstall(1,2,3, "appName1", "pkgName1")
     val install2 = new AppInstall(2,3,4, "appName2", "pkgName2")
     val data = List( install1, install2 )
-    val events = sc.parallelize(data)
+    val events:RDD[AppInstall] = sc.parallelize(data)
     val pairs = events.map( (null, _) )
 
     val f = new java.io.File("model/avro/app_install.avsc")
@@ -74,7 +74,7 @@ class ParquetInteractionSpec extends FlatSpec with Matchers{
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.createSchemaRDD
 
-    val events:List[CCAppInstall] = List(new AppInstall(1,2,3,"boo", "galoo"))
+    val events:List[CCAppInstall] = List(CCAppInstall(1,2,3,"boo", "galoo"))
     val rdds = sc.parallelize(events)
 
     val schemaRDDs = createSchemaRDD(rdds)
