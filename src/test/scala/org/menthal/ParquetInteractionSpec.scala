@@ -5,7 +5,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql
-import org.menthal.model.events.{CCAppInstall, WindowStateChanged, AppInstall}
+import org.menthal.model.events.{CCScreenOn, CCAppInstall, WindowStateChanged, AppInstall}
 import parquet.column.ColumnReader
 import parquet.filter.ColumnRecordFilter._
 import org.menthal.model._
@@ -62,11 +62,11 @@ class ParquetInteractionSpec extends FlatSpec with Matchers{
     filteredFile.foreach(ParquetInteractionSpec.assertionFunction)
 
     //Cleanup
-    File(path).deleteRecursively()
+    //File(path).deleteRecursively()
     sc.stop()
   }
 
-  ignore should "write and read stuff with Spark's write to parquet" in {
+  it should "write and read stuff with Spark's write to parquet" in {
     val path = "hey.parquet"
     File(path).deleteRecursively()
 
@@ -74,14 +74,12 @@ class ParquetInteractionSpec extends FlatSpec with Matchers{
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.createSchemaRDD
 
-    val events:List[CCAppInstall] = List(CCAppInstall(1,2,3,"boo", "galoo"))
+    val events = List(CCAppInstall(1,2,3,"boo", "galoo"))
     val rdds = sc.parallelize(events)
-
     val schemaRDDs = createSchemaRDD(rdds)
     schemaRDDs.saveAsParquetFile(path)
     val parquetFile = sqlContext.parquetFile(path)
     parquetFile.foreach(ParquetInteractionSpec.printEm)
-
     sc.stop()
   }
 }
