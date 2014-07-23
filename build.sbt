@@ -92,6 +92,7 @@ sourceGenerators in Compile += Def.task {
                 tpe = t.charAt(0).toUpper + t.tail
               } yield (name, tpe)
               Some((name, namespace, fieldTuples))
+            case _ => None
           }
         }
       case _ =>

@@ -29,7 +29,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     sc.stop()
   }
 
-  "The FileIO class" should "read and write RDDs of AppSession" in {
+  "The ParquetIO class" should "read and write RDDs of AppSession" in {
     val data = sc.parallelize(Seq(
       new AppInstall(1,2,3, "appName", "pkgName"),
       new AppInstall(7,8,11, "frederik", "209")
@@ -40,7 +40,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     readResult zip data foreach ParquetIOSpec.compareThem
   }
 
-  "The FileIO class" should "read and write RDDs of WindowStateChanged" in {
+  "The ParquetIO class" should "read and write RDDs of WindowStateChanged" in {
     val data = sc.parallelize(Seq(
       new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust"),
       new WindowStateChanged(7,8,11, "frederik", "209", "schnarbeltir")
@@ -51,7 +51,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     readResult zip data foreach ParquetIOSpec.compareThem
   }
 
-  "The FileIO class" should "apply UnboundRecordFilters" in {
+  "The ParquetIO class" should "apply UnboundRecordFilters" in {
     val data = sc.parallelize(Seq(
       new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust"),
       new WindowStateChanged(7,8,11, "frederik", "209", "slllllljltir")

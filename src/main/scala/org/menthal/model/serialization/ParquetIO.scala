@@ -1,26 +1,17 @@
 package org.menthal.model.serialization
 
-import java.io.ByteArrayOutputStream
-
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.avro.Schema
-import org.apache.avro.Schema.Parser
-import org.apache.avro.file.DataFileWriter
-import org.apache.avro.reflect.AvroSchema
-import org.apache.avro.specific.{SpecificDatumWriter, SpecificRecord}
+import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.menthal.model.events.{AppInstall, MenthalEvent}
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
 import parquet.hadoop.{ParquetInputFormat, ParquetOutputFormat}
 
 import scala.reflect.ClassTag
-import scala.reflect.io.File
-import scala.util.Try
 
 object ParquetIO {
 
