@@ -125,7 +125,7 @@ sourceGenerators in Compile += Def.task {
       lines = s" implicit def to$name(x:CC$name):$name = new $name($fields)" :: lines
     }
     lines = "}" :: lines
-    val path = (sourceManaged in Compile).value / "org" / "menthal" / "model" / "events" / "FuckingName.scala"
+    val path = (sourceManaged in Compile).value / "compiled_avro" / "org" / "menthal" / "model" / "events" / "FuckingName.scala"
     IO.write(path, lines.reverse.mkString("\n"))
     path
   }.toSeq

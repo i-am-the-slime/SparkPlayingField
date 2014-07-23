@@ -4,13 +4,13 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.menthal.model.events.{CCCallReceived, CCSmsReceived, MenthalEvent}
 
-import org.menthal.model.events.MenthalEvent._
+import org.menthal.model.events.MenthalUtils._
 import org.menthal.model.implicits.EventImplicts._
 import org.joda.time.DateTime
-import com.twitter.algebird.Operators._
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Semigroup
 import org.menthal.model.scalaevents.adapters.PostgresDump
+import com.twitter.algebird.Operators._
 
 /**
  * Created by mark on 18.05.14.
@@ -50,18 +50,18 @@ object GeneralAggregations {
     toMap(events)
   }
 
-  def toMap[A:Semigroup](events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Long]] = {
+  def toMap(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Long]] = {
     val buckets: UserBucketsRDD[Map[String, Long]] = events.map {
-      e => ((e.userId, roundTime(e.time)), eventAsMap(e))
+      e => ((e.userId, roundTime(new DateTime(e.time))), eventAsMap(e))
     }
     buckets reduceByKey (_ + _)
   }
 
-  def toCounter[B](events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Int]] = {
-    val buckets = events.map {
-        e => ((e.userId, roundTime(e.time)), eventAsCounter(e))
-      }
-    buckets reduceByKey (_ + _)
-  }
+  //def toCounter(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Int]] = {
+  //  val buckets = events.map {
+  //      e => ((e.userId, roundTime(new DateTime(e.time)), eventAsCounter(e))
+  //   }
+  //  buckets reduceByKey (_ + _)
+  //}
 }
 
