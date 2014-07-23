@@ -26,7 +26,7 @@ object NewAggregations {
   def linesToEvents(lines:RDD[String]):RDD[MenthalEvent] =
     lines.flatMap(PostgresDump.tryToParseLineFromDump)
 
-  def reduceToAppContainers(events:RDD[MenthalEvent]):RDD[Pair[Long, AppSessionContainer]] = {
+  def reduceToAppContainers(events:RDD[MenthalEvent])={//:RDD[Pair[Long, AppSessionContainer]] = {
     val containers: RDD[Pair[Pair[Long, Long],AppSessionContainer]] = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.getClass)
       time = event.time

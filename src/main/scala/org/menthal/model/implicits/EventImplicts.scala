@@ -7,5 +7,5 @@ import org.joda.time.DateTime
  */
 object EventImplicts {
   implicit def dateToLong(dt:DateTime):Long = dt.getMillis
-  implicit def longToDate(ln: Long): DateTime = longToDate(ln)
+  //implicit def longToDate(ln: Long): DateTime = longToDate(ln)
 }
