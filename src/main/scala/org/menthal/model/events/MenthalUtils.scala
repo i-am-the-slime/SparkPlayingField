@@ -1,14 +1,13 @@
 package org.menthal.model.events
 
 import org.joda.time.{Hours, DateTime}
-import org.menthal.model.events.{CCCallReceived, CCSmsReceived, MenthalEvent}
 import org.menthal.model.implicits.EventImplicts._
-
+import com.twitter.algebird.Operators._
 
 /**
  * Created by konrad on 21.07.2014.
  */
-object MenthalEvent {
+object MenthalUtils {
 
   def eventAsKeyValuePars(event: MenthalEvent): List[(String, Long)] = {
     event match {
@@ -16,7 +15,6 @@ object MenthalEvent {
       case CCCallMissed(_, _, _, contactHash, _) => List((contactHash, 0L))
       case CCCallOutgoing(_, _, _, contactHash, _, duration) => List((contactHash, duration))
       case CCCallReceived(_, _, _, contactHash, _, duration) => List((contactHash, duration))
-      case CCSmsReceived(_, _, _, contactHash, msgLength) => List((contactHash, msgLength.toLong))
       case CCSmsSent(_, _, _, contactHash, msgLength) => List((contactHash, msgLength.toLong))
       case CCWhatsAppReceived(_, _, _, contactHash, msgLength, _) => List((contactHash, msgLength.toLong))
       case CCWhatsAppSent(_, _, _, contactHash, msgLength,_) => List((contactHash, msgLength.toLong))
@@ -30,7 +28,7 @@ object MenthalEvent {
   }
 
   def eventAsCounter(event: MenthalEvent): Map[String, Int] = {
-    eventAsKeyValuePars(event) map {kv => Map(kv._1 -> 1)} sum
+    eventAsKeyValuePars(event) map { kv => Map(kv._1 -> 1)} reduce(_ + _)
   }
 
   def roundTime(time: DateTime): DateTime = {
@@ -48,11 +46,11 @@ object MenthalEvent {
     }
   }
 
-  def getSplitingTime(start: DateTime, duration: Long): List[(DateTime, Long)] = {
-    if (roundTime(start + duration) > roundTime(start)) {
-      val new_start = roundTimeCeiling(start + duration)
+  def getSplittingTime(start: DateTime, duration: Long): List[(DateTime, Long)] = {
+    if (roundTime(new DateTime(start + duration)) > roundTime(start)) {
+      val new_start = roundTimeCeiling(new DateTime(start + duration))
       val newDuration = new_start - start
-      (start, newDuration) :: getSplitingTime(new_start, duration - newDuration)
+      (start, newDuration) :: getSplittingTime(new_start, duration - newDuration)
     }
     else
       List((start, duration))
@@ -61,7 +59,7 @@ object MenthalEvent {
   def splitEventByRoundedTime(event: MenthalEvent): List[MenthalEvent] = {
       event match {
         case CCCallReceived(id, userId, time, contactHash, startTimestamp, durationInMillis) => {
-          for ((start, duration) <- getSplitingTime(time, durationInMillis))
+          for ((start, duration) <- getSplittingTime(new DateTime(time), durationInMillis))
           yield CCCallReceived(id, userId, start, contactHash, start, duration)
         }
         case _ => List(event)
