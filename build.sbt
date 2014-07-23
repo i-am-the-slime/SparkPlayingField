@@ -65,7 +65,7 @@ addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.fu
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
 
 sourceGenerators in Compile += Def.task {
-  val path = "/Users/mark/Documents/SparkPlayingField/model/avro"
+  val path = "./model/avro"
   val directory = File(path).toDirectory
   val nameNamespaceFields = directory.files.filter(_.extension == "avsc").toList.flatMap( file => {
     val schema = Source.fromFile(file.path).getLines().reduce(_ + _)
