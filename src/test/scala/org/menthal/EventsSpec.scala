@@ -15,9 +15,6 @@ import spray.json._
 
 import scala.reflect.io.File
 
-/**
- * Created by mark on 04.06.14.
- */
 class EventsSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
   "Creating events from the generated code" should "be possible" in {
     val siasd = new org.menthal.model.events.AppInstall(1,2,3,"appName", "pkgName")

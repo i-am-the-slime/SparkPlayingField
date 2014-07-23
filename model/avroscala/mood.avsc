@@ -1,0 +1,11 @@
+{
+   "name":"CCMood",
+   "type":"record",
+  "namespace":"org.menthal.model.events",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"moodValue", "type":"float" }
+   ]
+}
