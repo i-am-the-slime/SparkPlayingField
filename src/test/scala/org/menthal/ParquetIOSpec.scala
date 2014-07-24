@@ -16,17 +16,18 @@ import scala.util.Try
 
 class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
-  var sc:SparkContext = _
+  @transient var sc:SparkContext = _
   val path = "./src/test/resources/" + "ParquetIOTest"
 
   override def beforeEach(){
-    sc = SparkTestHelper.getLocalSparkContext
+    sc = SparkTestHelper.localSparkContext
     Try(File(path).deleteRecursively())
   }
 
   override def afterEach() = {
     Try(File(path).deleteRecursively())
     sc.stop()
+    sc = null
   }
 
   "The ParquetIO class" should "read and write RDDs of AppSession" in {

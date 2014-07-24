@@ -9,14 +9,15 @@ import scala.util.Try
 
 class NewAggregationsSpec extends FlatSpec with Matchers with BeforeAndAfterEach {
 
-  var sc:SparkContext = _
+  @transient var sc:SparkContext = _
 
   override def beforeEach(){
-    sc = SparkTestHelper.getLocalSparkContext
+    sc = SparkTestHelper.localSparkContext
   }
 
   override def afterEach() = {
     sc.stop()
+    sc = null
   }
 
 //  "The function aggregate" should "take an RDD of String and return another RDD of String" in {

@@ -5,6 +5,10 @@ SparkPlayingField
 
 To build run
 
+Add % provided to spark dependency before you submit it to the cluster.
+example:
+ ("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
+
 sbt assembly
 
 Copy the file in target/...assembly..jar to the server.

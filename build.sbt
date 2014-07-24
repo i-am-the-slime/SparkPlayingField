@@ -1,4 +1,5 @@
-import sbtassembly.Plugin.AssemblyKeys._
+import sbtassembly.Plugin._
+import AssemblyKeys._
 import scala.io.{Codec, Source}
 import scala.io.Source.fromFile
 import scala.reflect.io.File
@@ -31,34 +32,38 @@ Seq( sbtavro.SbtAvro.avroSettings : _*)
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
-libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
+//libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
 
-libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Columnar Storage for Hadoop
+libraryDependencies += ("com.twitter" % "parquet-avro" % "1.5.0") //Columnar Storage for Hadoop
 
 libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
 
-libraryDependencies += "com.twitter" %% "chill-bijection" % "0.4.0"
+libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.4.0").
+  exclude("com.esotericsoftware.minlog", "minlog")
 
 libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
-libraryDependencies += "com.julianpeeters" %% "avro-scala-macro-annotations" % "0.2"
+//libraryDependencies += "com.julianpeeters" %% "avro-scala-macro-annotations" % "0.2"
 
-libraryDependencies += "it.unimi.dsi" % "fastutil" % "6.5.15" //Faster serialization
+//libraryDependencies += "it.unimi.dsi" % "fastutil" % "6.5.15" //Faster serialization
 
-libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
+//libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
-  ("org.apache.spark" %% "spark-core" % "1.0.1").
+  ("org.apache.spark" %% "spark-core" % "1.0.0"). //("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
     exclude("log4j", "log4j").
-    exclude("org.mortbay.jetty", "servlet-api").
+    exclude("commons-beanutils", "commons-beanutils").
     exclude("commons-beanutils", "commons-beanutils-core").
-    exclude("commons-collections", "commons-collections").
     exclude("commons-collections", "commons-collections").
     exclude("com.esotericsoftware.minlog", "minlog")
 )
+
+test in assembly := {}
+
+fork in Test := true
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
 
