@@ -1,5 +1,6 @@
 package org.menthal
 
+import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.menthal.model.events.{WindowStateChanged, AppInstall, CCAppInstall}
@@ -25,7 +26,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
   }
 
   override def afterEach() = {
-    Try(File(path).deleteRecursively())
+//    Try(File(path).deleteRecursively())
     sc.stop()
     sc = null
   }
@@ -35,7 +36,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new AppInstall(1,2,3, "appName", "pkgName"),
       new AppInstall(7,8,11, "frederik", "209")
     ))
-    ParquetIO.write(sc, data, path, AppInstall.SCHEMA$)
+    ParquetIO.write(sc, data, path)
     val readResult = ParquetIO.read(path, sc)
 
     readResult zip data foreach ParquetIOSpec.compareThem
@@ -46,7 +47,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust"),
       new WindowStateChanged(7,8,11, "frederik", "209", "schnarbeltir")
     ))
-    ParquetIO.write(sc, data, path, WindowStateChanged.SCHEMA$)
+    ParquetIO.write(sc, data, path)
     val readResult = ParquetIO.read(path, sc)
 
     readResult zip data foreach ParquetIOSpec.compareThem
@@ -57,7 +58,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust"),
       new WindowStateChanged(7,8,11, "frederik", "209", "slllllljltir")
     ))
-    ParquetIO.write(sc, data, path, WindowStateChanged.SCHEMA$)
+    ParquetIO.write(sc, data, path)
 
     val filteredData = sc.parallelize(Seq(
       new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust")
@@ -68,12 +69,26 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     readResult zip filteredData foreach ParquetIOSpec.compareThem
 
   }
+
+  "The ParquetIO class" should "write single records" in {
+    val data = new WindowStateChanged(1,2,3, "appName", "pkgName", "banana")
+    ParquetIO.writeOne(sc, data.asInstanceOf[SpecificRecord], path)
+    val readResult = ParquetIO.read(path, sc)
+
+    readResult zip sc.parallelize(Seq(data)) foreach ParquetIOSpec.compareThem
+  }
+
+  "The ParquetIO class" should "write single AppInstalls" in {
+    val data = new AppInstall(1,2,3, "appName", "pkgName")
+    ParquetIO.writeOne(sc, data.asInstanceOf[SpecificRecord], path)
+    val readResult = ParquetIO.read(path, sc)
+
+    readResult zip sc.parallelize(Seq(data)) foreach ParquetIOSpec.compareThem
+  }
 }
 
 object ParquetIOSpec extends Matchers{
   def compareThem(tup:(Any, Any)) = {
-    System.out.println(tup._1.toString)
-    System.out.println(tup._2.toString)
     tup._1 shouldBe tup._2
   }
 

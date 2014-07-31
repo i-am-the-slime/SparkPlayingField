@@ -53,7 +53,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
-  ("org.apache.spark" %% "spark-core" % "1.0.0"). //("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
+  ("org.apache.spark" %% "spark-core" % "1.0.0" % "provided"). //("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
     exclude("log4j", "log4j").
     exclude("commons-beanutils", "commons-beanutils").
     exclude("commons-beanutils", "commons-beanutils-core").
@@ -108,17 +108,36 @@ sourceGenerators in Compile += Def.task {
   var lines:List[String] = List()
   nameNamespaceFields.keys.map{ ns =>
     lines = s"package $ns" :: lines
+    lines = "import org.apache.avro.specific.SpecificRecord" :: lines
+    lines = "import org.apache.spark.Partitioner" :: lines
+    lines = "import Implicits._" :: lines
     lines = "trait MenthalEvent { " :: lines
     lines = "  def id:Long" :: lines
     lines = "  def userId:Long" :: lines
     lines = "  def time:Long" :: lines
+    lines = "  def toAvro:SpecificRecord" :: lines
     lines = "}" :: lines
     val classes = nameNamespaceFields.get(ns).get
     classes.foreach{ cl =>
       val name = cl._1
       val fields = cl._3.map{case (nm:String,tp:String) => nm+":"+tp}.mkString(", ")
       lines = s"case class CC$name($fields) extends MenthalEvent" :: lines
+      lines = s"{ def toAvro:$name = this }" :: lines
     }
+    lines = "class EventPartitioner extends Partitioner {" :: lines
+    val numberOfClasses = classes.length
+    lines = s"  override def numPartitions: Int = $numberOfClasses" :: lines
+    lines = "" :: lines
+    lines = "  override def getPartition(key: Any): Int = {" :: lines
+    lines = "    val event = key.asInstanceOf[MenthalEvent]" :: lines
+    lines = "    event.toAvro match {" :: lines
+    classes.zipWithIndex.foreach{ case ((className, _, _),index) =>
+      lines = s"      case _:$className => $index" :: lines
+    }
+    lines = "    }" :: lines
+    lines = "  }" :: lines
+    lines = "}" :: lines
+    lines = "" :: lines
     lines = "\nobject Implicits{" :: lines
     classes.foreach{ cl =>
       val name = cl._1

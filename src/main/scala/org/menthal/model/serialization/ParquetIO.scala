@@ -15,21 +15,40 @@ import scala.reflect.ClassTag
 
 object ParquetIO {
 
-  def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema: Schema)(implicit ct:ClassTag[A]) = {
+  def writeOne[A <: SpecificRecord](sc:SparkContext, data:A, path:String)(implicit ct:ClassTag[A]) = {
     val writeJob = Job.getInstance(new Configuration)
     ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
+    val pairs: RDD[(Void, A)] = sc.parallelize(  List(Tuple2(null, data))  )
 
-    val pairs:RDD[(Void, A)] = data.map((null, _))
-
-    AvroParquetOutputFormat.setSchema(writeJob, schema)
+    AvroParquetOutputFormat.setSchema(writeJob, data.getSchema)
+    println("D   "+data.getClass.toString)
 
     pairs.saveAsNewAPIHadoopFile(
       path,
       classOf[Void],
-      ct.runtimeClass,
+      data.getClass,
       classOf[ParquetOutputFormat[A]],
       writeJob.getConfiguration)
+    println("E")
+  }
 
+  def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String)(implicit ct:ClassTag[A]) = {
+    val isEmpty = data.mapPartitions(iter => Iterator(! iter.hasNext)).reduce(_ && _)
+    if(!isEmpty) {
+      val writeJob = Job.getInstance(new Configuration)
+      ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
+      val pairs: RDD[(Void, A)] = data.map((null, _))
+
+      AvroParquetOutputFormat.setSchema(writeJob, data.first().getSchema)
+
+      pairs.saveAsNewAPIHadoopFile(
+        path,
+        classOf[Void],
+        ct.runtimeClass,
+        classOf[ParquetOutputFormat[A]],
+        writeJob.getConfiguration)
+
+    }
   }
 
   def read[A <: SpecificRecord](path: String, sc: SparkContext, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
