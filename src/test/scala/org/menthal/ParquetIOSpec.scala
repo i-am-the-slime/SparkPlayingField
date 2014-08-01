@@ -70,21 +70,6 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
   }
 
-  "The ParquetIO class" should "write single records" in {
-    val data = new WindowStateChanged(1,2,3, "appName", "pkgName", "banana")
-    ParquetIO.writeOne(sc, data.asInstanceOf[SpecificRecord], path)
-    val readResult = ParquetIO.read(path, sc)
-
-    readResult zip sc.parallelize(Seq(data)) foreach ParquetIOSpec.compareThem
-  }
-
-  "The ParquetIO class" should "write single AppInstalls" in {
-    val data = new AppInstall(1,2,3, "appName", "pkgName")
-    ParquetIO.writeOne(sc, data.asInstanceOf[SpecificRecord], path)
-    val readResult = ParquetIO.read(path, sc)
-
-    readResult zip sc.parallelize(Seq(data)) foreach ParquetIOSpec.compareThem
-  }
 }
 
 object ParquetIOSpec extends Matchers{

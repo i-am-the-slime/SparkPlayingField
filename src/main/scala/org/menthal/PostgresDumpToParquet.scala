@@ -86,15 +86,4 @@ object PostgresDumpToParquet {
     ParquetIO.write(sc, windowStateChanged, outputPath + "/window_state_changed")
   }
 
-  def work2(sc:SparkContext, dumpFilePath:String, outputPath:String) = {
-    sc.textFile(dumpFilePath)
-      .flatMap(line => PostgresDump.tryToParseLineFromDump(line))
-      .map(_.toAvro)
-      .foreach( obj => {
-        val path = outputPath + "/" + obj.getClass.toString.split("\\.").last
-        ParquetIO.writeOne(sc, obj, path)
-      }
-      )
-  }
-
 }

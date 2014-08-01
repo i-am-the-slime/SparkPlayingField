@@ -1648,6 +1648,8 @@ COPY common_event (id, user_id, "time", event_type_id, data) FROM stdin;
 191015	154	2013-05-29 21:32:57.877+02	1007	"[\\"gps\\",\\"11.0\\",\\"7.09814555\\",\\"50.7365353\\"]"
 191016	154	2013-05-29 21:30:47.028+02	64	"[\\"Menthal\\",\\"org.menthal\\",2]"
 191017	154	2013-05-29 22:07:10.111+02	1005	"[]"
+1910171	154	2013-05-29 22:07:10.111+02	1017	"[]"
+1910172	154	2013-05-29 22:07:10.111+02	1018	"[]"
 191018	154	2013-05-29 22:02:57.903+02	1007	"[\\"network\\",\\"30.0\\",\\"7.0964929\\",\\"50.7368284\\"]"
 191409	1	2013-05-24 00:04:21.95+02	32	"[\\"System Android\\",\\"android/com.android.internal.policy.impl.KeyguardViewManager$KeyguardViewHost\\",\\"\\"]"
 191410	1	2013-05-23 23:34:29.628+02	32	"[\\"System Android\\",\\"android/com.android.internal.policy.impl.KeyguardViewManager$KeyguardViewHost\\",\\"\\"]"

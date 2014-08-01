@@ -15,22 +15,6 @@ import scala.reflect.ClassTag
 
 object ParquetIO {
 
-  def writeOne[A <: SpecificRecord](sc:SparkContext, data:A, path:String)(implicit ct:ClassTag[A]) = {
-    val writeJob = Job.getInstance(new Configuration)
-    ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
-    val pairs: RDD[(Void, A)] = sc.parallelize(  List(Tuple2(null, data))  )
-
-    AvroParquetOutputFormat.setSchema(writeJob, data.getSchema)
-    println("D   "+data.getClass.toString)
-
-    pairs.saveAsNewAPIHadoopFile(
-      path,
-      classOf[Void],
-      data.getClass,
-      classOf[ParquetOutputFormat[A]],
-      writeJob.getConfiguration)
-    println("E")
-  }
 
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String)(implicit ct:ClassTag[A]) = {
     val isEmpty = data.mapPartitions(iter => Iterator(! iter.hasNext)).reduce(_ && _)

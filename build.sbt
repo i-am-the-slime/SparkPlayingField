@@ -53,7 +53,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
-  ("org.apache.spark" %% "spark-core" % "1.0.0" % "provided"). //("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
+  //("org.apache.spark" %% "spark-core" % "1.0.0").
+  ("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
     exclude("log4j", "log4j").
     exclude("commons-beanutils", "commons-beanutils").
     exclude("commons-beanutils", "commons-beanutils-core").

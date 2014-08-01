@@ -36,7 +36,28 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someEvent shouldBe expectedEvent
   }
 
-  "Some other test" should "work" in {
-    PostgresDumpToParquet.work2(sc, inputPath, outputPath)
+  "When given an input and output file" should "read the file and output the results for smss sent" in {
+    PostgresDumpToParquet.work(sc, inputPath , outputPath)
+    val result:RDD[SmsSent] = ParquetIO.read(outputPath + "/sms_sent", sc)
+    val someEvent = result.filter(smsRec => smsRec.getId == 192040L).take(1).toList(0)
+    val hash = "676962b809fac8b6cb64113f6ee3bc594ca3e7b59cb35863c15dd69f668b7763131e0c9a7708f5d9201e1e64783ac6eeb14c36b382bf7da14042575c54230f46"
+    val expectedEvent = new SmsSent(192040L, 1L, 1369649490619L, hash, 125)
+    someEvent shouldBe expectedEvent
+  }
+
+  "When given an dreaming input and output file" should "read the file and output the results" in {
+    PostgresDumpToParquet.work(sc, inputPath , outputPath)
+    val result:RDD[DreamingStarted] = ParquetIO.read(outputPath + "/dreaming_started", sc)
+    val someDreamingEvent = result.filter(dreamRec => dreamRec.getId == 1910171L).take(1).toList(0)
+    val expectedDreamingEvent = new DreamingStarted(1910171L, 154L, 1369858030111L)
+    someDreamingEvent shouldBe expectedDreamingEvent
+  }
+
+  "When given an dreaming stopped input and output file" should "read the file and output the results" in {
+    PostgresDumpToParquet.work(sc, inputPath , outputPath)
+    val result:RDD[DreamingStopped] = ParquetIO.read(outputPath + "/dreaming_stopped", sc)
+    val someDreamingEvent = result.filter(dreamRec => dreamRec.getId == 1910172L).take(1).toList(0)
+    val expectedDreamingEvent = new DreamingStopped(1910172L, 154L, 1369858030111L)
+    someDreamingEvent shouldBe expectedDreamingEvent
   }
 }

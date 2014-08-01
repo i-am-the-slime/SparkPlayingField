@@ -12,6 +12,8 @@ example:
 sbt assembly
 
 Copy the file in target/...assembly..jar to the server.
+Da shit:
+scp -P 20022 dev/SparkPlayingField/target/scala-2.10/sparkplayingfield-assembly-0.1.jar hduser@131.220.9.194:/home/hduser/
 
 Ssh into the server and rename the file to maderfaker.jar
 
