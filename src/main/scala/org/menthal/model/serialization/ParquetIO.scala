@@ -7,6 +7,7 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.menthal.model.events.DreamingStarted
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
 import parquet.hadoop.{ParquetInputFormat, ParquetOutputFormat}
@@ -23,13 +24,13 @@ object ParquetIO {
       ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
       val pairs: RDD[(Void, A)] = data.map((null, _))
 
-      AvroParquetOutputFormat.setSchema(writeJob, data.first().getSchema)
+      AvroParquetOutputFormat.setSchema(writeJob, DreamingStarted.SCHEMA$)
 
       pairs.saveAsNewAPIHadoopFile(
         path,
         classOf[Void],
-        ct.runtimeClass,
-        classOf[ParquetOutputFormat[A]],
+        classOf[DreamingStarted],
+        classOf[ParquetOutputFormat[DreamingStarted]],
         writeJob.getConfiguration)
 
     }

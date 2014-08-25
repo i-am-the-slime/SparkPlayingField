@@ -6,9 +6,11 @@ import scala.io.Source
 import scala.reflect.io.File
 import scala.util.parsing.json.JSON
 
-val test = new AppInstall(1,2,3,"appName", "appSausage")
+//val test = new AppInstall(1,2,3,"appName", "appSausage")
 //
 //
-test match {
-  case x:CCAppInstall => println("beer")
-}
+//test match {
+//  case x:CCAppInstall => println("beer")
+//}
+val a = List(1,2,3)
+println(a)

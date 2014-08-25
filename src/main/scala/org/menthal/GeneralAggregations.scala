@@ -25,7 +25,7 @@ object GeneralAggregations {
     val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"))
     val dumpFile = "/data"
     val eventsDump = sc.textFile(dumpFile, 2)
-    //    aggregate(eventsDump, marksFilter)
+    aggregateHourlyFromString(eventsDump, receivedSmsFilter)
     sc.stop()
   }
 
@@ -33,7 +33,6 @@ object GeneralAggregations {
   type EventPredicate[A] = MenthalEvent => Boolean
 
 
-  //TODO use generic numeric types from Spire if possible?
   def getEventsFromLines(lines: RDD[String], filter: MenthalEvent => Boolean): RDD[MenthalEvent] = {
     for {
       line <- lines
@@ -45,23 +44,24 @@ object GeneralAggregations {
   def receivedSmsFilter(event: MenthalEvent): Boolean =
     event.isInstanceOf[CCSmsReceived]
 
-  def aggregate(lines: RDD[String], filter: MenthalEvent => Boolean): RDD[(((Long, DateTime), Map[String, Long]))] = {
+
+  def aggregateHourlyFromString(lines: RDD[String], filter: MenthalEvent => Boolean): RDD[(((Long, DateTime), Map[String, Long]))] = {
     val events = getEventsFromLines(lines, filter)
-    toMap(events)
+    aggregateHourlyMap(events)
   }
 
-  def toMap(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Long]] = {
+  def aggregateHourlyMap(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Long]] = {
     val buckets: UserBucketsRDD[Map[String, Long]] = events.map {
       e => ((e.userId, roundTime(new DateTime(e.time))), eventAsMap(e))
     }
     buckets reduceByKey (_ + _)
   }
 
-  //def toCounter(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Int]] = {
-  //  val buckets = events.map {
-  //      e => ((e.userId, roundTime(new DateTime(e.time)), eventAsCounter(e))
-  //   }
-  //  buckets reduceByKey (_ + _)
-  //}
+  def aggregateHourlyCounter(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Int]] = {
+    val buckets = events.map {
+        e => ((e.userId, roundTime(new DateTime(e.time))), eventAsCounter(e))
+    }
+    buckets reduceByKey (_ + _)
+  }
 }
 

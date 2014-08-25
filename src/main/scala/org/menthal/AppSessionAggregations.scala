@@ -9,7 +9,7 @@ import org.joda.time.DateTime
 import org.menthal.model.events.MenthalEvent
 import org.menthal.model.scalaevents.adapters.PostgresDump
 
-object NewAggregations {
+object AppSessionAggregations {
   def main(args:Array[String]) {
     if (args.length < 2) {
       System.err.println("Usage: NewAggregations dumpFile")
