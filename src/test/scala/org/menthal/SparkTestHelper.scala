@@ -1,9 +1,13 @@
 package org.menthal
 
+import java.util.logging.{Level, Logger}
+
 import org.apache.spark.{SparkConf, SparkContext}
 
 object SparkTestHelper {
   def localSparkContext: SparkContext = {
+    val parquetHadoopLogger = Logger.getLogger("parquet.hadoop")
+    parquetHadoopLogger.setLevel(Level.SEVERE)
     val conf = new SparkConf()
       .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")

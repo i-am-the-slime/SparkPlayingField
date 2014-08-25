@@ -47,6 +47,7 @@ libraryDependencies += ("com.gensler" %% "scalavro" % "0.6.2").
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
   ("org.apache.spark" %% "spark-core" % "1.0.0").
+ // ("org.apache.spark" %% "spark-core" % "1.0.1" % "provided").
     exclude("log4j", "log4j").
     exclude("org.mortbay.jetty", "servlet-api").
     exclude("commons-beanutils", "commons-beanutils-core").
