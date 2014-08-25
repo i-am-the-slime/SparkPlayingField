@@ -1,5 +1,7 @@
 package org.menthal
 
+import java.util.logging.{Level, Logger}
+
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.menthal.model.events._
@@ -22,12 +24,13 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
   }
 
   override def afterEach() {
-//    Try(File(outputPath).deleteRecursively())
+    Try(File(outputPath).deleteRecursively())
     sc.stop()
     sc = null
   }
 
-  "When given an input and output file" should "read the file and output the results" in {
+//  "When given an input and output file" should "read the file and output the results" in {
+  ignore should "read the file and output the results correctly" in {
     PostgresDumpToParquet.work(sc, inputPath , outputPath)
     val result:RDD[SmsReceived] = ParquetIO.read(outputPath + "/sms_received", sc)
     val someEvent = result.filter(smsRec => smsRec.getId == 191444L).take(1).toList(0)
@@ -36,7 +39,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someEvent shouldBe expectedEvent
   }
 
-  "When given an input and output file" should "read the file and output the results for smss sent" in {
+//  "When given an input and output file" should "read the file and output the results for smss sent" in {
+  ignore should "read the file and output the results for smss sent" in {
     PostgresDumpToParquet.work(sc, inputPath , outputPath)
     val result:RDD[SmsSent] = ParquetIO.read(outputPath + "/sms_sent", sc)
     val someEvent = result.filter(smsRec => smsRec.getId == 192040L).take(1).toList(0)
@@ -45,7 +49,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someEvent shouldBe expectedEvent
   }
 
-  "When given an dreaming input and output file" should "read the file and output the results" in {
+//  "When given an dreaming input and output file" should "read the file and output the results" in {
+  ignore should "read the file and output the results" in {
     PostgresDumpToParquet.work(sc, inputPath , outputPath)
     val result:RDD[DreamingStarted] = ParquetIO.read(outputPath + "/dreaming_started", sc)
     val someDreamingEvent = result.filter(dreamRec => dreamRec.getId == 1910171L).take(1).toList(0)
@@ -53,11 +58,23 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someDreamingEvent shouldBe expectedDreamingEvent
   }
 
-  "When given an dreaming stopped input and output file" should "read the file and output the results" in {
+//  "When given an dreaming stopped input and output file" should "read the file and output the results" in {
+  ignore should "read the file and output the results, too" in {
     PostgresDumpToParquet.work(sc, inputPath , outputPath)
     val result:RDD[DreamingStopped] = ParquetIO.read(outputPath + "/dreaming_stopped", sc)
     val someDreamingEvent = result.filter(dreamRec => dreamRec.getId == 1910172L).take(1).toList(0)
     val expectedDreamingEvent = new DreamingStopped(1910172L, 154L, 1369858030111L)
     someDreamingEvent shouldBe expectedDreamingEvent
+  }
+
+  "The big dump" should "work" in {
+    val path = "/Users/mark/temp/events_dump_24_01_13.sql"
+    PostgresDumpToParquet.work(sc, path, path+"Dembowski")
+  }
+
+//  "When given a file with possibly wrong dreaming events" should "crash or not" in {
+  ignore should "crash or not" in {
+    val path = "/Users/mark/temp/dreamingstarted"
+    PostgresDumpToParquet.work(sc, path, path+"OUT")
   }
 }
