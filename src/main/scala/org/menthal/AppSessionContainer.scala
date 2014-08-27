@@ -17,9 +17,11 @@ import DateTimeImplicits._
 
 sealed abstract class AppSessionContainer {
   def sessions: Queue[AppSessionFragment]
+  def toAppSessions(userId: Long): List[AppSession]
 }
 
 case class Empty() extends AppSessionContainer {
+  def toAppSessions(userId: Long): List[AppSession] = List()
   val sessions = Queue.empty
 }
 
@@ -67,13 +69,20 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
     }
   }
   override def toString:String = "\n" + sessions.toString + " " +  last.toString
+
+  def toAppSessions(userId: Long): List[AppSession] = {
+    this.toQueue.toList.flatMap(_.toAppSession(userId))
+  }
+
 }
 
 
 sealed abstract class AppSessionFragment {
   val time: Long
   val app: Option[String]
+  def toAppSession(userId: Long): Option[AppSession]
 }
+
 
 case class Session(time: Long, end: Long, app: Option[String]) extends AppSessionFragment
 {
@@ -82,16 +91,25 @@ case class Session(time: Long, end: Long, app: Option[String]) extends AppSessio
     app.getOrElse("") +
     "\t" + end.minus(time.getMillis+7200000).toString("HH:mm:ss\t") +
     end.toString("\n\t\tHH:mm:ss:ms\t")
+
+  def toAppSession(userId: Long): Option[AppSession] = {
+    app match {
+      case None => None
+      case appName => Some(new AppSession(userId, time, end - time, appName.get, appName.get))
+    }
+  }
 }
 
 case class Lock(time: Long, app: Option[String] = None) extends AppSessionFragment
 {
   override def toString = "\nLock\t" + time.toString("HH:mm:ss:ms\t") + app.getOrElse("")
+  def toAppSession(userId: Long): Option[AppSession] = None
 }
 
 case class Unlock(time: Long, app: Option[String] = None) extends AppSessionFragment
 {
   override def toString = "\nUnlock\t" + time.toString("HH:mm:ss:ms\t") + app.getOrElse("")
+  def toAppSession(userId: Long): Option[AppSession] = None
 }
 
 object AppSessionContainer {
@@ -123,6 +141,8 @@ object AppSessionContainer {
     Container(Queue(), eventToAppSessionFragment(ev))
   }
 }
+
+
 
 object AppSessionMonoid extends Monoid[AppSessionContainer] {
   implicit val appSessionMonoid : Monoid[AppSessionContainer] = AppSessionMonoid

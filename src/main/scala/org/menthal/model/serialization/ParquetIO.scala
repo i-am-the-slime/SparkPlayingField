@@ -17,36 +17,19 @@ import scala.reflect.ClassTag
 object ParquetIO {
 
 
-  def writeDreamingStarted(sc:SparkContext, data:RDD[DreamingStarted], path:String) = {
-    val isEmpty = data.mapPartitions(iter => Iterator(!iter.hasNext)).reduce(_ && _)
-    if(!isEmpty) {
-      val writeJob = Job.getInstance(new Configuration)
-      ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
-      val pairs: RDD[(Void, DreamingStarted)] = data.map((null, _))
-      AvroParquetOutputFormat.setSchema(writeJob, data.first().getSchema)
-      pairs.saveAsNewAPIHadoopFile(
-        path,
-        classOf[Void],
-        classOf[DreamingStarted],
-        classOf[ParquetOutputFormat[DreamingStarted]],
-        writeJob.getConfiguration)
-    }
-  }
-
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) = {
     val isEmpty = data.mapPartitions(iter => Iterator(! iter.hasNext)).reduce(_ && _)
     if(!isEmpty) {
       val writeJob = Job.getInstance(new Configuration)
       ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
       val pairs: RDD[(Void, A)] = data.map((null, _))
-
-      AvroParquetOutputFormat.setSchema(writeJob, DreamingStarted.SCHEMA$)
+      AvroParquetOutputFormat.setSchema(writeJob, schema)
 
       pairs.saveAsNewAPIHadoopFile(
         path,
         classOf[Void],
-        classOf[DreamingStarted],
-        classOf[ParquetOutputFormat[DreamingStarted]],
+        ct.runtimeClass,
+        classOf[ParquetOutputFormat[A]],
         writeJob.getConfiguration)
 
     }

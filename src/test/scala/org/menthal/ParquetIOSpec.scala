@@ -38,7 +38,6 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     ))
     ParquetIO.write(sc, data, path, AppInstall.getClassSchema)
     val readResult = ParquetIO.read(path, sc)
-
     readResult zip data foreach ParquetIOSpec.compareThem
   }
 

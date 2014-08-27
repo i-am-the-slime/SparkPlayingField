@@ -12,6 +12,7 @@ import scala.reflect.io.File
 import scala.util.Try
 
 class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
+  //TODO fix localpaths in this file
 
   @transient var sc:SparkContext = _
   val basePath = "src/test/resources/"
@@ -67,7 +68,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someDreamingEvent shouldBe expectedDreamingEvent
   }
 
-  "The big dump" should "work" in {
+  //"The big dump"
+  ignore should "work" in {
     val path = "/Users/mark/temp/events_dump_24_01_13.sql"
     PostgresDumpToParquet.work(sc, path, path+"Dembowski")
   }

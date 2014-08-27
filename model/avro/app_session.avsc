@@ -7,6 +7,6 @@
       { "name":"time", "type":"long" },
       { "name":"duration", "type": "long"},
       { "name":"appName", "type":"string" },
-      { "name":"packageName", "type":"string" },
+      { "name":"packageName", "type":"string" }
    ]
 }

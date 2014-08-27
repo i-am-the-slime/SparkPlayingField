@@ -1,33 +1,47 @@
 package org.menthal
 
 import org.apache.spark.{Partitioner, SparkContext}
-import org.menthal.AppSessionMonoid._
+//import org.menthal.AppSessionMonoid._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Operators._
-import org.joda.time.DateTime
-import org.menthal.model.events.MenthalEvent
+import org.menthal.model.events.{AppSession, MenthalEvent}
 import org.menthal.model.scalaevents.adapters.PostgresDump
+import org.menthal.model.serialization.ParquetIO
 
 object AppSessionAggregations {
   def main(args:Array[String]) {
-    if (args.length < 2) {
-      System.err.println("Usage: NewAggregations dumpFile")
-      System.exit(1)
+    if (args.length != 3) {
+      System.err.println("First argument is master, second input path, third argument is output path")
     }
-    val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"))//, SparkContext.jarOfClass(this.getClass))
-    val dumpFile = args(1)
-    val eventsDump = sc.textFile(dumpFile,2)
-    val events = linesToEvents(eventsDump)
-    reduceToAppContainers(events)
-    sc.stop()
+    else {
+      val sc = new SparkContext(args(0),
+        "AppSessionAggregation",
+        System.getenv("SPARK_HOME"),
+        Nil,
+        Map(
+          "spark.serializer" -> "org.apache.spark.serializer.KryoSerializer",
+          "spark.kryo.registrator" -> "org.menthal.model.serialization.MenthalKryoRegistrator",
+          "spark.kryo.referenceTracking" -> "false")
+      )
+      val dumpFile = args(1)
+      val outputFile = args(2)
+      work(sc, dumpFile, outputFile)
+      sc.stop()
+    }
   }
 
-  def linesToEvents(lines:RDD[String]):RDD[MenthalEvent] =
-    lines.flatMap(PostgresDump.tryToParseLineFromDump)
+  def work(sc:SparkContext, dumpFilePath:String, outputPath:String) = {
+    val events = for {
+      line <- sc.textFile(dumpFilePath)
+      event <- PostgresDump.tryToParseLineFromDump(line)
+    } yield event
+    val sessions = reduceToAppSessions(events)
+    ParquetIO.write(sc, sessions, outputPath + "/app_sessions", AppSession.getClassSchema)
+  }
 
-  def reduceToAppContainers(events:RDD[MenthalEvent])={//:RDD[Pair[Long, AppSessionContainer]] = {
-    val containers: RDD[Pair[Pair[Long, Long],AppSessionContainer]] = for {
+  def reduceToAppSessions(events:RDD[MenthalEvent]):RDD[AppSession] = {
+    val containers = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.getClass)
       time = event.time
       user = event.userId
@@ -35,6 +49,7 @@ object AppSessionAggregations {
     } yield ((time, user), container)
 
     val sortedAndGrouped = containers.sortByKey().map{case ((time,user), container) => (user,container)}
-    sortedAndGrouped.reduceByKey( _ + _ )
+    val reducedContainers = sortedAndGrouped.reduceByKey( _ + _ )
+    reducedContainers flatMap {case (user, container) => container.toAppSessions(user)}
   }
 }
