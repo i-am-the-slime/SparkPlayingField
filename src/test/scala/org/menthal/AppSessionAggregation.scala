@@ -31,4 +31,10 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
       session:AppSession => info(s"User \nSessions $session")
     }
   }
+
+
+
+
+
+
 }

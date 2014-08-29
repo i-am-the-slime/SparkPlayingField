@@ -1,7 +1,7 @@
 package org.menthal
 
 import org.apache.spark.{Partitioner, SparkContext}
-//import org.menthal.AppSessionMonoid._
+import org.menthal.AppSessionMonoid._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Operators._
@@ -48,8 +48,8 @@ object AppSessionAggregations {
       container = AppSessionContainer(event)
     } yield ((time, user), container)
 
-    val sortedAndGrouped = containers.sortByKey().map{case ((time,user), container) => (user,container)}
-    val reducedContainers = sortedAndGrouped.reduceByKey( _ + _ )
+    val sortedAndGrouped = containers.sortByKey().map {case ((time,user), container) => (user,container)}
+    val reducedContainers = sortedAndGrouped.reduceByKey(_ + _)
     reducedContainers flatMap {case (user, container) => container.toAppSessions(user)}
   }
 }

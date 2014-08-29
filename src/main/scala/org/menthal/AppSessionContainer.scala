@@ -42,8 +42,8 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
   }
 
   def update(newFragment: AppSessionFragment): Container = {
+    assert(last.time <= newFragment.time)
     (last, newFragment) match {
-
       //Unlocks - they are usually special cases so we describe them first
       case (Unlock(t,app), _) => //add app session at the end and run update again with same argument
         Container(this.toQueue, Session(t, newFragment.time, app)) update newFragment

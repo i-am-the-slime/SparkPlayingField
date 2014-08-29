@@ -176,18 +176,18 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       CCWindowStateChanged(0,0, new DateTime(now plusMinutes 1).getMillis, "", "B", ""),
       CCWindowStateChanged(0,0, new DateTime(now plusMinutes 2).getMillis, "", "C", ""),
       CCScreenOff(0,0, new DateTime(now plusMinutes 3).getMillis),
-      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 2).getMillis, "", "D", ""),
-      CCScreenUnlock(0,0, new DateTime(now plusMinutes 4).getMillis),
-      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 5).getMillis, "", "E", "")
+      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 4).getMillis, "", "D", ""),
+      CCScreenUnlock(0,0, new DateTime(now plusMinutes 5).getMillis),
+      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 6).getMillis, "", "E", "")
     ) map (event => AppSessionContainer(event)) reduce (_+_)
     val correct = AppSessionContainer(
       Session(now, now plusMinutes 1, Some("A")),
       Session(now plusMinutes 1, now plusMinutes 2, Some("B")),
       Session(now plusMinutes 2, now plusMinutes 3, Some("C")),
       Lock(now plusMinutes 3, Some("D")), //added
-      Unlock(now plusMinutes 4, Some("D")), //added
-      Session(now plusMinutes 4, now plusMinutes 5, Some("D")),
-      Session(now plusMinutes 5, now plusMinutes 5, Some("E"))
+      Unlock(now plusMinutes 5, Some("D")), //added
+      Session(now plusMinutes 5, now plusMinutes 6, Some("D")),
+      Session(now plusMinutes 6, now plusMinutes 6, Some("E"))
     )
     events should be (correct)
   }
