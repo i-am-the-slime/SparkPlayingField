@@ -1,7 +1,5 @@
 package org.menthal
 
-import org.menthal.model.events.{MenthalEvent, CCWindowStateChanged, CCScreenUnlock, CCScreenOff}
-import org.menthal.model.scalaevents._
 import org.scalatest.{Matchers, BeforeAndAfterAll, FlatSpec}
 import org.joda.time.DateTime
 import scala.util.Random
@@ -10,6 +8,7 @@ import org.menthal.AppSessionMonoid.appSessionMonoid
 import scala.collection.immutable.Queue
 import org.menthal.model.implicits.EventImplicts._
 import org.menthal.model.events._
+
 /**
  * Created by mark on 20.05.14.
  */
@@ -214,5 +213,25 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
 //    events.sessions.foreach(x =>
 //      info(new DateTime(x.time).toString("HH:MM:SS  ") + x.toString)
 //    )
+  }
+
+  "App Container to AppSession test" should "convert 'em correctly" in {
+
+    val container = AppSessionContainer(
+      Session(now, now plusMinutes 1, None),
+      Session(now plusMinutes 1, now plusMinutes 2, Some("B")),
+      Session(now plusMinutes 2, now plusMinutes 3, Some("C")),
+      Lock(now plusMinutes 3, Some("D")), //added
+      Unlock(now plusMinutes 5, Some("D")), //added
+      Session(now plusMinutes 5, now plusMinutes 6, Some("D")),
+      Session(now plusMinutes 6, now plusMinutes 6, Some("E"))
+    )
+    val sessions = container.toAppSessions(1)
+    val correctSessions = List(
+      new AppSession(1, (now plusMinutes 1).getMillis, 60000, "B", "B"),
+      new AppSession(1, (now plusMinutes 2).getMillis, 60000, "C", "C"),
+      new AppSession(1, (now plusMinutes 5).getMillis, 60000, "D", "D"),
+      new AppSession(1, (now plusMinutes 6).getMillis, 0, "E", "E"))
+    sessions should be (correctSessions)
   }
 }

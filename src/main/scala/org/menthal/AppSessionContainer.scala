@@ -113,11 +113,11 @@ case class Unlock(time: Long, app: Option[String] = None) extends AppSessionFrag
 }
 
 object AppSessionContainer {
-  val handledEvents = Set[Class[_]](
-    classOf[ScreenOff],
-    classOf[WindowStateChanged],
-    classOf[ScreenUnlock],
-    classOf[DreamingStarted]
+  val handledEvents = Set[Class[_ <: MenthalEvent]](
+    classOf[CCScreenOff],
+    classOf[CCWindowStateChanged],
+    classOf[CCScreenUnlock],
+    classOf[CCDreamingStarted]
   )
 
   def eventToAppSessionFragment(ev: MenthalEvent): AppSessionFragment = {
