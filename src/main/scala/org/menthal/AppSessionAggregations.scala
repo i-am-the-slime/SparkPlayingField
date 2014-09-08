@@ -43,13 +43,13 @@ object AppSessionAggregations {
   def reduceToAppSessions(events:RDD[MenthalEvent]):RDD[AppSession] = {
     val containers = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.getClass)
-      time = event.time
       user = event.userId
+      time = event.time
       container = AppSessionContainer(event)
-    } yield ((time, user), container)
+    } yield ((user, time), container)
 
-    val sortedAndGrouped = containers.sortByKey().map {case ((time,user), container) => (user,container)}
-    val reducedContainers = sortedAndGrouped.reduceByKey(_ + _)
+    val sortedAndGrouped = containers.sortByKey().map {case ((user, time), container) => (user,container)}
+    val reducedContainers = sortedAndGrouped.foldByKey(AppSessionMonoid.zero)(_ + _)
     reducedContainers flatMap {case (user, container) => container.toAppSessions(user)}
   }
 }

@@ -31,7 +31,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
 
   "The function aggregate" should "take an RDD of String and return another RDD of String" in {
     val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList
-    val mockRDDs = sc.parallelize(eventLines)
+    val mockRDDs = sc.parallelize(eventLines, 4)
     val events = mockRDDs.flatMap(line => PostgresDump.tryToParseLineFromDump(line))
 
     val containers = for {
@@ -39,11 +39,11 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
       time = event.time
       user = event.userId
       container = AppSessionContainer(event)
-    } yield ((time, user), container)
+    } yield ((user, time), container)
 
     info(s"${containers.count()}")
-    val sortedAndGrouped = containers.sortByKey().map {case ((time,user), container) => (user,container)}
-    val reducedContainers = sortedAndGrouped.reduceByKey(_ + _)
+    val sortedAndGrouped = containers.sortByKey().map {case ((user, time), container) => (user,container)}
+    val reducedContainers = sortedAndGrouped.foldByKey(AppSessionMonoid.zero)(_ + _)
     val result = reducedContainers flatMap {case (user, container) => container.toAppSessions(user)}
     val len = result.count()
 
