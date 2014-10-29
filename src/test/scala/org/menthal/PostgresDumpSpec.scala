@@ -147,8 +147,8 @@ class PostgresDumpSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
   }
 
   "parseDumpFile" should "produce RDD of MenthalEvents" in {
-    sc = SparkTestHelper.localSparkContext
-    val events = parseDumpFile(sc, )
-    events.collect shouldBe
+    val sc = SparkTestHelper.localSparkContext
+    val events = PostgresDump.parseDumpFile(sc, "src/test/resources/raw_events")
+    events.collect().size shouldBe 7
   }
 }

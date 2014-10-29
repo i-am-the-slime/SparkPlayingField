@@ -33,8 +33,8 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
   "The ParquetIO class" should "read and write RDDs of AppSession" in {
     val data = sc.parallelize(Seq(
-      new AppInstall(1,2,3, "appName", "pkgName"),
-      new AppInstall(7,8,11, "frederik", "209")
+      new AppInstall(1L, 2L, 3L, "appName", "pkgName"),
+      new AppInstall(7L, 8L, 11L, "frederik", "209")
     ))
     ParquetIO.write(sc, data, path, AppInstall.getClassSchema)
     val readResult = ParquetIO.read(path, sc)
@@ -43,8 +43,8 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
   "The ParquetIO class" should "read and write RDDs of WindowStateChanged" in {
     val data = sc.parallelize(Seq(
-      new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust"),
-      new WindowStateChanged(7,8,11, "frederik", "209", "schnarbeltir")
+      new WindowStateChanged(1L,2L,3L, "appName", "pkgName", "knackwrust"),
+      new WindowStateChanged(7L,8L,11L, "frederik", "209", "schnarbeltir")
     ))
     ParquetIO.write(sc, data, path, WindowStateChanged.getClassSchema)
     val readResult = ParquetIO.read(path, sc)
@@ -54,13 +54,13 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
   "The ParquetIO class" should "apply UnboundRecordFilters" in {
     val data = sc.parallelize(Seq(
-      new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust"),
-      new WindowStateChanged(7,8,11, "frederik", "209", "slllllljltir")
+      new WindowStateChanged(1L,2L,3L, "appName", "pkgName", "knackwrust"),
+      new WindowStateChanged(7L,8L,11L, "frederik", "209", "slllllljltir")
     ))
     ParquetIO.write(sc, data, path, WindowStateChanged.getClassSchema)
 
     val filteredData = sc.parallelize(Seq(
-      new WindowStateChanged(1,2,3, "appName", "pkgName", "knackwrust")
+      new WindowStateChanged(1L,2L,3L, "appName", "pkgName", "knackwrust")
     ))
 
     val readResult = ParquetIO.read(path, sc, Some(classOf[ParquetIOSpec.SomeFilter]))

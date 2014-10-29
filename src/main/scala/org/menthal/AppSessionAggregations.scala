@@ -28,7 +28,7 @@ object AppSessionAggregations {
   def dumpToAppSessions(sc:SparkContext, dumpFilePath:String, outputPath:String) = {
     val events = parseDumpFile(sc, dumpFilePath)
     val sessions = eventsToAppSessions(events)
-    ParquetIO.write(sc, sessions, outputPath + "/app_sessions", AppSession.getClassSchema)
+    ParquetIO write(sc, sessions, outputPath + "/app_sessions", AppSession.getClassSchema)
   }
 
   def transformToAppSessionsContainer(events:Iterable[MenthalEvent]):AppSessionContainer = {

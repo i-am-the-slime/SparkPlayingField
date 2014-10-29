@@ -27,17 +27,16 @@ object PostgresDumpToParquet {
       )
       val dumpFile = args(1)
       val outputFile = args(2)
-      work(sc, dumpFile, outputFile)
+      parseFromDumpAndWriteToParquet(sc, dumpFile, outputFile)
       sc.stop()
     }
   }
 
-  def work(sc:SparkContext, dumpFilePath:String, outputPath:String) = {
+  def parseFromDumpAndWriteToParquet(sc:SparkContext, dumpFilePath:String, outputPath:String) = {
     val menthalEvents = for {
       line <- sc.textFile(dumpFilePath)
       event <- PostgresDump.tryToParseLineFromDump(line)
     } yield event.toAvro
-
 
     //TODO: Maybe make this more generic
     val appInstall = menthalEvents.filter(_.isInstanceOf[AppInstall])

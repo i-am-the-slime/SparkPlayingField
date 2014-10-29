@@ -30,6 +30,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     AppSessionContainer(CCScreenOff(0, 0, now)) should be (
     AppSessionContainer(Lock(now,None)))
   }
+
   it should "convert ScreenUnlock to Unlock(_), Start(_)" in {
     AppSessionContainer(CCScreenUnlock(0, 0, now )) should be(
     AppSessionContainer(Unlock(now, None)))
@@ -228,10 +229,10 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     )
     val sessions = container.toAppSessions(1)
     val correctSessions = List(
-      new AppSession(1, (now plusMinutes 1).getMillis, 60000, "B", "B"),
-      new AppSession(1, (now plusMinutes 2).getMillis, 60000, "C", "C"),
-      new AppSession(1, (now plusMinutes 5).getMillis, 60000, "D", "D"),
-      new AppSession(1, (now plusMinutes 6).getMillis, 0, "E", "E"))
+      new AppSession(1, (now plusMinutes 1).getMillis, 60000, "B"),
+      new AppSession(1, (now plusMinutes 2).getMillis, 60000, "C"),
+      new AppSession(1, (now plusMinutes 5).getMillis, 60000, "D"),
+      new AppSession(1, (now plusMinutes 6).getMillis, 0, "E"))
     sessions should be (correctSessions)
   }
 }

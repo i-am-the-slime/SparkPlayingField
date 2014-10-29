@@ -95,7 +95,7 @@ case class Session(time: Long, end: Long, app: Option[String]) extends AppSessio
   def toAppSession(userId: Long): Option[AppSession] = {
     app match {
       case None => None
-      case appName => Some(new AppSession(userId, time, end - time, appName.get, appName.get))
+      case appName => Some(new AppSession(userId, time, end - time, appName.get))
     }
   }
 }
