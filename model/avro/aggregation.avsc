@@ -1,5 +1,5 @@
 {
-   "name":"AppUsageAggregation",
+   "name":"Aggregation",
    "type":"record",
    "namespace":"org.menthal.model.events",
    "fields":[

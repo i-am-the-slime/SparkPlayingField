@@ -1,5 +1,6 @@
 package org.menthal.model.events
 
+import org.apache.spark.SparkContext
 import org.joda.time.{Hours, DateTime}
 import org.menthal.model.implicits.EventImplicts._
 import com.twitter.algebird.Operators._
@@ -31,11 +32,7 @@ object MenthalUtils {
   def eventAsCounter(event: MenthalEvent): Map[String, Int] =
     eventAsKeyValuePairs(event).map{ case (k,_) => Map(k -> 1)}.foldLeft(Map[String, Int]())(_ + _)
 
-  def roundTime(time: DateTime): DateTime =
-    time.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
 
-  def roundTimeCeiling(time: DateTime): DateTime =
-    roundTime(time).plusHours(1)
 
   //TODO complete this function
   def getDuration(event: MenthalEvent): Long = {

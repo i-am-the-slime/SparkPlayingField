@@ -6,7 +6,7 @@ import scala.util.Random
 import com.twitter.algebird.Operators._
 import org.menthal.AppSessionMonoid.appSessionMonoid
 import scala.collection.immutable.Queue
-import org.menthal.model.implicits.EventImplicts._
+import org.menthal.model.events.Granularity._
 import org.menthal.model.events._
 
 /**

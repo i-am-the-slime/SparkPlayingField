@@ -145,4 +145,10 @@ class PostgresDumpSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
     val expected = CCWindowStateChanged(79822117, 22812, DateTime.parse("2014-01-22T22:44:04.719+01").getMillis ,"WhatsApp","com.whatsapp","[WhatsApp]")
     result.get shouldBe expected
   }
+
+  "parseDumpFile" should "produce RDD of MenthalEvents" in {
+    sc = SparkTestHelper.localSparkContext
+    val events = parseDumpFile(sc, )
+    events.collect shouldBe
+  }
 }

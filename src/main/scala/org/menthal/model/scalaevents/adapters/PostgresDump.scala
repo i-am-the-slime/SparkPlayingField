@@ -1,5 +1,7 @@
 package org.menthal.model.scalaevents.adapters
 
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 import org.menthal.model.events._
 import spray.json._
@@ -8,6 +10,15 @@ import spray.json.DefaultJsonProtocol._
 import scala.util.Try
 
 object PostgresDump {
+
+  def parseDumpFile(sc: SparkContext, dumpFilePath: String):RDD[MenthalEvent] = {
+    for {
+      line <- sc.textFile(dumpFilePath)
+      event <- PostgresDump.tryToParseLineFromDump(line)
+    } yield event
+  }
+
+
   def tryToParseLineFromDump(dumpLine: String): Option[MenthalEvent] = {
     val rawData = dumpLine.split("\t")
     val event = for {

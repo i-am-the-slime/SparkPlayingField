@@ -21,7 +21,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
   @transient var sc:SparkContext = _
 
   override def beforeEach(){
-    sc = SparkTestHelper.localSparkContext
+    ysc = SparkTestHelper.localSparkContext
   }
 
   override def afterEach() = {
@@ -29,10 +29,25 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
     sc = null
   }
 
-  "The function aggregate" should "take an RDD of String and return another RDD of String" in {
+  def eventsToAppSessions(events: RDD[MenthalEvent]):RDD[AppSession] = ?
+
+
+ def transformToAppSessionsContainer(events:Iterable[MenthalEvent]):AppSessionContainer = ?
+
+  "The function transformToAppSessionsContainer" should "create AppSessionContainer from sorted MenthalEvents" in {
+
+  }
+
+  "The function eventsToAppSession" should
+    "take an RDD of MenthalEvents and return RDD with AppSession based on them" in {
     val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList
     val mockRDDs = sc.parallelize(eventLines, 4)
-    val events = mockRDDs.flatMap(line => PostgresDump.tryToParseLineFromDump(line))
+  }
+
+  "The function dumpToAppSesiions" should "take an path to file and return another RDD of String" in {
+    val eventLines = Source.fromURL(getClass.getResource("/real_events.small")).getLines().toList
+    val mockRDDs = sc.parallelize(eventLines, 4)
+    val events = mockRDDs.flatMap(line => PostgresDump.tryToParseLineFromDump(line))i
 
     val containers = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.getClass)

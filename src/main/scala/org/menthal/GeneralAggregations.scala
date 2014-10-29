@@ -2,10 +2,10 @@ package org.menthal
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
-import org.menthal.model.events.{CCCallReceived, CCSmsReceived, MenthalEvent}
+import org.menthal.model.events.Granularity._
+import org.menthal.model.events.{CCAppUsageAggregation, CCCallReceived, CCSmsReceived, MenthalEvent}
 
 import org.menthal.model.events.MenthalUtils._
-import org.menthal.model.implicits.EventImplicts._
 import org.joda.time.DateTime
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Semigroup
@@ -30,10 +30,10 @@ object GeneralAggregations {
   }
 
   type UserBucketsRDD[A] = RDD[(((Long, DateTime), A))]
-  type EventPredicate[A] = MenthalEvent => Boolean
+  type EventPredicate = MenthalEvent => Boolean
 
 
-  def getEventsFromLines(lines: RDD[String], filter: MenthalEvent => Boolean): RDD[MenthalEvent] = {
+  def getEventsFromLines(lines: RDD[String], filter: EventPredicate): RDD[MenthalEvent] = {
     for {
       line <- lines
       event <- PostgresDump.tryToParseLineFromDump(line)
@@ -44,22 +44,26 @@ object GeneralAggregations {
   def receivedSmsFilter(event: MenthalEvent): Boolean =
     event.isInstanceOf[CCSmsReceived]
 
-
-  def aggregateHourlyFromString(lines: RDD[String], filter: MenthalEvent => Boolean): RDD[(((Long, DateTime), Map[String, Long]))] = {
+  def aggregateFromString(lines: RDD[String], filter: EventPredicate): UserBucketsRDD[Map[String, Long]] = {
     val events = getEventsFromLines(lines, filter)
-    aggregateHourlyMap(events)
+    reduceToUserBucketsMap(events, Hourly)
   }
 
-  def aggregateHourlyMap(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Long]] = {
-    val buckets: UserBucketsRDD[Map[String, Long]] = events.map {
-      e => ((e.userId, roundTime(new DateTime(e.time))), eventAsMap(e))
+  def aggregateEvents(events: RDD[MenthalEvent], granularity: Granularity, name: String): RDD[CCAggregation] = {
+    val buckets = reduceToUserBucketsMap(events, granularity)
+    buckets.map {case ((user, time), bucket) => CCAggregation(user, time, granularity, name, bucket) }
+  }
+
+  def reduceToUserBucketsMap(events: RDD[MenthalEvent], granularity: Granularity): UserBucketsRDD[Map[String, Long]] = {
+    val buckets = events.map {
+      e => ((e.userId, roundTime(e.time, granularity)), eventAsMap(e))
     }
     buckets reduceByKey (_ + _)
   }
 
-  def aggregateHourlyCounter(events: RDD[MenthalEvent]): UserBucketsRDD[Map[String, Int]] = {
+  def reduceToUserBucketCounter(events: RDD[MenthalEvent], granularity: Granularity): UserBucketsRDD[Map[String, Int]] = {
     val buckets = events.map {
-        e => ((e.userId, roundTime(new DateTime(e.time))), eventAsCounter(e))
+        e => ((e.userId, roundTime(e.time, granularity)), eventAsCounter(e))
     }
     buckets reduceByKey (_ + _)
   }

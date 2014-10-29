@@ -1,6 +1,7 @@
 package org.menthal
 
 import org.joda.time.DateTime
+import org.menthal.model.events.Granularity._
 import org.menthal.model.events._
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -37,25 +38,25 @@ class MenthalUtilsSpec extends FlatSpec with Matchers{
   "roundTime" should "time at the previous full hours" in {
     val date = DateTime.parse("2014-01-01T21:58:44.752+01")
     val correctDate = DateTime.parse("2014-01-01T21:00:00.000+01")
-    MenthalUtils.roundTime(date) shouldBe correctDate
+    Granularity.roundTime(date, Hourly) shouldBe correctDate
 
     val date2 = DateTime.parse("2014-01-01T23:05:03.752+01")
     val correctDate2 = DateTime.parse("2014-01-01T23:00:00.000+01")
-    MenthalUtils.roundTime(date2) shouldBe correctDate2
+    Granularity.roundTime(date2, Hourly) shouldBe correctDate2
   }
 
   "roundTimeCeiling" should "time at the next full hours" in {
     val date = DateTime.parse("2014-01-01T21:58:44.752+01")
     val correctDate = DateTime.parse("2014-01-01T22:00:00.000+01")
-    MenthalUtils.roundTimeCeiling(date) shouldBe correctDate
+    Granularity.roundTimeCeiling(date, Hourly) shouldBe correctDate
 
     val date2 = DateTime.parse("2014-01-01T23:05:03.752+01")
     val correctDate2 = DateTime.parse("2014-01-02T00:00:00.000+01")
-    MenthalUtils.roundTimeCeiling(date2) shouldBe correctDate2
+    Granularity.roundTimeCeiling(date2, Hourly) shouldBe correctDate2
 
     val date3 = DateTime.parse("2016-02-28T23:05:03.752+01")
     val correctDate3 = DateTime.parse("2016-02-29T00:00:00.000+01")
-    MenthalUtils.roundTimeCeiling(date3) shouldBe correctDate3
+    Granularity.roundTimeCeiling(date3, Hourly) shouldBe correctDate3
   }
 
   val date = DateTime.parse("2014-01-01T21:58:44.752+01")

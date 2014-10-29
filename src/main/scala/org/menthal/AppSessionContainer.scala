@@ -17,11 +17,11 @@ import DateTimeImplicits._
 
 sealed abstract class AppSessionContainer {
   def sessions: Queue[AppSessionFragment]
-  def toAppSessions(userId: Long): List[AppSession]
+  def toAppSessions(userId: Long): Seq[AppSession]
 }
 
 case class Empty() extends AppSessionContainer {
-  def toAppSessions(userId: Long): List[AppSession] = List()
+  def toAppSessions(userId: Long): Seq[AppSession] = Seq()
   val sessions = Queue.empty
 }
 
@@ -42,7 +42,7 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
   }
 
   def update(newFragment: AppSessionFragment): Container = {
-    assert(last.time <= newFragment.time)
+    //assert(last.time <= newFragment.time)
     (last, newFragment) match {
       //Unlocks - they are usually special cases so we describe them first
       case (Unlock(t,app), _) => //add app session at the end and run update again with same argument
@@ -70,8 +70,8 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
   }
   override def toString:String = "\n" + sessions.toString + " " +  last.toString
 
-  def toAppSessions(userId: Long): List[AppSession] = {
-    this.toQueue.toList.flatMap(_.toAppSession(userId))
+  def toAppSessions(userId: Long): Seq[AppSession] = {
+    this.toQueue.flatMap(_.toAppSession(userId))
   }
 
 }
