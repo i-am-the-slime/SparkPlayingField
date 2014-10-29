@@ -1,6 +1,7 @@
 package org.menthal.model.events
 
 import org.apache.spark.SparkContext
+import Granularity._
 import org.joda.time.{Hours, DateTime}
 import org.menthal.model.implicits.EventImplicts._
 import com.twitter.algebird.Operators._
@@ -43,8 +44,8 @@ object MenthalUtils {
   }
 
   def getSplittingTime(start: DateTime, durationInMillis: Long): List[(DateTime, Long)] = {
-    if (roundTime(new DateTime(start + durationInMillis)) > roundTime(start)) {
-      val newStart = roundTimeCeiling(new DateTime(start))
+    if (roundTime(new DateTime(start + durationInMillis), Hourly) > roundTime(start, Hourly)) {
+      val newStart = roundTimeCeiling(new DateTime(start), Hourly)
       val newDuration = newStart - start
       (start, newDuration) :: getSplittingTime(newStart, durationInMillis - newDuration)
     }

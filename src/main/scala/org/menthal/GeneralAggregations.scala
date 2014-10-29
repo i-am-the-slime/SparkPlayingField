@@ -3,7 +3,7 @@ package org.menthal
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.menthal.model.events.Granularity._
-import org.menthal.model.events.{CCAppUsageAggregation, CCCallReceived, CCSmsReceived, MenthalEvent}
+import org.menthal.model.events.{CCAggregation, CCCallReceived, CCSmsReceived, MenthalEvent}
 
 import org.menthal.model.events.MenthalUtils._
 import org.joda.time.DateTime
@@ -25,7 +25,7 @@ object GeneralAggregations {
     val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"))
     val dumpFile = "/data"
     val eventsDump = sc.textFile(dumpFile, 2)
-    aggregateHourlyFromString(eventsDump, receivedSmsFilter)
+    aggregateFromString(eventsDump, receivedSmsFilter)
     sc.stop()
   }
 
@@ -51,7 +51,7 @@ object GeneralAggregations {
 
   def aggregateEvents(events: RDD[MenthalEvent], granularity: Granularity, name: String): RDD[CCAggregation] = {
     val buckets = reduceToUserBucketsMap(events, granularity)
-    buckets.map {case ((user, time), bucket) => CCAggregation(user, time, granularity, name, bucket) }
+    buckets.map {case ((user, time), bucket) => CCAggregation(user, time, 1, name, bucket.toString()) } //TODO: fix
   }
 
   def reduceToUserBucketsMap(events: RDD[MenthalEvent], granularity: Granularity): UserBucketsRDD[Map[String, Long]] = {
