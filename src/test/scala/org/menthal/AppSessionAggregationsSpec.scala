@@ -18,7 +18,7 @@ import scala.util.Try
 
 class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAfterEach with BeforeAndAfter{
 
-  val basePath = "src/test/resources/"
+  val basePath = ""
 
   @transient var sc:SparkContext = _
 
@@ -34,8 +34,8 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
 
 
   "The function dumpToAppSessions" should "read a dump file and produce parquet output with app sessions" in {
-    val outputPath = basePath+"appSessionsParquetted"
-    val inputPath = basePath + "raw_events_with_wsc"
+    val outputPath = "src/test/resources/appSessionsParquetted"
+    val inputPath = "src/test/resources/raw_events_with_wsc"
     Try(File(outputPath).deleteRecursively())
     AppSessionAggregations.dumpToAppSessions(sc, inputPath, outputPath)
     val result:Array[AppSession] = ParquetIO.read(outputPath + "/app_sessions", sc).collect()

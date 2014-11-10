@@ -19,6 +19,24 @@ resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
 resolvers += "spray" at "http://repo.spray.io/"
 
+val excludeJBossNetty = ExclusionRule(organization = "org.jboss.netty")
+//val excludeIONetty = ExclusionRule(organization = "io.netty")
+val excludeEclipseJetty = ExclusionRule(organization = "org.eclipse.jetty")
+val excludeMortbayJetty = ExclusionRule(organization = "org.mortbay.jetty")
+val excludeAsm = ExclusionRule(organization = "org.ow2.asm")
+val excludeOldAsm = ExclusionRule(organization = "asm")
+val excludeCommonsLogging = ExclusionRule(organization = "commons-logging")
+val excludeSLF4J = ExclusionRule(organization = "org.slf4j")
+//val excludeScalap = ExclusionRule(organization = "org.scala-lang", artifact = "scalap")
+val excludeHadoop = ExclusionRule(organization = "org.apache.hadoop")
+//val excludeCurator = ExclusionRule(organization = "org.apache.curator")
+//val excludePowermock = ExclusionRule(organization = "org.powermock")
+//val excludeFastutil = ExclusionRule(organization = "it.unimi.dsi")
+//val excludeJruby = ExclusionRule(organization = "org.jruby")
+//val excludeThrift = ExclusionRule(organization = "org.apache.thrift")
+val excludeServletApi = ExclusionRule(organization = "javax.servlet", artifact = "servlet-api")
+//val excludeJUnit = ExclusionRule(organization = "junit")
+
 //seq( sbtavro.SbtAvro.avroSettings : _*)
 
 libraryDependencies ++= Seq( //Dates and Times
@@ -50,19 +68,19 @@ libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
-
+libraryDependencies += "org.mortbay.jetty" % "servlet-api" % "3.0.20100224"
+//libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
 
 //libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
 
 libraryDependencies ++= Seq(
-  "org.apache.hadoop" % "hadoop-client" % "2.4.0" % "provided" ,
-  ("org.apache.spark" %% "spark-core" % "1.0.0").
-  //("org.apache.spark" %% "spark-core" % "1.0.0" % "provided").
-    exclude("log4j", "log4j").
-    exclude("commons-beanutils", "commons-beanutils").
-    exclude("commons-beanutils", "commons-beanutils-core").
-    exclude("commons-collections", "commons-collections").
-    exclude("com.esotericsoftware.minlog", "minlog")
+  "org.apache.hadoop" % "hadoop-client" % "2.5.0" % "provided"  excludeAll(excludeJBossNetty,excludeEclipseJetty,  excludeMortbayJetty, excludeAsm, excludeCommonsLogging, excludeSLF4J, excludeOldAsm, excludeServletApi),
+  ("org.apache.spark" %% "spark-core" % "1.1.0" % "provided"  excludeAll(excludeHadoop))
+  //  exclude("log4j", "log4j").
+  //  exclude("commons-beanutils", "commons-beanutils").
+  //  exclude("commons-beanutils", "commons-beanutils-core").
+  //  exclude("commons-collections", "commons-collections").
+  //  exclude("com.esotericsoftware.minlog", "minlog")
 )
 
 test in assembly := {}
@@ -72,6 +90,7 @@ fork in Test := true
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
 
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
+
 
 sourceGenerators in Compile += Def.task {
   val path = "./model/avro"
@@ -161,3 +180,4 @@ sourceGenerators in Compile += Def.task {
 }.taskValue
 
 
+javaHome  := Some(file("/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"))

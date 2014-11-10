@@ -7,19 +7,21 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.menthal.model.events.DreamingStarted
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
 import parquet.hadoop.{ParquetInputFormat, ParquetOutputFormat}
 
 import scala.reflect.ClassTag
+import scala.util.Try
 
 object ParquetIO {
 
 
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) = {
-    val isEmpty = data.mapPartitions(iter => Iterator(! iter.hasNext)).reduce(_ && _)
-    if(!isEmpty) {
+    //val isEmpty = data.fold(0)
+    val isEmpty = Try(data.first).isFailure
+
+    if (!isEmpty) {
       val writeJob = Job.getInstance(new Configuration)
       ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
       val pairs: RDD[(Void, A)] = data.map((null, _))
