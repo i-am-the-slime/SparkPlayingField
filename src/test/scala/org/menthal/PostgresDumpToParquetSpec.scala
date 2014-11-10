@@ -29,6 +29,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     sc.stop()
     sc = null
   }
+
   "When given an input and output file" should "read the file and output the results" in {
     PostgresDumpToParquet.parseFromDumpAndWriteToParquet(sc, inputPath , outputPath)
     val result:RDD[SmsReceived] = ParquetIO.read(outputPath + "/sms_received", sc)

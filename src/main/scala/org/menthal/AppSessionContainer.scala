@@ -7,11 +7,11 @@ import scala.collection.immutable.Queue
 
 
 /**
- * Created by mark on 20.05.14.
+ * Created by Mark on 20.05.14.
  * Update by Konrad 26.05.14
  */
 object DateTimeImplicits {
-  implicit def longToDateTime(timestamp:Long) = new DateTime(timestamp)
+  implicit def longToDateTime(timestamp:Long): DateTime = new DateTime(timestamp)
 }
 import DateTimeImplicits._
 
