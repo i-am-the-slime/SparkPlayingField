@@ -44,7 +44,9 @@ object EventTransformers {
   }
 
   def getSplittingTime(start: DateTime, durationInMillis: Long): List[(DateTime, Long)] = {
-    if (Granularity.roundTime(new DateTime(start + durationInMillis), Granularity.Hourly) > Granularity.roundTime(start, Granularity.Hourly)) {
+    val endTimeRounded = Granularity.roundTime(new DateTime(start + durationInMillis), Granularity.Hourly)
+    val startTimeRounded = Granularity.roundTime(start, Granularity.Hourly)
+    if (endTimeRounded > startTimeRounded) {
       val newStart = Granularity.roundTimeCeiling(new DateTime(start), Granularity.Hourly)
       val newDuration = newStart - start
       (start, newDuration) :: getSplittingTime(newStart, durationInMillis - newDuration)
