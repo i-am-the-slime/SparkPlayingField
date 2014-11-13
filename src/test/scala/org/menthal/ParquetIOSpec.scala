@@ -3,8 +3,8 @@ package org.menthal
 import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.events.{WindowStateChanged, AppInstall, CCAppInstall}
-import org.menthal.model.serialization.ParquetIO
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import parquet.column.ColumnReader
 import parquet.filter.{RecordFilter, UnboundRecordFilter}

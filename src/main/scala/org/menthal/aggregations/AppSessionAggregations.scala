@@ -1,13 +1,13 @@
-package org.menthal
+package org.menthal.aggregations
 
-import org.apache.spark.{Partitioner, SparkContext}
-import org.menthal.AppSessionMonoid._
+import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import com.twitter.algebird.Operators._
+import org.menthal.aggregations.tools.{AppSessionMonoid, AppSessionContainer}
+import org.menthal.io.parquet.ParquetIO
+import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events.{AppSession, MenthalEvent}
-import org.menthal.model.scalaevents.adapters.PostgresDump._
-import org.menthal.model.serialization.ParquetIO
+import PostgresDump._
 import org.menthal.spark.SparkHelper._
 
 object AppSessionAggregations {
@@ -36,7 +36,7 @@ object AppSessionAggregations {
       event <- events if AppSessionContainer.handledEvents.contains(event.getClass)
       container = AppSessionContainer(event)
     } yield container
-    containers.fold(AppSessionMonoid.zero)(_ + _) //Does it makes sense to use par? nope, monoid addition will be slower
+    containers.fold(AppSessionMonoid.zero)(AppSessionMonoid.plus) //Does it makes sense to use par? nope, monoid addition will be slower
   }
 
   def eventsToAppSessions(events: RDD[MenthalEvent]):RDD[AppSession] = {

@@ -1,7 +1,9 @@
 package org.menthal
 
 import org.joda.time.DateTime
-import org.menthal.model.events.Granularity._
+import org.menthal.aggregations.tools.EventTransformers
+import org.menthal.model.Granularity
+import Granularity._
 import org.menthal.model.events._
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -10,29 +12,29 @@ import org.scalatest.{FlatSpec, Matchers}
  */
 class MenthalUtilsSpec extends FlatSpec with Matchers{
   "eventAsKeyValuePairs" should "transform MenthalEvents to Lists" in {
-    MenthalUtils.eventAsKeyValuePairs(CCSmsReceived(1,2,3, "conha", 5)) shouldBe List(("conha", 5L))
-    MenthalUtils.eventAsKeyValuePairs(CCCallMissed(1,2,3, "hash", 4)) shouldBe List(("hash", 0L))
-    MenthalUtils.eventAsKeyValuePairs(CCCallOutgoing(1,2,3, "hash", 4, 5)) shouldBe List(("hash", 5L))
-    MenthalUtils.eventAsKeyValuePairs(CCCallReceived(1,2,3, "hash", 4, 5)) shouldBe List(("hash", 5L))
-    MenthalUtils.eventAsKeyValuePairs(CCSmsSent(1,2,3, "hash", 4)) shouldBe List(("hash", 4L))
-    MenthalUtils.eventAsKeyValuePairs(CCSmsReceived(1,2,3, "hash", 4)) shouldBe List(("hash", 4L))
-    MenthalUtils.eventAsKeyValuePairs(CCWhatsAppSent(1,2,3, "hash", 4, isGroupMessage = false))  shouldBe List(("hash", 4L))
-    MenthalUtils.eventAsKeyValuePairs(CCWhatsAppReceived(1,2,3, "hash", 4, isGroupMessage = true)) shouldBe List(("hash", 4L))
+    EventTransformers.eventAsKeyValuePairs(CCSmsReceived(1,2,3, "conha", 5)) shouldBe List(("conha", 5L))
+    EventTransformers.eventAsKeyValuePairs(CCCallMissed(1,2,3, "hash", 4)) shouldBe List(("hash", 0L))
+    EventTransformers.eventAsKeyValuePairs(CCCallOutgoing(1,2,3, "hash", 4, 5)) shouldBe List(("hash", 5L))
+    EventTransformers.eventAsKeyValuePairs(CCCallReceived(1,2,3, "hash", 4, 5)) shouldBe List(("hash", 5L))
+    EventTransformers.eventAsKeyValuePairs(CCSmsSent(1,2,3, "hash", 4)) shouldBe List(("hash", 4L))
+    EventTransformers.eventAsKeyValuePairs(CCSmsReceived(1,2,3, "hash", 4)) shouldBe List(("hash", 4L))
+    EventTransformers.eventAsKeyValuePairs(CCWhatsAppSent(1,2,3, "hash", 4, isGroupMessage = false))  shouldBe List(("hash", 4L))
+    EventTransformers.eventAsKeyValuePairs(CCWhatsAppReceived(1,2,3, "hash", 4, isGroupMessage = true)) shouldBe List(("hash", 4L))
   }
 
   it should "return an empty list for other MenthalEvents" in {
-    MenthalUtils.eventAsKeyValuePairs(CCDreamingStarted(1,2,3)) shouldBe List()
-    MenthalUtils.eventAsKeyValuePairs(CCAppInstall(1,2,3,"balls", "packageName")) shouldBe List()
+    EventTransformers.eventAsKeyValuePairs(CCDreamingStarted(1,2,3)) shouldBe List()
+    EventTransformers.eventAsKeyValuePairs(CCAppInstall(1,2,3,"balls", "packageName")) shouldBe List()
   }
 
   "eventAsMap" should "turn MenthalEvents into Maps" in {
-    MenthalUtils.eventAsMap(CCCallMissed(1,2,3, "hash", 4)) shouldBe Map("hash" -> 0L)
-    MenthalUtils.eventAsMap(CCAppInstall(1,2,3,"balls", "packageName")) shouldBe Map()
+    EventTransformers.eventAsMap(CCCallMissed(1,2,3, "hash", 4)) shouldBe Map("hash" -> 0L)
+    EventTransformers.eventAsMap(CCAppInstall(1,2,3,"balls", "packageName")) shouldBe Map()
   }
 
   "eventAsCounter" should "count the number of events" in {
-    MenthalUtils.eventAsCounter(CCCallMissed(1,2,3, "hash", 4)) shouldBe Map("hash" -> 1)
-    MenthalUtils.eventAsCounter(CCAppInstall(1,2,3,"balls", "packageName")) shouldBe Map()
+    EventTransformers.eventAsCounter(CCCallMissed(1,2,3, "hash", 4)) shouldBe Map("hash" -> 1)
+    EventTransformers.eventAsCounter(CCAppInstall(1,2,3,"balls", "packageName")) shouldBe Map()
   }
 
   "roundTime" should "time at the previous full hours" in {
@@ -73,13 +75,13 @@ class MenthalUtilsSpec extends FlatSpec with Matchers{
   )
 
   "getSplittingTime" should "yield durations that span over full hours should be split" in {
-    MenthalUtils.getSplittingTime(date, 3600000) shouldBe correct
-    MenthalUtils.getSplittingTime(date, 7200000) shouldBe correct2
-    MenthalUtils.getSplittingTime(date, 1) shouldBe List((date, 1))
+    EventTransformers.getSplittingTime(date, 3600000) shouldBe correct
+    EventTransformers.getSplittingTime(date, 7200000) shouldBe correct2
+    EventTransformers.getSplittingTime(date, 1) shouldBe List((date, 1))
   }
 
   "splitEventByRoundedTime" should "split actual events at full hours" in {
     val correctMapped = correct2.map(x => CCCallReceived(1,2,x._1.getMillis,"hash", x._1.getMillis, x._2))
-    MenthalUtils.splitEventByRoundedTime(CCCallReceived(1,2,3,"hash", date.getMillis,7200000)) shouldBe correctMapped
+    EventTransformers.splitEventByRoundedTime(CCCallReceived(1,2,3,"hash", date.getMillis,7200000)) shouldBe correctMapped
   }
 }

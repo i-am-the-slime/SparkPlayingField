@@ -1,9 +1,8 @@
 package org.menthal
 
 import org.joda.time.DateTime
+import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events._
-import org.menthal.model.scalaevents._
-import org.menthal.model.scalaevents.adapters.PostgresDump
 import org.scalatest.{FlatSpec, Matchers, BeforeAndAfterAll}
 
 /**

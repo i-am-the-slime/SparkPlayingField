@@ -1,13 +1,15 @@
 package org.menthal
 
+import org.menthal.aggregations.tools._
+import org.menthal.model.Granularity
 import org.scalatest.{Matchers, BeforeAndAfterAll, FlatSpec}
 import org.joda.time.DateTime
 import scala.util.Random
 import com.twitter.algebird.Operators._
-import org.menthal.AppSessionMonoid.appSessionMonoid
 import scala.collection.immutable.Queue
-import org.menthal.model.events.Granularity._
 import org.menthal.model.events._
+import org.menthal.model.implicits.DateImplicits._
+import org.menthal.aggregations.tools.AppSessionMonoid._
 
 /**
  * Created by mark on 20.05.14.
@@ -179,7 +181,7 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       CCWindowStateChanged(0,0, new DateTime(now plusMinutes 4).getMillis, "", "D", ""),
       CCScreenUnlock(0,0, new DateTime(now plusMinutes 5).getMillis),
       CCWindowStateChanged(0,0, new DateTime(now plusMinutes 6).getMillis, "", "E", "")
-    ) map (event => AppSessionContainer(event)) reduce (_+_)
+    ) map (event => AppSessionContainer(event)) reduce(_ + _)
     val correct = AppSessionContainer(
       Session(now, now plusMinutes 1, Some("A")),
       Session(now plusMinutes 1, now plusMinutes 2, Some("B")),
@@ -229,10 +231,10 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     )
     val sessions = container.toAppSessions(1)
     val correctSessions = List(
-      new AppSession(1, (now plusMinutes 1).getMillis, 60000, "B"),
-      new AppSession(1, (now plusMinutes 2).getMillis, 60000, "C"),
-      new AppSession(1, (now plusMinutes 5).getMillis, 60000, "D"),
-      new AppSession(1, (now plusMinutes 6).getMillis, 0, "E"))
+      new AppSession(1L, (now plusMinutes 1).getMillis, 60000L, "B"),
+      new AppSession(1L, (now plusMinutes 2).getMillis, 60000L, "C"),
+      new AppSession(1L, (now plusMinutes 5).getMillis, 60000L, "D"),
+      new AppSession(1L, (now plusMinutes 6).getMillis, 0L, "E"))
     sessions should be (correctSessions)
   }
 }

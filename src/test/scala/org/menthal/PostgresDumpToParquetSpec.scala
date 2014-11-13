@@ -4,8 +4,9 @@ import java.util.logging.{Level, Logger}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.menthal.io.PostgresDumpToParquet
+import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.events._
-import org.menthal.model.serialization.ParquetIO
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.reflect.io.File

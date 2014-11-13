@@ -59,7 +59,7 @@ libraryDependencies += ("com.twitter" % "parquet-avro" % "1.5.0") //Columnar Sto
 
 libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Columnar Storage for Hadoop
 
-libraryDependencies += "com.twitter" %% "algebird-core" % "0.6.0" //Monoids
+libraryDependencies += "com.twitter" %% "algebird-core" % "0.8.1" //Monoids
 
 libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.4.0").
   exclude("com.esotericsoftware.minlog", "minlog")
@@ -91,93 +91,152 @@ addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.fu
 
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
 
-
 sourceGenerators in Compile += Def.task {
-  val path = "./model/avro"
-  val directory = File(path).toDirectory
-  val nameNamespaceFields = directory.files.filter(_.extension == "avsc").toList.flatMap( file => {
+  type ClassTriplet = (String, String, Seq[(String, String)])
+  type AvroFileTriplet = (String, String, Seq[Map[String, Any]])
+  def getNameNamespaceAndFields(m:Map[String, Any]): Option[AvroFileTriplet] = {
+    for {
+      name <- m.get("name")
+      deeName = name.asInstanceOf[String]
+      namespace = m.getOrElse("namespace", "").asInstanceOf[String]
+      f <- m.get("fields")
+      fields = f.asInstanceOf[Seq[Map[String, Any]]]
+    } yield (deeName, namespace, fields)
+  }
+  def toCamelToe(s:String):String = s.charAt(0).toUpper + s.tail
+  def parseAvroType(tpe:Any):String = {
+    tpe match {
+      case s:String =>
+        toCamelToe(s)
+      case complex:Map[String, Any] =>
+        complex("type") match {
+          case "map" =>
+            val values = toCamelToe(complex("values").asInstanceOf[String])
+            s"scala.collection.mutable.Map[String, $values]"
+          case "array" =>
+            val items = toCamelToe(complex("items").asInstanceOf[String])
+            s"scala.collection.mutable.Buffer[$items]"
+        }
+    }
+  }
+  def jsonMapsToTuples(fields: Seq[Map[String, Any]]):Seq[(String, String)] =
+    for{
+      field <- fields
+      n <- field.get("name")
+      name = n.asInstanceOf[String]
+      t <- field.get("type")
+      tpe = parseAvroType(t)
+    } yield (name, tpe)
+  def processJson(m:Map[String, Any]): Option[ClassTriplet] = {
+    getNameNamespaceAndFields(m) match {
+      case Some((name:String, namespace:String, fields:Seq[Map[String, String]])) =>
+        val fieldTuples = jsonMapsToTuples(fields)
+        Some((name, namespace, fieldTuples))
+      case _ => None
+    }
+  }
+  def processFile (file:File): Option[ClassTriplet] = {
     val schema = Source.fromFile(file.path).getLines().reduce(_ + _)
     val json = JSON.parseFull(schema)
     json.flatMap{
       case m:Map[String, Any] =>
-        val triple = for {
-          name <- m.get("name")
-          namespace = m.getOrElse("namespace", "").asInstanceOf[String]
-          f <- m.get("fields")
-          fields = f.asInstanceOf[Seq[Map[String, String]]]
-        } yield (name, namespace, fields)
-        if(triple.isEmpty){
-          sys.error(s"File $file is missing required fields name or fields")
-          None
-        }
-        else {
-          triple match {
-            case Some((name:String, namespace:String, fields:Seq[Map[String, String]])) =>
-              val fieldTuples = for{
-                field <- fields
-                name <- field.get("name")
-                t <- field.get("type")
-                tpe = t.charAt(0).toUpper + t.tail
-              } yield (name, tpe)
-              Some((name, namespace, fieldTuples))
-            case _ => None
-          }
-        }
+        processJson(m)
       case _ =>
-        sys.error(s"Could not parse file $file")
         None
     }
-  }).groupBy(_._2)
-  var lines:List[String] = List()
-  nameNamespaceFields.keys.map{ ns =>
-    lines = s"package $ns" :: lines
-    lines = "import org.apache.avro.specific.SpecificRecord" :: lines
-    lines = "import org.apache.spark.Partitioner" :: lines
-    lines = "import Implicits._" :: lines
-    lines = "trait MenthalEvent { " :: lines
-    //lines = "  def id:Long" :: lines
-    lines = "  def userId:Long" :: lines
-    lines = "  def time:Long" :: lines
-    lines = "  def toAvro:SpecificRecord" :: lines
-    lines = "}" :: lines
-    val classes = nameNamespaceFields.get(ns).get
-    classes.foreach{ cl =>
-      val name = cl._1
-      val fields = cl._3.map{case (nm:String,tp:String) => nm+":"+tp}.mkString(", ")
-      lines = s"case class CC$name($fields) extends MenthalEvent" :: lines
-      lines = s"{ def toAvro:$name = this }" :: lines
-    }
-    lines = "class EventPartitioner extends Partitioner {" :: lines
-    val numberOfClasses = classes.length
-    lines = s"  override def numPartitions: Int = $numberOfClasses" :: lines
-    lines = "" :: lines
-    lines = "  override def getPartition(key: Any): Int = {" :: lines
-    lines = "    val event = key.asInstanceOf[MenthalEvent]" :: lines
-    lines = "    event.toAvro match {" :: lines
-    classes.zipWithIndex.foreach{ case ((className, _, _),index) =>
-      lines = s"      case _:$className => $index" :: lines
-    }
-    lines = "    }" :: lines
-    lines = "  }" :: lines
-    lines = "}" :: lines
-    lines = "" :: lines
-    lines = "\nobject Implicits{" :: lines
-    classes.foreach{ cl =>
-      val name = cl._1
-      val fields = cl._3.map("x."+_._1).mkString(", ")
-      val getFields = cl._3.map{x =>
-        val firstLetterUppercased = x._1.charAt(0).toUpper + x._1.tail
-        "x.get"+firstLetterUppercased
-      }.mkString(", ")
-      lines = s" implicit def toCC$name(x:$name):CC$name = CC$name($getFields)" :: lines
-      lines = s" implicit def to$name(x:CC$name):$name = new $name($fields)" :: lines
-    }
-    lines = "}" :: lines
-    val path = (sourceManaged in Compile).value / "compiled_avro" / "org" / "menthal" / "model" / "events" / "FuckingName.scala"
-    IO.write(path, lines.reverse.mkString("\n"))
+  }
+  def classTripletsFromAvroDir(avroPath:String):Seq[ClassTriplet] = {
+    val directory = File(avroPath).toDirectory
+    directory.files.filter(_.extension == "avsc")
+      .toList
+      .flatMap(processFile)
+  }
+  def generateImports(ns: String): List[String] = {
+    List(
+      s"package $ns",
+      "import org.apache.avro.specific.SpecificRecord",
+      //"import org.apache.spark.Partitioner",
+      "import scala.collection.JavaConverters._",
+      "import java.util",
+      "import java.lang",
+      "import scala.collection",
+      "import Implicits._",
+      "\n"
+    )
+  }
+  def generatePartitioner(classes: Seq[ClassTriplet]): List[String] = {
+    var lines: List[String] = List()
+    //lines = "class EventPartitioner extends Partitioner {" :: lines
+    //val numberOfClasses = classes.length
+    //lines = s"  override def numPartitions: Int = $numberOfClasses" :: lines
+    //lines = "" :: lines
+    //lines = "  override def getPartition(key: Any): Int = {" :: lines
+    //lines = "    val event = key.asInstanceOf[MenthalEvent]" :: lines
+    //lines = "    event.toAvro match {" :: lines
+    //classes.zipWithIndex.foreach{ case ((className, _, _),index) =>
+    //  lines = s"      case _:$className => $index" :: lines
+    //}
+    //lines = "    }" :: lines
+    //lines = "  }" :: lines
+    //lines = "}" :: lines
+    //lines = "" :: lines
+    //lines = "\nobject Implicits{" :: lines
+    lines
+  }
+  def generateMainTrait(ns: String): List[String] ={
+    List(
+      "trait MenthalEvent { ",
+      "  def userId:Long",
+      "  def time:Long",
+      "  def toAvro:SpecificRecord",
+      "}\n")
+  }
+  def generateClasses(classes:Seq[ClassTriplet]):List[String] = {
+    classes.flatMap {case (name, _, fieldsList) =>
+      val fields = fieldsList.map {case (nm:String,tp:String) => nm+":"+tp}.mkString(", ")
+      List(s"case class CC$name($fields) extends MenthalEvent", s"{ def toAvro:$name = this }\n")
+    }.toList
+  }
+  def generateImplicits(classes: Seq[ClassTriplet]): List[String] = {
+    val genImplicitsList = classes.flatMap { case (name, _, fields) =>
+      val (scalaFields, javaFields) = fields.map { case (nme, tpe) =>
+        val camelNme = toCamelToe(nme)
+        tpe match {
+          case li if li.startsWith("scala.collection.mutable.Buffer") =>
+            val regex = "scala.collection.mutable.Buffer\\[(.*)\\]".r
+            val elType = regex.findFirstMatchIn(li).get.group(1)
+            (s"x.$nme.asJava", s"x.get$camelNme.asScala")
+          case m if m.startsWith("scala.collection.mutable.Map") =>
+            val regex = "scala.collection.mutable.Map\\[String,(.*)\\]".r
+            val elType = regex.findFirstMatchIn(m).get.group(1)
+            (s"x.$nme.asJava.asInstanceOf[java.util.Map[String, java.lang.$elType]]",
+              s"x.get$camelNme.asScala.asInstanceOf[scala.collection.mutable.Map[String, $elType]]")
+          case _ =>
+            (s"x.$nme", s"x.get$camelNme")
+        }
+      }.unzip
+      List(s" implicit def toCC$name(x:$name):CC$name = CC$name(${javaFields.mkString(", ")})",
+        s" implicit def to$name(x:CC$name):$name = new $name(${scalaFields.mkString(", ")})")
+    }.toList
+    List("\n","object Implicits{") ::: genImplicitsList ::: List("}\n","\n")
+  }
+  val avroPath = "./model/avro"
+  val groupedClassTriplets = classTripletsFromAvroDir(avroPath)
+                                  .groupBy {case (_,namespace, _) => namespace}
+  val paths = groupedClassTriplets.map { case (ns, classes) =>
+    val genImports = generateImports(ns)
+    val genTrait = generateMainTrait(ns)
+    val genClasses = generateClasses(classes)
+    val genImplicits = generateImplicits(classes)
+    val genPartitioner = generatePartitioner(classes)
+    val content = genImports ::: genTrait ::: genClasses ::: genImplicits ::: genPartitioner
+    val path = (sourceManaged in Compile).value / "compiled_avro" / ns.replace(".","/") / "AvroScalaConversions.scala"
+    IO.write(path, content.mkString("\n"))
     path
-  }.toSeq
+  }
+  paths.toSeq
 }.taskValue
+
 
 
 javaHome  := Some(file("/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"))

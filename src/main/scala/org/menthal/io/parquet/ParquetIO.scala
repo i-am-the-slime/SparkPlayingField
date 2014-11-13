@@ -1,4 +1,4 @@
-package org.menthal.model.serialization
+package org.menthal.io.parquet
 
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord

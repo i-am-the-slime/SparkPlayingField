@@ -1,15 +1,16 @@
 package org.menthal
 
+import org.menthal.aggregations._
+import org.menthal.aggregations.tools.{AppSessionMonoid, AppSessionContainer, Lock, Session}
+import org.menthal.io.parquet.ParquetIO
+import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events._
-import org.menthal.model.scalaevents.adapters.PostgresDump
 import org.scalatest._
 import org.apache.spark.{SparkConf, SparkContext}
-import org.menthal.AppSessionMonoid._
+import AppSessionMonoid._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.twitter.algebird.Operators._
-import org.menthal.model.scalaevents.adapters.PostgresDump
-import org.menthal.model.serialization.ParquetIO
 
 import scala.collection.immutable.Queue
 import scala.io.Source

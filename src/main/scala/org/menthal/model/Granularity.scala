@@ -1,13 +1,12 @@
-package org.menthal.model.events
+package org.menthal.model
 
 import org.joda.time.DateTime
 
 /**
  * Created by konrad on 29.10.14.
  */
-object Granularity extends Enumeration {
-  implicit def dateToLong(dt:DateTime):Long = dt.getMillis
-  implicit def LongToDate(t: Long) = new DateTime(t)
+object Granularity
+  extends Enumeration {
   type Granularity = Value
   val Hourly, Daily, Weekly, Monthly, Yearly = Value
 

@@ -5,9 +5,8 @@ import java.io.File
 
 import org.apache.avro.file.DataFileWriter
 import org.apache.avro.specific.SpecificDatumWriter
+import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events._
-import org.menthal.model.scalaevents._
-import org.menthal.model.scalaevents.adapters.PostgresDump
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import scala.io.Source
 import org.joda.time.DateTime
@@ -17,7 +16,7 @@ import scala.reflect.io.File
 
 class EventsSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
   "Creating events from the generated code" should "be possible" in {
-    val siasd = new org.menthal.model.events.AppInstall(1,2,3,"appName", "pkgName")
+    val siasd = new AppInstall(1L,2L,3L,"appName", "pkgName")
     info("" + siasd)
   }
   "Creating events " should "work." in {

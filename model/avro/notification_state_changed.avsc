@@ -1,0 +1,13 @@
+{
+   "name":"NotificationStateChanged",
+   "type":"record",
+  "namespace":"org.menthal.model.events",
+   "fields":[
+      { "name":"id", "type":"long" },
+      { "name":"userId", "type":"long" },
+      { "name":"time", "type":"long" },
+      { "name":"appName", "type":"string" },
+      { "name":"packageName", "type":"string" },
+      { "name":"notificationLength", "type":"long" }
+   ]
+}

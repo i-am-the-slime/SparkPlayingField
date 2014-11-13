@@ -1,16 +1,19 @@
-package org.menthal
+package org.menthal.aggregations
 
+import com.twitter.algebird.Operators._
+import com.twitter.algebird._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
-import org.menthal.model.events.Granularity._
-import org.menthal.model.events.{CCAggregation, CCCallReceived, CCSmsReceived, MenthalEvent}
-
-import org.menthal.model.events.MenthalUtils._
-import org.joda.time.DateTime
 import org.apache.spark.rdd.RDD
-import com.twitter.algebird.Semigroup
-import org.menthal.model.scalaevents.adapters.PostgresDump
-import com.twitter.algebird.Operators._
+import org.joda.time.DateTime
+import org.menthal.io.postgres.PostgresDump
+import org.menthal.model.Granularity
+import org.menthal.model.Granularity._
+import org.menthal.model.implicits.DateImplicits.{dateToLong,longToDate}
+import org.menthal.aggregations.tools.EventTransformers._
+import org.menthal.model.events.{CCAggregation, CCSmsReceived, MenthalEvent}
+import scala.collection.mutable.{Map => MMap}
+import scala.collection.JavaConverters._
 
 /**
  * Created by mark on 18.05.14.
@@ -30,6 +33,7 @@ object GeneralAggregations {
   }
 
   type UserBucketsRDD[A] = RDD[(((Long, DateTime), A))]
+  type UserAggregatesRDD = UserBucketsRDD[Map[String, Long]]
   type EventPredicate = MenthalEvent => Boolean
 
 
@@ -44,26 +48,27 @@ object GeneralAggregations {
   def receivedSmsFilter(event: MenthalEvent): Boolean =
     event.isInstanceOf[CCSmsReceived]
 
-  def aggregateFromString(lines: RDD[String], filter: EventPredicate): UserBucketsRDD[Map[String, Long]] = {
+  def aggregateFromString(lines: RDD[String], filter: EventPredicate): UserAggregatesRDD = {
     val events = getEventsFromLines(lines, filter)
-    reduceToUserBucketsMap(events, Hourly)
+    reduceToUserBucketsMap(events, Granularity.Hourly)
   }
 
   def aggregateEvents(events: RDD[MenthalEvent], granularity: Granularity, name: String): RDD[CCAggregation] = {
     val buckets = reduceToUserBucketsMap(events, granularity)
-    buckets.map {case ((user, time), bucket) => CCAggregation(user, time, 1, name, bucket.toString()) } //TODO: fix
+    buckets.map {case ((user, time), bucket) =>
+      CCAggregation(user, dateToLong(time), 1L, name, MMap(bucket.toSeq: _*))}
   }
 
-  def reduceToUserBucketsMap(events: RDD[MenthalEvent], granularity: Granularity): UserBucketsRDD[Map[String, Long]] = {
+  def reduceToUserBucketsMap(events: RDD[MenthalEvent], granularity: Granularity): UserAggregatesRDD = {
     val buckets = events.map {
-      e => ((e.userId, roundTime(e.time, granularity)), eventAsMap(e))
+      e => ((e.userId, roundTime(longToDate(e.time), granularity)), eventAsMap(e))
     }
     buckets reduceByKey (_ + _)
   }
 
-  def reduceToUserBucketCounter(events: RDD[MenthalEvent], granularity: Granularity): UserBucketsRDD[Map[String, Int]] = {
+  def reduceToUserBucketCounter(events: RDD[MenthalEvent], granularity: Granularity): UserAggregatesRDD = {
     val buckets = events.map {
-        e => ((e.userId, roundTime(e.time, granularity)), eventAsCounter(e))
+        e => ((e.userId, roundTime(longToDate(e.time), granularity)), eventAsCounter(e))
     }
     buckets reduceByKey (_ + _)
   }
