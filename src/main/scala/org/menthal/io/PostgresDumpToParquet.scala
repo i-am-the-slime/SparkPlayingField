@@ -4,10 +4,10 @@ import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.menthal.spark.SparkHelper
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events._
-import org.menthal.spark.SparkHelper
 
 import scala.reflect.ClassTag
 

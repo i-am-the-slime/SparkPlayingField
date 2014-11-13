@@ -7,7 +7,6 @@ import org.menthal.aggregations.tools.{AppSessionMonoid, AppSessionContainer}
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events.{AppSession, MenthalEvent}
-import PostgresDump._
 import org.menthal.spark.SparkHelper._
 
 object AppSessionAggregations {
@@ -26,7 +25,7 @@ object AppSessionAggregations {
   }
 
   def dumpToAppSessions(sc:SparkContext, dumpFilePath:String, outputPath:String) = {
-    val events = parseDumpFile(sc, dumpFilePath)
+    val events = PostgresDump.parseDumpFile(sc, dumpFilePath)
     val sessions = eventsToAppSessions(events)
     ParquetIO write(sc, sessions, outputPath + "/app_sessions", AppSession.getClassSchema)
   }

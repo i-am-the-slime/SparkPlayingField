@@ -5,7 +5,6 @@ import com.twitter.algebird._
 import com.twitter.algebird.Operators._
 import org.joda.time.DateTime
 import org.menthal.model.Granularity
-import org.menthal.model.Granularity._
 import org.menthal.model.events._
 import org.menthal.model.implicits.DateImplicits._
 
@@ -45,8 +44,8 @@ object EventTransformers {
   }
 
   def getSplittingTime(start: DateTime, durationInMillis: Long): List[(DateTime, Long)] = {
-    if (roundTime(new DateTime(start + durationInMillis), Hourly) > roundTime(start, Hourly)) {
-      val newStart = roundTimeCeiling(new DateTime(start), Hourly)
+    if (roundTime(new DateTime(start + durationInMillis), Granularity.Hourly) > roundTime(start, Granularity.Hourly)) {
+      val newStart = Granularity.roundTimeCeiling(new DateTime(start), Granularity.Hourly)
       val newDuration = newStart - start
       (start, newDuration) :: getSplittingTime(newStart, durationInMillis - newDuration)
     }

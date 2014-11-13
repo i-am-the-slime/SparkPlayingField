@@ -1,19 +1,17 @@
 package org.menthal.aggregations
 
 import com.twitter.algebird.Operators._
-import com.twitter.algebird._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.Granularity
-import org.menthal.model.Granularity._
+import org.menthal.model.Granularity.Granularity
 import org.menthal.model.implicits.DateImplicits.{dateToLong,longToDate}
 import org.menthal.aggregations.tools.EventTransformers._
 import org.menthal.model.events.{CCAggregation, CCSmsReceived, MenthalEvent}
 import scala.collection.mutable.{Map => MMap}
-import scala.collection.JavaConverters._
 
 /**
  * Created by mark on 18.05.14.
@@ -61,14 +59,14 @@ object GeneralAggregations {
 
   def reduceToUserBucketsMap(events: RDD[MenthalEvent], granularity: Granularity): UserAggregatesRDD = {
     val buckets = events.map {
-      e => ((e.userId, roundTime(longToDate(e.time), granularity)), eventAsMap(e))
+      e => ((e.userId, Granularity.roundTime(longToDate(e.time), granularity)), eventAsMap(e))
     }
     buckets reduceByKey (_ + _)
   }
 
   def reduceToUserBucketCounter(events: RDD[MenthalEvent], granularity: Granularity): UserAggregatesRDD = {
     val buckets = events.map {
-        e => ((e.userId, roundTime(longToDate(e.time), granularity)), eventAsCounter(e))
+        e => ((e.userId, Granularity.roundTime(longToDate(e.time), granularity)), eventAsCounter(e))
     }
     buckets reduceByKey (_ + _)
   }

@@ -2,12 +2,10 @@ package org.menthal.model.serialization
 
 import com.twitter.bijection.avro.SpecificAvroCodecs
 import com.twitter.chill.InjectiveSerializer
-import org.menthal.model.events._
 import org.apache.avro.specific.SpecificRecordBase
-
-import com.esotericsoftware.kryo.Kryo
-
 import org.apache.spark.serializer.KryoRegistrator
+import com.esotericsoftware.kryo.Kryo
+import org.menthal.model.events._
 
 object AvroSerializer {
   def asAvroSerializer[A <: SpecificRecordBase : Manifest] = {
