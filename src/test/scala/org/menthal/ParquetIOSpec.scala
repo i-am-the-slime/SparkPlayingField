@@ -63,12 +63,12 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     ))
     ParquetIO.write(sc, data, path, WindowStateChanged.getClassSchema)
 
-    val filteredData = sc.parallelize(Seq(
+    val filteredData = Seq(
       new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST)
-    ))
+    )
 
-    val readResult = ParquetIO.read(path, sc, Some(classOf[ParquetIOSpec.SomeFilter]))
-    readResult zip filteredData foreach ParquetIOSpec.compareThem
+    val readResult = ParquetIO.read(path, sc, Some(classOf[ParquetIOSpec.SomeFilter])).collect()
+    readResult equals filteredData
 
   }
 
@@ -98,7 +98,7 @@ object ParquetIOSpec extends Matchers{
 
   class SomeFilter extends UnboundRecordFilter {
     def bind(readers: java.lang.Iterable[ColumnReader]): RecordFilter = {
-      column("windowTitle", equalTo(KNACKWURST)).bind(readers)
+      column("appName", equalTo("appName")).bind(readers)
     }
   }
 }

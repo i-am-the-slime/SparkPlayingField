@@ -5,6 +5,8 @@ import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events._
 import org.scalatest.{FlatSpec, Matchers, BeforeAndAfterAll}
 
+import scala.collection.mutable
+
 /**
  * Created by mark on 13.07.14.
  */
@@ -107,21 +109,34 @@ class PostgresDumpSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
     edt.get shouldBe result
   }
   it should "parse type 1021 (Device Features)" in {
-    //TODO: Find an example from a dump to test this.
+    val edt = PostgresDump.getEvent("3039653826", "54140","2014-11-04 19:39:44.05+01", "1021" , "[\"19 4.4.2\",\"Samsung SM-N900\",\"Warid WARID\"]")
+    val result = CCDeviceFeatures(3039653826L,54140,1369891226177L,"19 4.4.2","Samsung SM-N900","Warid WARID")
+    edt.get shouldBe result
   }
   it should "parse type 1022 (Menthal App Action)" in {
-    //TODO: Find an example from a dump to test this.
+    val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1022" , "[\"open.menthal.fragments.MenthalScoreFragment\"]")
+    val result = CCMenthalAppEvent(3039653826L,54140,1369891226177L, "open.menthal.fragments.MenthalScoreFragment")
+    edt.get shouldBe result
   }
   it should "parse type 1023 (Timezone)" in {
-    //TODO: Find an example from a dump to test this.
+    val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1023" , "[\"1415574517096\",\"1415574520080\",\"3600000\"]")
+    val result = CCTimeZone(3039653826L,54140,1369891226177L,1415574517096L, 1415574520080L, 3600000L)
+    edt.get shouldBe result
   }
   it should "parse type 1025 (Traffic Data)" in {
-    //TODO: Find an example from a dump to test this.
+    val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1025" , "[\"1\",\"\\\"FRITZ!Box 6360 Cable\\\"\",\"0\",\"780327\",\"102914\",\"0\",\"0\"]")
+    val result = CCTrafficData(1,2,1369891226177L, 1, "FRITZ!Box 6360 Cable", 0, 780327L, 102914L, 0L)
+    edt.get shouldBe result
   }
   it should "parse type 1032 (App Session)" in {
-    //TODO: Find an example from a dump to test this.
+    val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1032" , "[\"1408467826794\",\"28\",\"Menthal\",\"open.menthal\"]")
+    val result = CCAppSession(2,1369891226177L, 28, "open.menthal")
+    edt.get shouldBe result
   }
   it should "parse type 1100 (Questionnaire)" in {
+    val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1100" , "[\"1\",\"3\",\"1\",\"3\",\"3\",\"0\",\"3\",\"1\",\"3\",\"1\",\"4\",\"4\",\"7\",\"7\",\"6\",\"10\",\"6\",\"8\",\"23\",\"1\",\"4\"]")
+    val result = CCQuestionnaire(1,2,1369891226177L, 1, mutable.Buffer("3","1","3","3","0","3","1","3","1","4","4","7","7","6","10","6","8","23","1","4"))
+    edt.get shouldBe result
     //TODO: Find an example from a dump to test this.
     /*
     val edt = PostgresDump.getEvent("1100", "")

@@ -6,6 +6,8 @@
       { "name":"id", "type":"long" },
       { "name":"userId", "type":"long" },
       { "name":"time", "type":"long" },
+      { "name":"moTime", "type":"long" },
+      { "name":"momoTime", "type":"long" },
       { "name":"offsetInMillis", "type":"long" }
    ]
 }

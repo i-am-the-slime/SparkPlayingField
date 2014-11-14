@@ -65,14 +65,10 @@ object PostgresDump {
         Some(CCCallMissed(id, userId, time, ld(0), ld(1).toLong))
       case TYPE_LOCALISATION =>
         Some(CCLocalisation(id, userId, time, ld(0), ld(1).toFloat, ld(2).toDouble, ld(3).toDouble))
-      //      case TYPE_APP_LIST =>
-      //        val d = data.substring(1, data.length()-1).replace("\\","").parseJson.convertTo[List[Map[String,String]]]
-      //        val list:List[AppListItem] = d.flatMap( dict =>
-      //          for {
-      //            pkgName <- dict.get("pkg")
-      //            appName <- dict.get("appName")
-      //          } yield CCAppListItem(pkgName, appName) )
-      //        Some(AppList(list))
+      case TYPE_APP_LIST =>
+             val d = data.substring(1, data.length()-1).replace("\\","").parseJson.convertTo[List[Map[String,String]]]
+             val list:List[String] = d.map(dict => dict.getOrElse("pkg",""))
+             Some(CCAppList(id, userId, time, list.toBuffer))
       case TYPE_APP_INSTALL =>
         Some(CCAppInstall(id, userId, time, ld(0), ld(1)))
       case TYPE_APP_REMOVAL =>
@@ -90,7 +86,7 @@ object PostgresDump {
         val ld = data.substring(1, data.length() - 1).replace("\\", "").parseJson.asInstanceOf[JsArray].elements
         Some(CCWhatsAppReceived(id, userId, time, ld(0).convertTo[String], ld(1).convertTo[Int], if (ld(2).convertTo[Int] == 0) false else true))
       case TYPE_QUESTIONNAIRE =>
-        Some(CCQuestionnaire(id, userId, time, ld(0).toInt, ld(1).toInt, ld(2).toInt))
+        Some(CCQuestionnaire(id, userId, time, ld.head.toInt, ld.tail.toBuffer))
       case a if a == TYPE_WINDOW_STATE_CHANGED || a == TYPE_WINDOW_STATE_CHANGED_BASIC =>
         Some(CCWindowStateChanged(id, userId, time, ld(0), ld(1).split("/")(0), ld(2)))
       case _ =>
