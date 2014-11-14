@@ -7,6 +7,8 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.menthal.model.events.MenthalEvent
+import org.menthal.model.EventType
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
 import parquet.hadoop.{ParquetInputFormat, ParquetOutputFormat}
@@ -16,6 +18,17 @@ import scala.util.Try
 
 object ParquetIO {
 
+
+  def filterAndWriteToParquet(sc:SparkContext, events: RDD[_ <:MenthalEvent], eventType: Int, dirPath:String ) = {
+    val filteredEvents = events.filter  {e => (EventType.fromMenthalEvent(e) == eventType) }.map(_.toAvro)
+    val path = s"$dirPath/${EventType.toPath(eventType)}"
+    val schema = EventType.toSchema(eventType)
+    ParquetIO.write(sc, filteredEvents, path, schema)
+  }
+
+  def readEventType[A <: SpecificRecord](path: String, eventType: Int, sc: SparkContext, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
+    read(path + "/" + EventType.toPath(eventType),sc, recordFilter)(ct)
+  }
 
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) = {
     //val isEmpty = data.fold(0)

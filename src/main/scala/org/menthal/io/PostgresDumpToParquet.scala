@@ -3,13 +3,12 @@ package org.menthal.io
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
+import org.menthal.model.EventType._
 import org.menthal.spark.SparkHelper
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.events._
 
-import scala.reflect.ClassTag
 
 object PostgresDumpToParquet {
   def main(args: Array[String]) {
@@ -25,39 +24,42 @@ object PostgresDumpToParquet {
     sc.stop()
   }
 
-  val eventTypes: List[(String, Class[_ <: SpecificRecord], Schema)] = List(
-    ("app_install", classOf[AppInstall], AppInstall.getClassSchema),
-    ("app_removal", classOf[AppRemoval], AppRemoval.getClassSchema),
-    ("call_missed", classOf[CallMissed], CallMissed.getClassSchema),
-    ("call_outgoing", classOf[CallOutgoing], CallOutgoing.getClassSchema),
-    ("call_received", classOf[CallReceived], CallReceived.getClassSchema),
-    ("dreaming_stopped", classOf[DreamingStopped], DreamingStopped.getClassSchema),
-    ("dreaming_started", classOf[DreamingStarted], DreamingStarted.getClassSchema),
-    ("localisation", classOf[Localisation], Localisation.getClassSchema),
-    ("mood", classOf[Mood], Mood.getClassSchema),
-    ("phone_boot", classOf[PhoneBoot], PhoneBoot.getClassSchema),
-    ("phone_shutdown", classOf[PhoneShutdown], PhoneShutdown.getClassSchema),
-    ("questionnaire", classOf[Questionnaire], Questionnaire.getClassSchema),
-    ("screen_off", classOf[ScreenOff], ScreenOff.getClassSchema),
-    ("screen_on", classOf[ScreenOn], ScreenOn.getClassSchema),
-    ("screen_unlock", classOf[ScreenUnlock], ScreenUnlock.getClassSchema),
-    ("sms_received", classOf[SmsReceived], SmsReceived.getClassSchema),
-    ("sms_sent", classOf[SmsSent], SmsSent.getClassSchema),
-    ("time_zone", classOf[TimeZone], TimeZone.getClassSchema),
-    ("traffic_data", classOf[TrafficData], TrafficData.getClassSchema),
-    ("whatsapp_received", classOf[WhatsAppReceived], WhatsAppReceived.getClassSchema),
-    ("whatsapp_sent", classOf[WhatsAppSent], WhatsAppSent.getClassSchema),
-    ("window_state_changed", classOf[WindowStateChanged], WindowStateChanged.getClassSchema))
-
-  def filterAndWriteToParquet[A <:SpecificRecord](sc:SparkContext, events: RDD[MenthalEvent], path: String, schema: Schema, klazz: Class[A])(implicit ct:ClassTag[A]) = {
-    val filteredEvents = events.filter(_.isInstanceOf[A]).map(_.asInstanceOf[A])
-    ParquetIO.write(sc, filteredEvents, path, schema)
-  }
+  val processedTypes = List(
+  //TYPE_APP_SESSION_TEST,
+  //TYPE_APP_UPDATE,
+  //TYPE_ACCESSIBILITY_SERVICE_UPDATE,
+  TYPE_WINDOW_STATE_CHANGED,
+  TYPE_WINDOW_STATE_CHANGED_BASIC,
+  TYPE_SMS_RECEIVED,
+  TYPE_SMS_SENT,
+  TYPE_CALL_RECEIVED,
+  TYPE_CALL_OUTGOING,
+  TYPE_CALL_MISSED,
+  TYPE_SCREEN_ON,
+  TYPE_SCREEN_OFF,
+  TYPE_LOCALISATION,
+  //TYPE_APP_LIST, TODO
+  TYPE_APP_INSTALL,
+  //TYPE_APP_REMOVAL, TODO
+  TYPE_MOOD,
+  TYPE_PHONE_BOOT,
+  TYPE_PHONE_SHUTDOWN,
+  TYPE_SCREEN_UNLOCK,
+  TYPE_DREAMING_STARTED,
+  TYPE_DREAMING_STOPPED,
+  TYPE_WHATSAPP_SENT,
+  TYPE_WHATSAPP_RECEIVED,
+  //TYPE_DEVICE_FEATURES, TODO
+  //TYPE_MENTHAL_APP_ACTION, TODO
+  //TYPE_TIMEZONE, TODO
+  // TYPE_TRAFFIC_DATA, TODO
+  //TYPE_APP_SESSION, TODO
+  TYPE_QUESTIONNAIRE)
 
   def parseFromDumpAndWriteToParquet(sc:SparkContext, dumpDirPath:String, outputPath:String) = {
     val menthalEvents = PostgresDump.parseDumpFile(sc, dumpDirPath)
-    eventTypes.foreach {
-      case (path, klazz, schema) =>  filterAndWriteToParquet(sc, menthalEvents, path, schema, klazz)
+    processedTypes.foreach {
+      case (eventType) =>  ParquetIO.filterAndWriteToParquet(sc, menthalEvents, eventType, outputPath)
     }
   }
 }

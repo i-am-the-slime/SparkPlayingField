@@ -1,6 +1,7 @@
 package org.menthal.aggregations.tools
 
 import com.twitter.algebird.Monoid
+
 import org.menthal.model.events._
 import org.menthal.model.implicits.DateImplicits._
 

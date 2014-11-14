@@ -30,7 +30,7 @@ object AppSessionAggregations {
     ParquetIO write(sc, sessions, outputPath + "/app_sessions", AppSession.getClassSchema)
   }
 
-  def transformToAppSessionsContainer(events:Iterable[MenthalEvent]):AppSessionContainer = {
+  def transformToAppSessionsContainer(events:Iterable[_ <: MenthalEvent]):AppSessionContainer = {
     val containers = for {
       event <- events if AppSessionContainer.handledEvents.contains(event.getClass)
       container = AppSessionContainer(event)
@@ -38,7 +38,7 @@ object AppSessionAggregations {
     containers.fold(AppSessionMonoid.zero)(AppSessionMonoid.plus) //Does it makes sense to use par? nope, monoid addition will be slower
   }
 
-  def eventsToAppSessions(events: RDD[MenthalEvent]):RDD[AppSession] = {
+  def eventsToAppSessions(events: RDD[_ <: MenthalEvent]):RDD[AppSession] = {
     events.map { e => (e.userId, e)}
       .groupByKey()
       .flatMap {case (userId, evs) =>

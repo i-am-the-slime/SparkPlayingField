@@ -13,13 +13,12 @@ import scala.util.Try
 
 object PostgresDump {
 
-  def parseDumpFile(sc: SparkContext, dumpFilePath: String): RDD[MenthalEvent] = {
+  def parseDumpFile(sc: SparkContext, dumpFilePath: String): RDD[_ <: MenthalEvent] = {
     for {
       line <- sc.textFile(dumpFilePath)
       event <- PostgresDump.tryToParseLineFromDump(line)
     } yield event
   }
-
 
   def tryToParseLineFromDump(dumpLine: String): Option[MenthalEvent] = {
     val rawData = dumpLine.split("\t")
@@ -84,7 +83,6 @@ object PostgresDump {
         Some(CCPhoneShutdown(id, userId, time))
       case TYPE_MOOD =>
         Some(CCMood(id, userId, time, ld(0).toFloat))
-
       case TYPE_WHATSAPP_SENT =>
         val ld = data.substring(1, data.length() - 1).replace("\\", "").parseJson.asInstanceOf[JsArray].elements
         Some(CCWhatsAppSent(id, userId, time, ld(0).convertTo[String], ld(1).convertTo[Int], if (ld(2).convertTo[Int] == 0) false else true))
