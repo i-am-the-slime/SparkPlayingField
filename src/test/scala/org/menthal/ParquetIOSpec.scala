@@ -19,6 +19,7 @@ import scala.util.Try
 
 class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
+  import ParquetIOSpec._
   @transient var sc:SparkContext = _
   val path = "./src/test/resources/" + "ParquetIOTest"
 
@@ -45,7 +46,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
   "The ParquetIO class" should "read and write RDDs of WindowStateChanged" in {
     val data = sc.parallelize(Seq(
-      new WindowStateChanged(1L,2L,3L, "appName", "pkgName", "knackwrust"),
+      new WindowStateChanged(1L,2L,3L, "appName", "pkgName", KNACKWURST),
       new WindowStateChanged(7L,8L,11L, "frederik", "209", "schnarbeltir")
     ))
     ParquetIO.write(sc, data, path, WindowStateChanged.getClassSchema)
@@ -57,13 +58,13 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
   //ignore should "apply UnboundRecordFilters" in {
   "The ParquetIO class" should "apply UnboundRecordFilters" in {
     val data = sc.parallelize(Seq(
-      new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", "knackwrust"),
+      new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new WindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")
     ))
     ParquetIO.write(sc, data, path, WindowStateChanged.getClassSchema)
 
     val filteredData = sc.parallelize(Seq(
-      new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", "knackwrust")
+      new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST)
     ))
 
     val readResult = ParquetIO.read(path, sc, Some(classOf[ParquetIOSpec.SomeFilter]))
@@ -73,13 +74,13 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 
   "The filterAndWriteToParquet() function" should "Write simple RDD of menthal Events to Parquet Correctly" in {
     val data = sc.parallelize(Seq(
-      new CCWindowStateChanged(1L, 2L, 3L, "appName", "pkgName", "knackwurst"),
+      new CCWindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new CCWindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")
     ))
     ParquetIO.filterAndWriteToParquet(sc, data, TYPE_WINDOW_STATE_CHANGED, path)
 
     val readData = sc.parallelize(Seq(
-      new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", "knackwurst"),
+      new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new WindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")
     ))
 
@@ -89,13 +90,15 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
 }
 
 object ParquetIOSpec extends Matchers{
+  val KNACKWURST = "knackwurst"
+
   def compareThem(tup:(Any, Any)) = {
     tup._1 shouldBe tup._2
   }
 
   class SomeFilter extends UnboundRecordFilter {
     def bind(readers: java.lang.Iterable[ColumnReader]): RecordFilter = {
-      column("windowTitle", equalTo("knackwurst")).bind(readers)
+      column("windowTitle", equalTo(KNACKWURST)).bind(readers)
     }
   }
 }
