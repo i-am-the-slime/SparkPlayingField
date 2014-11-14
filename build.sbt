@@ -1,7 +1,6 @@
 import sbtassembly.Plugin._
 import AssemblyKeys._
-import scala.io.{Codec, Source}
-import scala.io.Source.fromFile
+import scala.io.Source
 import scala.reflect.io.File
 import scala.util.parsing.json.JSON
 
@@ -69,13 +68,14 @@ libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
 
 libraryDependencies += "org.mortbay.jetty" % "servlet-api" % "3.0.20100224"
-//libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
 
-//libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
+libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.6.0-RC0" % "test"
+
+ //libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.5.0" % "provided"  excludeAll(excludeJBossNetty,excludeEclipseJetty,  excludeMortbayJetty, excludeAsm, excludeCommonsLogging, excludeSLF4J, excludeOldAsm, excludeServletApi),
-  ("org.apache.spark" %% "spark-core" % "1.1.0" % "provided"  excludeAll(excludeHadoop))
+  "org.apache.spark" %% "spark-core" % "1.1.0" % "provided"  excludeAll excludeHadoop
   //  exclude("log4j", "log4j").
   //  exclude("commons-beanutils", "commons-beanutils").
   //  exclude("commons-beanutils", "commons-beanutils-core").

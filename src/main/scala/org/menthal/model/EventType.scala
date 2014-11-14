@@ -2,7 +2,6 @@ package org.menthal.model
 
 import org.apache.avro.Schema
 import org.menthal.model.events._
-import spray.json.JsArray
 
 /**
  * Created by konrad on 13.11.14.
