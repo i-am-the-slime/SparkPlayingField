@@ -55,8 +55,8 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     readResult zip data foreach ParquetIOSpec.compareThem
   }
 
-  //ignore should "apply UnboundRecordFilters" in {
-  "The ParquetIO class" should "apply UnboundRecordFilters" in {
+  ignore should "apply UnboundRecordFilters" in {
+  //"The ParquetIO class" should "apply UnboundRecordFilters" in {
     val data = sc.parallelize(Seq(
       new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new WindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")

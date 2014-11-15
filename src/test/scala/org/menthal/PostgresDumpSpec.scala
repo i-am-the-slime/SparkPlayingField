@@ -11,10 +11,17 @@ import scala.collection.mutable
  * Created by mark on 13.07.14.
  */
 class PostgresDumpSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
+
+
   val windowStateChange1 = CCWindowStateChanged(1, 2, 1369891226177L, "WhatsApp","com.whatsapp","[WhatsApp]")
   "getEvent" should "parse type 32 (WindowStateChange)" in {
     val edt = PostgresDump.getEvent("1", "2", "2013-05-30 07:20:26.177+02", "32", "\"[\\\\\"WhatsApp\\\\\",\\\\\"com.whatsapp/com.whatsapp.Conversation\\\\\",\\\\\"[WhatsApp]\\\\\"]\"")
     edt.get shouldBe windowStateChange1
+  }
+  it should "parse type 64 (NotificationStateChange)" in {
+    val edt = PostgresDump.getEvent("1", "2", "2013-05-30 07:20:26.177+02", "64", "\"[\\\\\"System Android\\\\\",\\\\\"android\\\\\",2]\"")
+    val notificationStateChange = CCNotificationStateChanged(1, 2, 1369891226177L, "System Android","android",2)
+    edt.get shouldBe notificationStateChange
   }
   it should "parse type 132 (WindowStateChangeBasic)" in {
     val edt = PostgresDump.getEvent("1","2","2013-05-30 07:20:26.177+02","132", "\"[\\\\\"WhatsApp\\\\\",\\\\\"com.whatsapp/com.whatsapp.Conversation\\\\\",\\\\\"[WhatsApp]\\\\\"]\"")
@@ -58,17 +65,17 @@ class PostgresDumpSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
     val result = CCLocalisation(1,2,1369891226177L,"network", 1124.0f, 7.0958195, 50.7465128)
     edt.get shouldBe result
   }
-  ignore should "parse type 1008 (AppList)" in {
-//    val edt = PostgresDump.getEvent("1","2","2013-05-30 07:20:26.177+02","1008", "\"[{\\\\\"appName\\\\\":\\\\\"Calculator\\\\\",\\\\\"pkg\\\\\":\\\\\"com.android.calculator2\\\\\"},{\\\\\"appName\\\\\":\\\\\"Contacts\\\\\",\\\\\"pkg\\\\\":\\\\\"com.android.contacts\\\\\"}]\"")
-//    val list = List( AppListItem("com.android.calculator2", "Calculator"),
-//      AppListItem("com.android.contacts", "Contacts"))
-//    edt.get shouldBe AppList(list)
+  it should "parse type 1008 (AppList)" in {
+    val edt = PostgresDump.getEvent("1","2","2013-05-30 07:20:26.177+02","1008", "\"[{\\\\\"appName\\\\\":\\\\\"Calculator\\\\\",\\\\\"pkg\\\\\":\\\\\"com.android.calculator2\\\\\"},{\\\\\"appName\\\\\":\\\\\"Contacts\\\\\",\\\\\"pkg\\\\\":\\\\\"com.android.contacts\\\\\"}]\"")
+    val list = List("com.android.calculator2", "com.android.contacts")
+    edt.get shouldBe CCAppList(1,2, 1369891226177L, list.toBuffer)
   }
-  ignore should "parse type 1009 (AppInstall)" in {
+
+  it should "parse type 1009 (AppInstall)" in {
     val edt = PostgresDump.getEvent("1","2","2013-05-30 07:20:26.177+02","1009", "\"[\\\\\"Nyx\\\\\",\\\\\"com.menthal.nyx\\\\\"]\"")
     edt.get shouldBe CCAppInstall(1,2,1369891226177L,"Nyx", "com.menthal.nyx")
   }
-  ignore should "parse type 1010 (AppRemoval)" in {
+  it should "parse type 1010 (AppRemoval)" in {
     val edt = PostgresDump.getEvent("1","2","2013-05-30 07:20:26.177+02","1010", "\"[\\\\\"Nyx\\\\\",\\\\\"com.menthal.nyx\\\\\"]\"")
     edt.get shouldBe CCAppRemoval(1,2,1369891226177L,"Nyx", "com.menthal.nyx")
   }
@@ -110,32 +117,32 @@ class PostgresDumpSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
   }
   it should "parse type 1021 (Device Features)" in {
     val edt = PostgresDump.getEvent("3039653826", "54140","2014-11-04 19:39:44.05+01", "1021" , "[\"19 4.4.2\",\"Samsung SM-N900\",\"Warid WARID\"]")
-    val result = CCDeviceFeatures(3039653826L,54140,1369891226177L,"19 4.4.2","Samsung SM-N900","Warid WARID")
+    val result = CCDeviceFeatures(3039653826L,54140,1415126384050L,"19 4.4.2","Samsung SM-N900","Warid WARID")
     edt.get shouldBe result
   }
   it should "parse type 1022 (Menthal App Action)" in {
     val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1022" , "[\"open.menthal.fragments.MenthalScoreFragment\"]")
-    val result = CCMenthalAppEvent(3039653826L,54140,1369891226177L, "open.menthal.fragments.MenthalScoreFragment")
+    val result = CCMenthalAppEvent(3039653826L,171194,1415132320219L, "open.menthal.fragments.MenthalScoreFragment")
     edt.get shouldBe result
   }
   it should "parse type 1023 (Timezone)" in {
     val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1023" , "[\"1415574517096\",\"1415574520080\",\"3600000\"]")
-    val result = CCTimeZone(3039653826L,54140,1369891226177L,1415574517096L, 1415574520080L, 3600000L)
+    val result = CCTimeZone(3039653826L,171194,1415132320219L,1415574517096L, 1415574520080L, 3600000L)
     edt.get shouldBe result
   }
   it should "parse type 1025 (Traffic Data)" in {
     val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1025" , "[\"1\",\"\\\"FRITZ!Box 6360 Cable\\\"\",\"0\",\"780327\",\"102914\",\"0\",\"0\"]")
-    val result = CCTrafficData(1,2,1369891226177L, 1, "FRITZ!Box 6360 Cable", 0, 780327L, 102914L, 0L)
+    val result = CCTrafficData(3039653826L,171194,1415132320219L, 1, "\"FRITZ!Box 6360 Cable\"" , 0, 780327L, 102914L, 0L)
     edt.get shouldBe result
   }
   it should "parse type 1032 (App Session)" in {
     val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1032" , "[\"1408467826794\",\"28\",\"Menthal\",\"open.menthal\"]")
-    val result = CCAppSession(2,1369891226177L, 28, "open.menthal")
+    val result = CCAppSession(171194,1415132320219L, 28, "open.menthal")
     edt.get shouldBe result
   }
   it should "parse type 1100 (Questionnaire)" in {
     val edt = PostgresDump.getEvent("3039653826", "171194","2014-11-04 21:18:40.219+01", "1100" , "[\"1\",\"3\",\"1\",\"3\",\"3\",\"0\",\"3\",\"1\",\"3\",\"1\",\"4\",\"4\",\"7\",\"7\",\"6\",\"10\",\"6\",\"8\",\"23\",\"1\",\"4\"]")
-    val result = CCQuestionnaire(1,2,1369891226177L, 1, mutable.Buffer("3","1","3","3","0","3","1","3","1","4","4","7","7","6","10","6","8","23","1","4"))
+    val result = CCQuestionnaire(3039653826L,171194,1415132320219L, 1, mutable.Buffer("3","1","3","3","0","3","1","3","1","4","4","7","7","6","10","6","8","23","1","4"))
     edt.get shouldBe result
     //TODO: Find an example from a dump to test this.
     /*

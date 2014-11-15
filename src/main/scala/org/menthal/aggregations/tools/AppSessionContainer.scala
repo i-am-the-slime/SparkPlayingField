@@ -10,7 +10,6 @@ import scala.collection.immutable.Queue
 
 /**
  * Created by Mark on 20.05.14.
- * Update by Konrad 26.05.14
  */
 
 sealed abstract class AppSessionContainer {
@@ -87,7 +86,7 @@ case class Session(time: Long, end: Long, app: Option[String]) extends AppSessio
   override def toString = "\nSession\t" +
     time.toString("HH:mm:ss:ms\t") +
     app.getOrElse("") +
-    "\t" + end.minus(time.getMillis+7200000).toString("HH:mm:ss\t") +
+    "\t" + end.minus(time.getMillis + 7200000).toString("HH:mm:ss\t") +
     end.toString("\n\t\tHH:mm:ss:ms\t")
 
   def toAppSession(userId: Long): Option[AppSession] = {
