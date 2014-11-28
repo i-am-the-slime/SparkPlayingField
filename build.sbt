@@ -164,25 +164,6 @@ sourceGenerators in Compile += Def.task {
       "\n"
     )
   }
-  def generatePartitioner(classes: Seq[ClassTriplet]): List[String] = {
-    var lines: List[String] = List()
-    //lines = "class EventPartitioner extends Partitioner {" :: lines
-    //val numberOfClasses = classes.length
-    //lines = s"  override def numPartitions: Int = $numberOfClasses" :: lines
-    //lines = "" :: lines
-    //lines = "  override def getPartition(key: Any): Int = {" :: lines
-    //lines = "    val event = key.asInstanceOf[MenthalEvent]" :: lines
-    //lines = "    event.toAvro match {" :: lines
-    //classes.zipWithIndex.foreach{ case ((className, _, _),index) =>
-    //  lines = s"      case _:$className => $index" :: lines
-    //}
-    //lines = "    }" :: lines
-    //lines = "  }" :: lines
-    //lines = "}" :: lines
-    //lines = "" :: lines
-    //lines = "\nobject Implicits{" :: lines
-    lines
-  }
   def generateMainTrait(ns: String): List[String] ={
     List(
       "trait MenthalEvent { ",
@@ -223,16 +204,16 @@ sourceGenerators in Compile += Def.task {
   val avroPath = "./model/avro"
   val groupedClassTriplets = classTripletsFromAvroDir(avroPath)
                                   .groupBy {case (_,namespace, _) => namespace}
-  val paths = groupedClassTriplets.map { case (ns, classes) =>
-    val genImports = generateImports(ns)
-    val genTrait = generateMainTrait(ns)
-    val genClasses = generateClasses(classes)
-    val genImplicits = generateImplicits(classes)
-    val genPartitioner = generatePartitioner(classes)
-    val content = genImports ::: genTrait ::: genClasses ::: genImplicits ::: genPartitioner
-    val path = (sourceManaged in Compile).value / "compiled_avro" / ns.replace(".","/") / "AvroScalaConversions.scala"
-    IO.write(path, content.mkString("\n"))
-    path
+  val paths = groupedClassTriplets.map {
+    case (ns, classes) =>
+      val genImports = generateImports(ns)
+      val genTrait = generateMainTrait(ns)
+      val genClasses = generateClasses(classes)
+      val genImplicits = generateImplicits(classes)
+      val content = genImports ::: genTrait ::: genClasses ::: genImplicits
+      val path = (sourceManaged in Compile).value / "compiled_avro" / ns.replace(".","/") / "AvroScalaConversions.scala"
+      IO.write(path, content.mkString("\n"))
+      path
   }
   paths.toSeq
 }.taskValue

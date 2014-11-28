@@ -68,8 +68,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
     )
 
     val readResult = ParquetIO.read(path, sc, Some(classOf[ParquetIOSpec.SomeFilter])).collect()
-    readResult equals filteredData
-
+    readResult shouldBe filteredData
   }
 
   "The filterAndWriteToParquet() function" should "Write simple RDD of menthal Events to Parquet Correctly" in {
