@@ -77,7 +77,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
   "When given an dump file " should "read the TrafficData events and write them to Parquet correctly "  in {
     val eventType =TYPE_TRAFFIC_DATA
     val filter = (ev:TrafficData) => ev.getId == 2149587751L
-    val expectedEvent = new TrafficData(2149587751L, 42535L, 1369858030111L, 1, "FRITZ!Box 6360 Cable", 0, 780327L, 102914L, 0L)
+    val expectedEvent = new TrafficData(2149587751L, 42535L, 1407583604729L, 1, "FRITZ!Box\t6360\tCable", 0, 780327L, 102914L, 0L)
     parquetTest[TrafficData](eventType, filter) shouldBe expectedEvent
   }
 

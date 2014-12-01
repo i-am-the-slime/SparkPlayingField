@@ -23,13 +23,16 @@ object PostgresDump {
   }
 
   def tryToParseLineFromDump(dumpLine: String): Option[MenthalEvent] = {
-    val rawData = dumpLine.split("\t")
+    val split = dumpLine.split("\t")
+    val rawData:Array[String] = split.take(4) :+ split.drop(4).mkString("\t")
     val event = for {
       theEvent <- Try(getEvent(rawData(0), rawData(1), rawData(2), rawData(3), rawData(4)))
     } yield theEvent
     if(event.isFailure) {
       println(rawData.mkString(","))
+      println(dumpLine)
     }
+
     event getOrElse None
   }
 
