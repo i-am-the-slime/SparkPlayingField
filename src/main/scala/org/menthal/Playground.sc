@@ -1,3 +1,6 @@
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.SparkContext._
 import org.joda.time.DateTime
 import org.menthal.model.events.{CCAppInstall, AppInstall}
 import spray.json.{JsArray, JsValue}
@@ -21,14 +24,12 @@ import org.menthal.aggregations.tools.AppSessionMonoid._
 
 val str1 = "[\"1408467826794\",\"28\",\"Menthal\",\"open.menthal\"]"
 val str2 = "\"[\\\"Facebook\\\",\\\"com.facebook.katana\\\"]\""
+val tenten = """"[\"YouTube\",\"com.google.android.youtube\"]""""
+val tentene2 = """"[\\"Nyx\\",\\"com.menthal.nyx\\"]""""
 def parsedJSONDataArrayAsList(data: String): List[String] = {
   data.parseJson.convertTo[List[String]]
 }
 
-def parsedJSONDataStringAsList(data: String): List[String] = {
-  //Data parsed from JSON into a list
-  data.substring(1, data.length() - 1).replace("\\", "").parseJson.convertTo[List[String]]
-}
 
 def parsedJSONDataAsList(data: String): List[String] = {
   if (data.startsWith("\""))
@@ -37,7 +38,15 @@ def parsedJSONDataAsList(data: String): List[String] = {
     data.parseJson.convertTo[List[String]]
 }
 
+def parsedJSONDataAsStringList(data: String): List[String] = {
+  if (data.startsWith("\""))
+    data.substring(1, data.length() - 1).replace("\\", "").parseJson.convertTo[List[String]]
+  else
+    data.parseJson.convertTo[List[String]]
+}
 
-val v1 = parsedJSONDataAsList(str1)
 
-val v2 = parsedJSONDataAsList(str2)
+val v1 = parsedJSONDataAsStringList(tentene2)
+val v2 = parsedJSONDataAsStringList(tenten)
+
+

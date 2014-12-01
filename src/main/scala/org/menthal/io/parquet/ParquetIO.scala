@@ -26,6 +26,16 @@ object ParquetIO {
     ParquetIO.write(sc, filteredEvents, path, schema)
   }
 
+//  def MapByTypesAndWriteToParquet(sc:SparkContext, events: RDD[_ <:MenthalEvent], eventType: Int, dirPath:String ) = {
+//    val filteredEvents = events.map(e => (EventType.fromMenthalEvent(e), e))
+//    val filterdEvents =
+////    val path = s"$dirPath/${EventType.toPath(eventType)}"
+//    val schema = EventType.toSchema(eventType)
+//    ParquetIO.write(sc, filteredEvents, path, schema)
+//  }
+
+
+
   def readEventType[A <: SpecificRecord](path: String, eventType: Int, sc: SparkContext, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
     read(path + "/" + EventType.toPath(eventType),sc, recordFilter)(ct)
   }

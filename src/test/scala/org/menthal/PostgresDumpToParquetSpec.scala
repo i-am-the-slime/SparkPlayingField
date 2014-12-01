@@ -2,6 +2,7 @@ package org.menthal
 
 import java.util.logging.{Level, Logger}
 
+import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.menthal.io.PostgresDumpToParquet
@@ -10,6 +11,7 @@ import org.menthal.model.events._
 import org.menthal.model.EventType._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec, Matchers}
 
+import scala.reflect.ClassTag
 import scala.reflect.io.File
 import scala.util.Try
 
@@ -50,7 +52,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someEvent shouldBe expectedEvent
   }
 
-  "When given an dreaming input and output file" should "read the file and output the results" in {
+  "When given an dump file " should "read the file and output the results" in {
     PostgresDumpToParquet.parseFromDumpAndWriteToParquet(sc, inputPath , outputPath)
     val result:RDD[DreamingStarted] = ParquetIO.readEventType(outputPath, TYPE_DREAMING_STARTED, sc)
     val someDreamingEvent = result.filter(dreamRec => dreamRec.getId == 1910171L).take(1).toList(0)
@@ -58,12 +60,37 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     someDreamingEvent shouldBe expectedDreamingEvent
   }
 
-  "When given an dreaming stopped input and output file" should "read the file and output the results" in {
-    PostgresDumpToParquet.parseFromDumpAndWriteToParquet(sc, inputPath , outputPath)
-    val result:RDD[DreamingStopped] = ParquetIO.readEventType(outputPath, TYPE_DREAMING_STOPPED, sc)
-    val someDreamingEvent = result.filter(dreamRec => dreamRec.getId == 1910172L).take(1).toList(0)
+  "When given an dump file " should "read the Dreaming stopped events and write them to Parquet correctly" in {
+    val eventType =TYPE_DREAMING_STOPPED
+    val filter = (dreamRec:DreamingStopped) => dreamRec.getId == 1910172L
     val expectedDreamingEvent = new DreamingStopped(1910172L, 154L, 1369858030111L)
-    someDreamingEvent shouldBe expectedDreamingEvent
+    parquetTest[DreamingStopped](eventType, filter) shouldBe expectedDreamingEvent
   }
+
+  "When given an dump file " should "read the AppRemoval events and write them to Parquet correctly "  in {
+    val eventType =TYPE_APP_REMOVAL
+    val filter = (ev:AppRemoval) => ev.getId == 3045489513L
+    val expectedEvent = new AppRemoval(3045489513L, 8912L, 1369858030111L, "YouTube", "com.google.android.youtube")
+    parquetTest[AppRemoval](eventType, filter) shouldBe expectedEvent
+  }
+
+  "When given an dump file " should "read the TrafficData events and write them to Parquet correctly "  in {
+    val eventType =TYPE_TRAFFIC_DATA
+    val filter = (ev:TrafficData) => ev.getId == 2149587751L
+    val expectedEvent = new TrafficData(2149587751L, 42535L, 1369858030111L, 1, "FRITZ!Box 6360 Cable", 0, 780327L, 102914L, 0L)
+    parquetTest[TrafficData](eventType, filter) shouldBe expectedEvent
+  }
+
+
+
+
+  def parquetTest[A <: SpecificRecord](eventType: Int, filter: A => Boolean)(implicit cd : ClassTag[A]):A = {
+    PostgresDumpToParquet.parseFromDumpAndWriteToParquet(sc, inputPath, outputPath)
+    val result:RDD[A] = ParquetIO.readEventType[A](outputPath, eventType, sc)
+    info("\n\n" + result.count().toString +  "\n\n")
+    result.filter(filter).take(1).toList(0)
+  }
+
+
 
 }

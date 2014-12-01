@@ -9,6 +9,8 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 
+import scala.io.Codec
+import scala.reflect.io.File
 import scala.util.Try
 
 object PostgresDump {
@@ -25,6 +27,9 @@ object PostgresDump {
     val event = for {
       theEvent <- Try(getEvent(rawData(0), rawData(1), rawData(2), rawData(3), rawData(4)))
     } yield theEvent
+    if(event.isFailure) {
+      println(rawData.mkString(","))
+    }
     event getOrElse None
   }
 
@@ -65,8 +70,11 @@ object PostgresDump {
         Some(CCAppList(id, userId, time, list.toBuffer))
       case TYPE_APP_REMOVAL =>
         ld match {
-          case appName :: packageName :: Nil => Some(CCAppRemoval(id, userId, time, appName, packageName))
-          case _ => None
+          case appName :: packageName :: Nil =>
+            Some(CCAppRemoval(id, userId, time, appName, packageName))
+          case _ =>
+            None
+
         }
       case TYPE_APP_SESSION =>
         ld match {
