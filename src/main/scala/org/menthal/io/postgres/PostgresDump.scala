@@ -28,11 +28,6 @@ object PostgresDump {
     val event = for {
       theEvent <- Try(getEvent(rawData(0), rawData(1), rawData(2), rawData(3), rawData(4)))
     } yield theEvent
-    if(event.isFailure) {
-      println(rawData.mkString(","))
-      println(dumpLine)
-    }
-
     event getOrElse None
   }
 

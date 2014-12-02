@@ -18,6 +18,8 @@ resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
 resolvers += "spray" at "http://repo.spray.io/"
 
+//javaHome := Some(file("/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"))
+
 val excludeJBossNetty = ExclusionRule(organization = "org.jboss.netty")
 //val excludeIONetty = ExclusionRule(organization = "io.netty")
 val excludeEclipseJetty = ExclusionRule(organization = "org.eclipse.jetty")
@@ -49,7 +51,6 @@ Seq( sbtavro.SbtAvro.avroSettings : _*)
 
 (stringType in avroConfig) := "String"
 
-
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 //libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
@@ -73,7 +74,8 @@ libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.6.0-RC0" % "test"
 
  //libraryDependencies += ("org.apache.spark" %% "spark-sql" % "1.0.1") //Sql queries on spark shit
 
-val hadoopExcludes = List(excludeJBossNetty, excludeEclipseJetty, excludeMortbayJetty, excludeAsm, excludeCommonsLogging, excludeSLF4J, excludeOldAsm, excludeServletApi)
+val hadoopExcludes = List(excludeJBossNetty, excludeEclipseJetty, excludeMortbayJetty, excludeAsm,
+  excludeCommonsLogging, excludeSLF4J, excludeOldAsm, excludeServletApi)
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.5.0" % "provided"  excludeAll(hadoopExcludes:_*),
@@ -84,6 +86,8 @@ libraryDependencies ++= Seq(
   //  exclude("commons-collections", "commons-collections").
   //  exclude("com.esotericsoftware.minlog", "minlog")
 )
+
+parallelExecution in test := false
 
 fork in Test := true
 
@@ -218,6 +222,3 @@ sourceGenerators in Compile += Def.task {
   paths.toSeq
 }.taskValue
 
-
-
-javaHome  := Some(file("/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"))

@@ -59,7 +59,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val event = new WindowStateChanged(194430L, 1L, 1369864301015L, "System Android", "android", "")
     val typeNo = TYPE_WINDOW_STATE_CHANGED
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -71,7 +72,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_NOTIFICATION_STATE_CHANGED
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -84,7 +86,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_SMS_RECEIVED
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -97,7 +100,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_SMS_SENT
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -110,7 +114,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_CALL_RECEIVED
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -124,22 +129,13 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_CALL_OUTGOING
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
-  it should "work for Call Missed" in {
-//    type ET = CallMissed
-//    val event = new CallMissed(192040L, 1L, 1369880442744L,
-//      "676962b809fac8b6cb64113f6ee3bc594ca3e7b59cb35863c15dd69f668b7763131e0c9a7708f5d9201e1e64783ac6eeb14c36b382bf7da14042575c54230f46",
-//      125)
-//    val typeNo = TYPE_CALL_MISSED
-//
-//    //Always the same
-//    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
-//    if (event != result) error("Expected:   " + event + "\nActual      " +result)
-////    result shouldBe event
+  ignore should "work for Call Missed" in {
     fail("we need one example of this")
   }
 
@@ -149,7 +145,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_SCREEN_ON
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -160,7 +157,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_SCREEN_OFF
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -171,7 +169,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_SCREEN_UNLOCK
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -182,7 +181,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_LOCALISATION
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -193,7 +193,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_APP_INSTALL
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
@@ -204,7 +205,8 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_MOOD
 
     //Always the same
-    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    val eventId = event.getId
+    val result = writeAndGet[ET](typeNo, filter = _.getId == eventId )
     if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
