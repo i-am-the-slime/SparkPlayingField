@@ -60,6 +60,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
     val typeNo = TYPE_WINDOW_STATE_CHANGED
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
@@ -71,6 +72,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
@@ -83,18 +85,20 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
   it should "work for SMS Sent" in {
     type ET = SmsSent
-    val event = new SmsSent(192040L, 1L, 1369880442744L,
+    val event = new SmsSent(192040L, 1L, 1369649490619L,
       "676962b809fac8b6cb64113f6ee3bc594ca3e7b59cb35863c15dd69f668b7763131e0c9a7708f5d9201e1e64783ac6eeb14c36b382bf7da14042575c54230f46",
       125)
     val typeNo = TYPE_SMS_SENT
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
@@ -107,19 +111,21 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
 
   it should "work for Call Outgoing" in {
     type ET = CallOutgoing
-    val event = new CallOutgoing(190829L, 154L, 1369880442744L,
+    val event = new CallOutgoing(190829L, 154L, 1369853029838L,
       "613a016635fc407c1b3a1b6122f2469aac080a0b3ab37110e0d92d2be5d84acda400260ffc7fc771b16af49588babd2f326eb61c5ad903a499693ba36a9e5651",
       1369852973032L, 43L)
     val typeNo = TYPE_CALL_OUTGOING
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
@@ -132,47 +138,52 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 //
 //    //Always the same
 //    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
-//    result shouldBe event
+//    if (event != result) error("Expected:   " + event + "\nActual      " +result)
+////    result shouldBe event
     "we need one example of this" shouldBe ""
   }
 
   it should "work for Screen On" in {
     type ET = ScreenOn
-    val event = new ScreenOn(194670L, 2L, 1369880442744L)
+    val event = new ScreenOn(194670L, 2L, 1369903309675L)
     val typeNo = TYPE_SCREEN_ON
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
   it should "work for Screen Off" in {
     type ET = ScreenOff
-    val event = new ScreenOff(190840L, 154L, 1369880442744L)
+    val event = new ScreenOff(190840L, 154L, 1369853566432L)
     val typeNo = TYPE_SCREEN_OFF
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
   it should "work for Screen Unlock" in {
     type ET = ScreenUnlock
-    val event = new ScreenUnlock(194671L, 2L, 1369880442744L)
+    val event = new ScreenUnlock(194671L, 2L, 1369903310758L)
     val typeNo = TYPE_SCREEN_UNLOCK
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
   it should "work for Localisation (GPS)" in {
     type ET = Localisation
-    val event = new Localisation(194570L, 154L, 1369880442744L, "gps", 10.0f, 7.12154483, 50.735962)
+    val event = new Localisation(194570L, 154L, 1369890110233L, "gps", 10.0f, 7.12154483, 50.735962)
     val typeNo = TYPE_LOCALISATION
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
@@ -183,6 +194,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
@@ -193,6 +205,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
     //Always the same
     val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
+    if (event != result) error("Expected:   " + event + "\nActual      " +result)
     result shouldBe event
   }
 
