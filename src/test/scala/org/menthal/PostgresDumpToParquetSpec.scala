@@ -104,7 +104,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
   it should "work for Call Received" in {
     type ET = CallReceived
-    val event = new CallReceived(192040L, 154L, 1369880442744L,
+    val event = new CallReceived(190906L, 154L, 1369854937137L,
       "613a016635fc407c1b3a1b6122f2469aac080a0b3ab37110e0d92d2be5d84acda400260ffc7fc771b16af49588babd2f326eb61c5ad903a499693ba36a9e5651",
       1369854866723L, 64L)
     val typeNo = TYPE_CALL_RECEIVED
@@ -140,7 +140,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 //    val result = writeAndGet[ET](typeNo, filter = _.getId == event.getId )
 //    if (event != result) error("Expected:   " + event + "\nActual      " +result)
 ////    result shouldBe event
-    "we need one example of this" shouldBe ""
+    fail("we need one example of this")
   }
 
   it should "work for Screen On" in {
@@ -189,7 +189,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
   it should "work for AppInstall" in {
     type ET = AppInstall
-    val event = new AppInstall(195669L, 2L, 1369880442744L,"Nyx", "com.menthal.nyx")
+    val event = new AppInstall(194742L, 2L, 1369909525818L,"Nyx", "com.menthal.nyx")
     val typeNo = TYPE_APP_INSTALL
 
     //Always the same
@@ -200,7 +200,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
 
   it should "work for Mood" in {
     type ET = Mood
-    val event = new Mood(192040L, 1L, 1369880442744L, 4.0f)
+    val event = new Mood(195143L, 2L, 1369943233517L, 1.0f)
     val typeNo = TYPE_MOOD
 
     //Always the same
