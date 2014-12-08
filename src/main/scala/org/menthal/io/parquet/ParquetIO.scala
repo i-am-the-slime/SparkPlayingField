@@ -36,7 +36,12 @@ object ParquetIO {
 
 
 
-  def readEventType[A <: SpecificRecord](path: String, eventType: Int, sc: SparkContext, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
+  def readEventType[A <: SpecificRecord](
+    path: String,
+    eventType: Int,
+    sc: SparkContext,
+    recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)
+      (implicit ct:ClassTag[A]): RDD[A] = {
     read(path + "/" + EventType.toPath(eventType),sc, recordFilter)(ct)
   }
 

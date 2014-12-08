@@ -76,7 +76,7 @@ object PostgresDump {
         }
       case TYPE_APP_SESSION =>
         ld match {
-          case startTime ::duration ::appName :: packageName :: Nil =>
+          case startTime :: duration :: appName :: packageName :: Nil =>
             Some(CCAppSession(userId, time, duration.toLong, packageName))
           case _ => None
         }
@@ -90,19 +90,19 @@ object PostgresDump {
         Some(CCCallMissed(id, userId, time, ld(0), ld(1).toLong))
       case TYPE_CALL_OUTGOING =>
         ld match {
-          case contactHash :: startTimestamp ::durationInMillis :: Nil =>
+          case contactHash :: startTimestamp :: durationInMillis :: Nil =>
             Some(CCCallOutgoing(id, userId, time, contactHash, startTimestamp.toLong, durationInMillis.toLong))
           case _ => None
         }
       case TYPE_CALL_RECEIVED =>
         ld match {
-          case contactHash :: startTimestamp ::durationInMillis :: Nil =>
+          case contactHash :: startTimestamp :: durationInMillis :: Nil =>
             Some(CCCallReceived(id, userId, time, contactHash, startTimestamp.toLong, durationInMillis.toLong))
           case _ => None
         }
       case TYPE_DEVICE_FEATURES =>
         ld match {
-          case androidVersion :: deviceName ::operatorName :: Nil =>
+          case androidVersion :: deviceName :: operatorName :: Nil =>
             Some(CCDeviceFeatures(id, userId, time, androidVersion, deviceName, operatorName))
           case _ => None
         }
