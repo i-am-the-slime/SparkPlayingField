@@ -7,7 +7,7 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.menthal.model.events.MenthalEvent
+import org.menthal.model.events.{CCScreenOn, MenthalEvent}
 import org.menthal.model.EventType
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
@@ -82,6 +82,8 @@ object ParquetIO {
       readJob.getConfiguration)
       .map(_._2.asInstanceOf[A])
 
+
+    filteredFile.asInstanceOf[RDD[CCScreenOn]].collect().sortBy(_.time)
     filteredFile
   }
 }

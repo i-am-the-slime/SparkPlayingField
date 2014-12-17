@@ -73,13 +73,11 @@ case class Container(sessions: Queue[AppSessionFragment], last: AppSessionFragme
 
 }
 
-
 sealed abstract class AppSessionFragment {
   val time: Long
   val app: Option[String]
   def toAppSession(userId: Long): Option[AppSession]
 }
-
 
 case class Session(time: Long, end: Long, app: Option[String]) extends AppSessionFragment
 {
@@ -138,8 +136,6 @@ object AppSessionContainer {
     Container(Queue(), eventToAppSessionFragment(ev))
   }
 }
-
-
 
 object AppSessionMonoid extends Monoid[AppSessionContainer] {
   implicit val appSessionMonoid : Monoid[AppSessionContainer] = AppSessionMonoid

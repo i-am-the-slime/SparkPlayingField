@@ -47,7 +47,7 @@ libraryDependencies ++= Seq( //Dates and Times
   ,"joda-time" % "joda-time" % "2.3"
 )
 
-libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.2"
+libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.12"
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 

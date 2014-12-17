@@ -174,13 +174,13 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
   "WindowStateChanges during locked state" should "still reduce fine" in {
     val now = DateTime.now
     val events = Vector(
-      CCWindowStateChanged(0,0, new DateTime(now).getMillis, "", "A", ""),
-      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 1).getMillis, "", "B", ""),
-      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 2).getMillis, "", "C", ""),
-      CCScreenOff(0,0, new DateTime(now plusMinutes 3).getMillis),
-      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 4).getMillis, "", "D", ""),
-      CCScreenUnlock(0,0, new DateTime(now plusMinutes 5).getMillis),
-      CCWindowStateChanged(0,0, new DateTime(now plusMinutes 6).getMillis, "", "E", "")
+      CCWindowStateChanged(0,0, now.getMillis, "", "A", ""),
+      CCWindowStateChanged(0,0, (now plusMinutes 1).getMillis, "", "B", ""),
+      CCWindowStateChanged(0,0, (now plusMinutes 2).getMillis, "", "C", ""),
+      CCScreenOff(0,0, (now plusMinutes 3).getMillis),
+      CCWindowStateChanged(0,0, (now plusMinutes 4).getMillis, "", "D", ""),
+      CCScreenUnlock(0,0, (now plusMinutes 5).getMillis),
+      CCWindowStateChanged(0,0, (now plusMinutes 6).getMillis, "", "E", "")
     ) map (event => AppSessionContainer(event)) reduce(_ + _)
     val correct = AppSessionContainer(
       Session(now, now plusMinutes 1, Some("A")),
@@ -192,6 +192,16 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
       Session(now plusMinutes 6, now plusMinutes 6, Some("E"))
     )
     events should be (correct)
+  }
+
+  "The first event" should "not produce a 16000 day long app session" in {
+    val time = DateTime.now
+    val events = Vector(
+    CCScreenUnlock(0, 0, time minusMinutes 2),
+    CCWindowStateChanged(0, 0, time, "FuckerMan", "com.fuck.you", "Roll")
+    ).map(AppSessionContainer(_))
+    val sessions = events.reduce(_ + _).toAppSessions(0)
+    error(sessions.toString())
   }
 
   val apps = List("ShitApp", "FuckApp", "WhoreFace", "KabelJau")

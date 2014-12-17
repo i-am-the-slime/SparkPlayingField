@@ -10,24 +10,29 @@ object Granularity
   type Granularity = Value
   val Hourly, Daily, Weekly, Monthly, Yearly = Value
 
+  def granularityToLong(granularity:Granularity):Long = granularity match {
+    case Hourly => 1
+    case Daily => 2
+    case Weekly => 3
+  }
 
-  def roundTime(time: DateTime, granularity: Granularity): DateTime = {
+  def roundTimeFloor(time: DateTime, granularity: Granularity): DateTime = {
     granularity match {
       case Hourly =>
-        time.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+        time.withTimeAtStartOfDay().withHourOfDay(time.getHourOfDay)
       case Daily =>
-        time.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+        time.withTimeAtStartOfDay()
       case Weekly =>
-        time.withDayOfWeek(0).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+        time.withDayOfWeek(0).withTimeAtStartOfDay()
       case Monthly =>
-        time.withDayOfMonth(0).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+        time.withDayOfMonth(0).withTimeAtStartOfDay()
       case Yearly =>
-        time.withDayOfYear(0).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+        time.withDayOfYear(0).withTimeAtStartOfDay()
     }
   }
 
   def roundTimeCeiling(time: DateTime, granularity: Granularity): DateTime = {
-    val rounded = roundTime(time, granularity)
+    val rounded = roundTimeFloor(time, granularity)
     granularity match {
       case Hourly =>
         rounded.plusHours(1)

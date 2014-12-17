@@ -18,7 +18,7 @@ import AvroSerializer._
 class MenthalKryoRegistrator extends KryoRegistrator {
   override def registerClasses(kryo: Kryo) {
     kryo.register(classOf[AccessibilityServiceUpdate], asAvroSerializer[AccessibilityServiceUpdate])
-    kryo.register(classOf[Aggregation], asAvroSerializer[Aggregation])
+    kryo.register(classOf[AggregationEntry], asAvroSerializer[AggregationEntry])
     kryo.register(classOf[AppInstall], asAvroSerializer[AppInstall])
     kryo.register(classOf[AppList], asAvroSerializer[AppList])
     kryo.register(classOf[AppRemoval], asAvroSerializer[AppRemoval])
