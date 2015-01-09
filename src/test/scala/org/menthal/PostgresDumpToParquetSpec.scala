@@ -16,11 +16,11 @@ import scala.reflect.io.File
 import scala.util.Try
 
 class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAfterEach with BeforeAndAfter{
-  //TODO fix localpaths in this file
+  //TODO fix local paths in this file
 
   @transient var sc:SparkContext = _
-  val basePath = "src/test/resources/"
-  val inputPath = basePath + "real_events.small"
+  val basePath   = "src/test/resources/"
+  val inputPath  = basePath + "real_events.small"
   val outputPath = basePath + "PostgresDumpToParquetSpecTestFile"
 
   override def beforeEach() {
@@ -29,7 +29,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
   }
 
   override def afterEach() {
-    Try(File(outputPath).deleteRecursively())
+//    Try(File(outputPath).deleteRecursively())
     sc.stop()
     sc = null
   }

@@ -45,10 +45,12 @@ import org.menthal.model.events._
     val TYPE_TRAFFIC_DATA = 1025
     val TYPE_APP_SESSION = 1032
     val TYPE_QUESTIONNAIRE = 1100
+    val TYPE_AGGREGATION_ENTRY = 2000
 
   def fromMenthalEvent(event: MenthalEvent): Int = {
     event match {
       case _ : CCAccessibilityServiceUpdate => TYPE_ACCESSIBILITY_SERVICE_UPDATE
+      case _ : CCAggregationEntry ⇒ TYPE_AGGREGATION_ENTRY
       case _ : CCAppInstall => TYPE_APP_INSTALL
       case _ : CCAppList => TYPE_APP_LIST
       case _ : CCAppRemoval => TYPE_APP_REMOVAL
@@ -85,6 +87,7 @@ import org.menthal.model.events._
   def toPath(eventType: Int): String = {
     eventType match {
       case TYPE_ACCESSIBILITY_SERVICE_UPDATE => "accessibility_service_update"
+      case TYPE_AGGREGATION_ENTRY ⇒ "aggregation"
       case TYPE_APP_LIST => "app_list"
       case TYPE_APP_INSTALL => "app_install"
       case TYPE_APP_REMOVAL => "app_removal"
@@ -113,7 +116,7 @@ import org.menthal.model.events._
       case TYPE_TRAFFIC_DATA => "traffic_data"
       case TYPE_WHATSAPP_RECEIVED => "whatsapp_received"
       case TYPE_WHATSAPP_SENT => "whatsapp_sent"
-      case  a if a == TYPE_WINDOW_STATE_CHANGED || a == TYPE_WINDOW_STATE_CHANGED_BASIC =>
+      case a if a == TYPE_WINDOW_STATE_CHANGED || a == TYPE_WINDOW_STATE_CHANGED_BASIC =>
         "window_state_changed"
       case _ => "unknown"
     }
@@ -122,6 +125,8 @@ import org.menthal.model.events._
 
   def toSchema(eventType: Int):Schema = {//TODO use schema lookup service instead
     eventType match {
+      case TYPE_ACCESSIBILITY_SERVICE_UPDATE ⇒ AccessibilityServiceUpdate.getClassSchema
+      case TYPE_AGGREGATION_ENTRY ⇒ AggregationEntry.getClassSchema
       case TYPE_APP_INSTALL => AppInstall.getClassSchema
       case TYPE_APP_LIST => AppList.getClassSchema
       case TYPE_APP_REMOVAL => AppRemoval.getClassSchema

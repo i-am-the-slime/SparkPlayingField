@@ -57,8 +57,7 @@ object PostgresDumpToParquet {
   def parseFromDumpAndWriteToParquet(sc:SparkContext, dumpDirPath:String, outputPath:String) = {
     val menthalEvents = PostgresDump.parseDumpFile(sc, dumpDirPath)
     menthalEvents.cache()
-    processedTypes.foreach {
-      case (eventType) =>  ParquetIO.filterAndWriteToParquet(sc, menthalEvents, eventType, outputPath)
-    }
+    for (eventType ← processedTypes)
+      ParquetIO.filterAndWriteToParquet(sc, menthalEvents, eventType, outputPath)
   }
 }

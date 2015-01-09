@@ -8,4 +8,5 @@ import org.joda.time.DateTime
 object DateImplicits {
   implicit def dateToLong(dt:DateTime):Long = dt.getMillis
   implicit def longToDate(t: Long):DateTime = new DateTime(t)
+  implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
 }

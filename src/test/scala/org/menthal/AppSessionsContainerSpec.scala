@@ -194,16 +194,6 @@ class AppSessionsContainerSpec extends FlatSpec with Matchers with BeforeAndAfte
     events should be (correct)
   }
 
-  "The first event" should "not produce a 16000 day long app session" in {
-    val time = DateTime.now
-    val events = Vector(
-    CCScreenUnlock(0, 0, time minusMinutes 2),
-    CCWindowStateChanged(0, 0, time, "FuckerMan", "com.fuck.you", "Roll")
-    ).map(AppSessionContainer(_))
-    val sessions = events.reduce(_ + _).toAppSessions(0)
-    error(sessions.toString())
-  }
-
   val apps = List("ShitApp", "FuckApp", "WhoreFace", "KabelJau")
   val rand = new Random()
   var time = DateTime.now()

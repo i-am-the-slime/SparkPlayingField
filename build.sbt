@@ -47,13 +47,12 @@ libraryDependencies ++= Seq( //Dates and Times
   ,"joda-time" % "joda-time" % "2.3"
 )
 
+//libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.15"
 libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.12"
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
-//libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.6" //Monads
-
-libraryDependencies += ("com.twitter" % "parquet-avro" % "1.5.0") //Columnar Storage for Hadoop
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.0" //Monads
 
 libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Columnar Storage for Hadoop
 
@@ -64,7 +63,9 @@ libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.4.0").
 
 libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test" //Testing
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test" //Testing
+
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.1" % "test"
 
 libraryDependencies += "org.mortbay.jetty" % "servlet-api" % "3.0.20100224"
 

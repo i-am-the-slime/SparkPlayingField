@@ -20,7 +20,8 @@ object ParquetIO {
 
 
   def filterAndWriteToParquet(sc:SparkContext, events: RDD[_ <:MenthalEvent], eventType: Int, dirPath:String ) = {
-    val filteredEvents = events.filter  {e => (EventType.fromMenthalEvent(e) == eventType) }.map(_.toAvro)
+//    val filteredEvents = events.filter  {e => EventType.fromMenthalEvent(e) == eventType }.map(_.toAvro)
+    val filteredEvents = for (e ← events if EventType.fromMenthalEvent(e) == eventType) yield e.toAvro
     val path = s"$dirPath/${EventType.toPath(eventType)}"
     val schema = EventType.toSchema(eventType)
     ParquetIO.write(sc, filteredEvents, path, schema)
@@ -35,7 +36,6 @@ object ParquetIO {
 //  }
 
 
-
   def readEventType[A <: SpecificRecord](
     path: String,
     eventType: Int,
@@ -47,7 +47,7 @@ object ParquetIO {
 
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) = {
     //val isEmpty = data.fold(0)
-    val isEmpty = Try(data.first).isFailure
+    val isEmpty = Try(data.first()).isFailure
 
     if (!isEmpty) {
       val writeJob = Job.getInstance(new Configuration)
@@ -66,7 +66,6 @@ object ParquetIO {
   }
 
   def read[A <: SpecificRecord](path: String, sc: SparkContext, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
-
     val readJob = Job.getInstance(new Configuration)
     ParquetInputFormat.setReadSupportClass(readJob, classOf[AvroReadSupport[A]])
 
@@ -82,8 +81,6 @@ object ParquetIO {
       readJob.getConfiguration)
       .map(_._2.asInstanceOf[A])
 
-
-    filteredFile.asInstanceOf[RDD[CCScreenOn]].collect().sortBy(_.time)
     filteredFile
   }
 }
