@@ -9,12 +9,13 @@ import org.menthal.io.PostgresDumpToParquet
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.events._
 import org.menthal.model.EventType._
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest._
 
 import scala.reflect.ClassTag
 import scala.reflect.io.File
 import scala.util.Try
 
+@Ignore
 class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAfterEach with BeforeAndAfter{
   //TODO fix local paths in this file
 
@@ -24,29 +25,31 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
   val outputPath = basePath + "PostgresDumpToParquetSpecTestFile"
 
   override def beforeEach() {
-    Try(File(outputPath).deleteRecursively())
+//    Try(File(outputPath).deleteRecursively())
     sc = SparkTestHelper.localSparkContext
   }
 
   override def afterEach() {
-//    Try(File(outputPath).deleteRecursively())
+    Try(File(outputPath).deleteRecursively())
     sc.stop()
     sc = null
   }
 
-  "When given an input and output file" should "read the file and output the results" in {
+  behavior of "When given an input and output file"
+
+  it should "read the file and output the results" in {
     PostgresDumpToParquet.parseFromDumpAndWriteToParquet(sc, inputPath , outputPath)
     val result:RDD[SmsReceived] = ParquetIO.readEventType(outputPath, TYPE_SMS_RECEIVED, sc)
-    val someEvent = result.filter(smsRec => smsRec.getId == 191444L).take(1).toList(0)
+    val someEvent = result.filter(_.getId == 191444L).take(1).toList(0)
     val hash = "43bd5f4b6f51cb3a007fb2683ca64e7788a0fc02f84c52670e8086b491bcb85572ae8772b171910ee2cbce1f3fe27a7fa3634d0c97a8c5f925de9eb21b574179"
     val expectedEvent = new SmsReceived(191444L, 1L, 1369369344990L, hash, 129)
     someEvent shouldBe expectedEvent
   }
 
-  "When given an input and output file" should "read the file and output the results for SMS sent" in {
+  it should "read the file and output the results for SMS sent" in {
     PostgresDumpToParquet.parseFromDumpAndWriteToParquet(sc, inputPath , outputPath)
     val result:RDD[SmsSent] = ParquetIO.readEventType(outputPath, TYPE_SMS_SENT, sc)
-    val someEvent = result.filter(smsRec => smsRec.getId == 192040L).take(1).toList(0)
+    val someEvent = result.filter(_.getId == 192040L).take(1).toList(0)
     val hash = "676962b809fac8b6cb64113f6ee3bc594ca3e7b59cb35863c15dd69f668b7763131e0c9a7708f5d9201e1e64783ac6eeb14c36b382bf7da14042575c54230f46"
     val expectedEvent = new SmsSent(192040L, 1L, 1369649490619L, hash, 125)
     someEvent shouldBe expectedEvent

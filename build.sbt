@@ -93,3 +93,7 @@ fork in Test := true
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
 
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
+
+val java7Home = Some(file("/Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/Home"))
+
+javaHome in (Compile, compile) := java7Home

@@ -132,7 +132,6 @@ import org.menthal.model.events._
       case TYPE_APP_REMOVAL => AppRemoval.getClassSchema
       case TYPE_APP_SESSION => AppSession.getClassSchema
       case TYPE_APP_UPGRADE => AppUpgrade.getClassSchema
-      case TYPE_ACCESSIBILITY_SERVICE_UPDATE => AccessibilityServiceUpdate.getClassSchema
       case TYPE_CALL_MISSED => CallMissed.getClassSchema
       case TYPE_CALL_OUTGOING => CallOutgoing.getClassSchema
       case TYPE_CALL_RECEIVED => CallReceived.getClassSchema

@@ -75,12 +75,12 @@ object AggrSpec {
   type ParquetEventsAggregator[A] = (EventConverter[A]) ⇒ (String, Int, TimePeriod, String, SparkContext) ⇒ Unit
   type ParquetAggregationsAggregator = (String, String, TimePeriod, TimePeriod, SparkContext) ⇒ Unit
 
-  def aggregateDurationFromParquet:ParquetEventsAggregator =
-    aggregateEventsFromParquet(GeneralAggregations.aggregateDuration) _
-  def aggregateCountFromParquet:ParquetEventsAggregator =
-    aggregateEventsFromParquet(GeneralAggregations.aggregateCount) _
-  def aggregateFromParquet:ParquetEventsAggregator =
-    aggregateEventsFromParquet(GeneralAggregations.aggregateLength) _
+  def aggregateDurationFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
+    aggregateEventsFromParquet(GeneralAggregations.aggregateDuration)
+  def aggregateCountFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
+    aggregateEventsFromParquet(GeneralAggregations.aggregateCount)
+  def aggregateFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
+    aggregateEventsFromParquet(GeneralAggregations.aggregateLength)
 
   def aggregateEventsFromParquet[A <: SpecificRecord]
   (aggregator:MenthalEventsAggregator)

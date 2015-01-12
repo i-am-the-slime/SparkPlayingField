@@ -1,8 +1,6 @@
-package org.menthal
+package org.menthal.aggregations
 
 import org.apache.spark.SparkContext
-import org.menthal.aggregations.AggrSpec
-import org.menthal.aggregations.GeneralAggregations._
 import org.menthal.model.Granularity
 
 /**
@@ -17,7 +15,6 @@ object Aggregations {
     }
     val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"))
     val datadir = args(1)
-    //TODO actually aggregate in this method.
     aggregate(datadir, sc)
     sc.stop()
   }
@@ -25,6 +22,6 @@ object Aggregations {
   def aggregate(datadir: String,  sc: SparkContext) =
     for {
       granularity ← List(Granularity.Daily, Granularity.Weekly, Granularity.Monthly, Granularity.Yearly)
-    } yield AggrSpec.aggregateGranularity(granularity, datadir, sc)
+    } yield AggrSpec.aggregateSuiteForGranularity(granularity, datadir, sc)
 
 }
