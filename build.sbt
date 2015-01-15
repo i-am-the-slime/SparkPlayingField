@@ -63,7 +63,7 @@ libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.4.0").
 
 libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test" //Testing
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test" //Testing
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.1" % "test"
 

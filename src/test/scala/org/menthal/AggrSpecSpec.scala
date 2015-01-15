@@ -38,27 +38,22 @@ class AggrSpecSpec extends FlatSpec with GeneratorDrivenPropertyChecks with Matc
   }
 
   val granularities = List(Leaf(Granularity.Hourly))
-  val simpleAggrSpecs =List(
+  val simpleAggrSpecs = List(
     AggrSpec(TYPE_APP_SESSION, toCCAppSession _, agCount("app", "starts")))
 
   "aggregateSuiteForGranularity should read data from postgres and then aggregate in package" should "be possible" in {
-    forAll(Generators.listAppSession) { sessions ⇒
+    forAll(Generators.nonEmptyListOfAppSessions) { sessions ⇒
       Try(File(datadir).deleteRecursively())
       //beforeEach()
-
       val sessionsRdd = sc.parallelize(sessions).map(_.toAvro)
-      ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, sessionsRdd)
-      ParquetIO.readEventType[AppSession](sc, datadir, EventType.TYPE_APP_SESSION)
-      AggrSpec.aggregate(sc, datadir, simpleAggrSpecs, granularities)
-//      val result = ParquetIO.readAggrType(sc, datadir, "appStarts", timePeriod).map(toCCAggregationEntry).collect()
-//
-//      val keyVals = Generators.splitToBucketsWithCount(timePeriod, sessions)
-//      val expected = for (((user, pn, time), count) <- keyVals)
-//      yield CCAggregationEntry(user, time, timePeriod, pn, count)
-//
-//      result.toSet() equals expected.toSet()
-//      afterEach()
-
+        ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, sessionsRdd)
+//        ParquetIO.readEventType(sc, datadir, EventType.TYPE_APP_SESSION)
+        AggrSpec.aggregate(sc, datadir, simpleAggrSpecs, granularities)
+      val result = ParquetIO.readAggrType(sc, datadir, "app_starts", timePeriod).map(toCCAggregationEntry).collect()
+      val keyVals = Generators.splitToBucketsWithCount(timePeriod, sessions)
+      val expected = for (((user, pn, time), count) <- keyVals)
+      yield CCAggregationEntry(user, time, timePeriod, pn, count)
+      result.toSet() shouldBe expected.toSet()
     }
   }
 }

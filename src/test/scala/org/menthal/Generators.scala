@@ -22,6 +22,7 @@ object Generators {
   } yield CCAppSession(userId, time, duration, packageName)
 
   val listAppSession:Gen[List[CCAppSession]] = Gen.listOf(appSession)
+  val nonEmptyListOfAppSessions:Gen[List[CCAppSession]] = Gen.nonEmptyListOf(appSession)
 
   def splitToBucketsWithFun(getVal: CCAppSession => Long)
                            (timePeriod:TimePeriod, sessions:List[CCAppSession])
