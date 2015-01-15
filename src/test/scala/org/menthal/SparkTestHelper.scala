@@ -15,6 +15,7 @@ object SparkTestHelper {
       .set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
       .set("spark.kryo.registrator", classOf[MenthalKryoRegistrator].getCanonicalName)
       .set("spark.kryo.referenceTracking", "false")
+      .set("spark.driver.allowMultipleContexts", "true")
       .setAppName("test")
       .set("spark.executor.memory", "512M")
     val sc = new SparkContext(conf)

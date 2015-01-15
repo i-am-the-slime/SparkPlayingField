@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 import org.menthal.aggregations.tools.EventTransformers
 import org.menthal.model.Granularity
 import org.menthal.model.Granularity.TimePeriod
-import org.menthal.model.events.CCAppSession
+import org.menthal.model.events.{MenthalEvent, CCAppSession}
 import org.menthal.model.implicits.DateImplicits._
 import org.scalacheck.Gen
 
@@ -32,7 +32,7 @@ object Generators {
       userId = session.userId
       pn = session.packageName
       bucket = Granularity.roundTimeFloor(split.time, timePeriod)
-    } yield ((userId, pn, dateToLong(bucket)), getVal(session))
+    } yield ((userId, pn, dateToLong(bucket)), getVal(split.asInstanceOf[CCAppSession]))
   }
 
   def splitToBucketsWithCount = splitToBucketsWithFun {_ => 1} _

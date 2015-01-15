@@ -24,16 +24,15 @@ import org.menthal.model.EventType._
 object GeneralAggregations {
 
   type PerUserBucketsRDD[K, V] = RDD[(((Long, DateTime, K), V))]
-  type MenthalEventsAggregator = (RDD[_ <: MenthalEvent], TimePeriod) => RDD[CCAggregationEntry]
-  type EventPredicate = MenthalEvent => Boolean
+  type MenthalEventsAggregator = (RDD[MenthalEvent], TimePeriod) => RDD[CCAggregationEntry]
 
 
-  def aggregateLength = aggregateEvents(getMessageLength) _
-  def aggregateDuration = aggregateEvents(getDuration) _
-  def aggregateCount = aggregateEvents(_ => 1L) _
+  def aggregateLength:MenthalEventsAggregator = aggregateEvents(getMessageLength) _
+  def aggregateDuration:MenthalEventsAggregator = aggregateEvents(getDuration) _
+  def aggregateCount:MenthalEventsAggregator = aggregateEvents(_ => 1L) _
 
 
-  def aggregateAggregations(aggrs: RDD[CCAggregationEntry], granularity: TimePeriod, subgranularity: TimePeriod): RDD[CCAggregationEntry] = {
+  def aggregateAggregations(aggrs: RDD[MenthalEvent], granularity: TimePeriod, subgranularity: TimePeriod): RDD[CCAggregationEntry] = {
       val buckets = for {
         CCAggregationEntry(user, time, `subgranularity`, key, value) ← aggrs
         timeBucket = Granularity.roundTimeFloor(time, granularity)
@@ -44,7 +43,7 @@ object GeneralAggregations {
   }
 
   def aggregateEvents(fn:MenthalEvent ⇒ Long)
-                     (events: RDD[_ <: MenthalEvent], granularity: TimePeriod)
+                     (events: RDD[MenthalEvent], granularity: TimePeriod)
                      :RDD[CCAggregationEntry] = {
     val buckets = reduceToPerUserAggregations(fn)(events, granularity)
     buckets.map {case ((user, time, key), value) ⇒
@@ -52,7 +51,7 @@ object GeneralAggregations {
   }
 
   def reduceToPerUserAggregations(getValFunction: MenthalEvent => Long)
-                                 (events: RDD[_ <: MenthalEvent], granularity: TimePeriod)
+                                 (events: RDD[MenthalEvent], granularity: TimePeriod)
                                  :PerUserBucketsRDD[String, Long] = {
     val buckets = for {
       event ← events

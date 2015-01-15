@@ -15,7 +15,6 @@ import scala.reflect.ClassTag
 import scala.reflect.io.File
 import scala.util.Try
 
-@Ignore
 class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAfterEach with BeforeAndAfter{
   //TODO fix local paths in this file
 

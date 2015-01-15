@@ -2,14 +2,15 @@ package org.menthal.aggregations
 
 import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
-import org.menthal.aggregations.AggrSpec.ParquetEventsAggregator
+import org.apache.spark.rdd.RDD
 import org.menthal.aggregations.GeneralAggregations.MenthalEventsAggregator
+import org.menthal.aggregations.tools.{Tree,Leaf, Node}
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.EventType._
 import org.menthal.model.Granularity
 import org.menthal.model.Granularity.TimePeriod
 import org.menthal.model.events.Implicits._
-import org.menthal.model.events.{AggregationEntry, MenthalEvent}
+import org.menthal.model.events.{CCAggregationEntry, AggregationEntry, MenthalEvent}
 
 import scala.reflect.ClassTag
 
@@ -35,65 +36,39 @@ object AggrSpec {
 
   def agCountAndLength(name: String) = List(agCount(name), agLength(name))
 
-  val suite = List(
-    AggrSpec(TYPE_APP_SESSION, toCCAppSession, agDuration("app", "usage"), agCount("app", "starts")),
-    AggrSpec(TYPE_CALL_MISSED, toCCCallMissed _, agCount("call_missed")),
-    AggrSpec(TYPE_CALL_OUTGOING, toCCCallOutgoing _, agCountAndDuration("call_outgoing")),
-    AggrSpec(TYPE_CALL_RECEIVED, toCCCallReceived _, agCountAndDuration("call_received")),
-    AggrSpec(TYPE_NOTIFICATION_STATE_CHANGED, toCCNotificationStateChanged _, agCount("notification")),
-    AggrSpec(TYPE_SCREEN_OFF, toCCScreenOff _, agCount("screen_off")),
-    AggrSpec(TYPE_SCREEN_ON, toCCScreenOn _, agCount("screen_on")),
-    AggrSpec(TYPE_SCREEN_UNLOCK, toCCScreenUnlock _, agCount("screen_unlock")),
-    AggrSpec(TYPE_SMS_RECEIVED, toCCSmsReceived _, agCountAndLength("message_received")),
-    AggrSpec(TYPE_SMS_SENT, toCCSmsSent _, agCountAndLength("message_sent")),
-    AggrSpec(TYPE_WHATSAPP_RECEIVED, toCCWhatsAppReceived _, agCountAndLength("whatsapp_received")),
-    AggrSpec(TYPE_WHATSAPP_SENT, toCCWhatsAppSent _, agCountAndLength("whatsapp_sent"))
-  )
 
-
-  def aggregateSuiteForGranularity(granularity:TimePeriod, datadir: String, sc: SparkContext) = {
-    for {
-      AggrSpec(eventType, converter, aggrs) ← suite
-      (aggregator, aggrName) ← aggrs
-    } {
+  def aggregate(sc: SparkContext, datadir: String, suite: List[AggrSpec[_ <: SpecificRecord]], granularities: List[Tree[TimePeriod]]) = {
+    def aggregateAggregationsToParquet(aggrName:String, subAggregates: RDD[MenthalEvent], granularity: TimePeriod, subgranularity: TimePeriod)
+        :RDD[_ <: MenthalEvent] = {
+      val aggregates = GeneralAggregations.aggregateAggregations(subAggregates, granularity, subgranularity)
+      ParquetIO.writeAggrType(sc, datadir, aggrName, granularity, aggregates.map(_.toAvro))
+      aggregates
+    }
+    def aggregateEventsToParquet
+        (aggrName: String, aggregator:MenthalEventsAggregator, eventType: Int,events: RDD[MenthalEvent],granularity: TimePeriod)
+        :RDD[CCAggregationEntry]= {
+      val aggregates = aggregator(events, granularity)
+      ParquetIO.writeAggrType(sc, datadir, aggrName, granularity, aggregates.map(_.toAvro))
+      aggregates
+    }
+    def aggregateToParquetForGranularity
+        (aggrName: String, aggregator:MenthalEventsAggregator, eventType: Int)
+        (events: RDD[MenthalEvent],granularity: TimePeriod)
+        :RDD[MenthalEvent] = {
       Granularity.sub(granularity) match {
-        case Some(subgranularity) ⇒
-          aggregateAggregationsFromParquet(datadir, aggrName, granularity, subgranularity, sc)
-        case None ⇒
-          aggregateEventsFromParquet(aggregator)(converter)(datadir, eventType, granularity, aggrName, sc)
+        case Some(subgranularity) ⇒ aggregateAggregationsToParquet(aggrName, events, granularity, subgranularity).map(_.asInstanceOf[MenthalEvent])
+        case None ⇒ aggregateEventsToParquet(aggrName, aggregator, eventType, events, granularity).map(_.asInstanceOf[MenthalEvent])
       }
     }
+    for {
+      AggrSpec(eventType, converter, aggrs) ← suite
+      events = ParquetIO.readEventType(sc, datadir, eventType).map(converter)
+      (aggregator, aggrName) ← aggrs
+      granularityTree <- granularities
+      parquetAggregator = aggregateToParquetForGranularity(aggrName, aggregator, eventType) _
+    } granularityTree.traverseTree(events)(parquetAggregator)
   }
 
-  def aggregateAggregationsFromParquet(datadir: String, aggrName: String, granularity: TimePeriod, subgranularity:TimePeriod, sc: SparkContext) = {
-    val subAggregates = ParquetIO.readAggrType(sc, datadir, aggrName, subgranularity).map(toCCAggregationEntry)
-    val aggregates = GeneralAggregations.aggregateAggregations(subAggregates, granularity, subgranularity)
-    ParquetIO.writeAggrType(sc, datadir, aggrName, granularity, aggregates.map(_.toAvro))
-  }
-
-  type EventConverter[A] = A ⇒ MenthalEvent
-  type ParquetEventsAggregator[A] = (EventConverter[A]) ⇒ (String, Int, TimePeriod, String, SparkContext) ⇒ Unit
-  type ParquetAggregationsAggregator = (String, String, TimePeriod, TimePeriod, SparkContext) ⇒ Unit
-
-  def aggregateDurationFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
-    aggregateEventsFromParquet(GeneralAggregations.aggregateDuration)
-  def aggregateCountFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
-    aggregateEventsFromParquet(GeneralAggregations.aggregateCount)
-  def aggregateFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
-    aggregateEventsFromParquet(GeneralAggregations.aggregateLength)
-
-
-
-  def aggregateEventsFromParquet[A <: SpecificRecord]
-  (aggregator:MenthalEventsAggregator)
-  (toMenthalEvent:A ⇒ MenthalEvent)
-  (datadir: String, eventType: Int, granularity: TimePeriod, outputName: String, sc: SparkContext)
-  (implicit ct:ClassTag[A]) = {
-
-    val events = ParquetIO.readEventType[A](sc, datadir, eventType).map(toMenthalEvent)
-    val aggregates = aggregator(events, granularity)
-    ParquetIO.writeAggrType(sc, datadir, outputName, granularity, aggregates.map(_.toAvro))
-  }
 }
 
 

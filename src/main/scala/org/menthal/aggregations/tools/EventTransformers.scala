@@ -89,7 +89,7 @@ object EventTransformers {
     go(start, durationInMillis, Nil)
   }
 
-  def splitEventByRoundedTime(event: MenthalEvent, timePeriod: TimePeriod): List[MenthalEvent] = {
+  def splitEventByRoundedTime(event: MenthalEvent, timePeriod: TimePeriod): List[_ <: MenthalEvent] = {
     event match {
       case e: CCAppSession ⇒
         for ((start, duration) ← getSplittingTime(new DateTime(e.time), e.duration, timePeriod))

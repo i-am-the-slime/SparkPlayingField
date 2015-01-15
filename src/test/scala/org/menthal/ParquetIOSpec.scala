@@ -76,7 +76,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new CCWindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new CCWindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")
     ))
-    ParquetIO.filterAndWriteToParquet(sc, path, EventType.TYPE_APP_SESSION, data)
+    ParquetIO.filterAndWriteToParquet(sc, path, EventType.TYPE_WINDOW_STATE_CHANGED, data)
 
     val readData = sc.parallelize(Seq(
       new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
