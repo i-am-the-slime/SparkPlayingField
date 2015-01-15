@@ -58,6 +58,6 @@ object PostgresDumpToParquet {
     val menthalEvents = PostgresDump.parseDumpFile(sc, dumpDirPath)
     menthalEvents.cache()
     for (eventType ← processedTypes)
-      ParquetIO.filterAndWriteToParquet(sc, menthalEvents, eventType, outputPath)
+      ParquetIO.filterAndWriteToParquet(sc, outputPath, eventType, menthalEvents)
   }
 }

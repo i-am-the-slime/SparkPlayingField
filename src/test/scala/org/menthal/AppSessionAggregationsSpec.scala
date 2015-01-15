@@ -4,6 +4,7 @@ import org.menthal.aggregations._
 import org.menthal.aggregations.tools.{AppSessionMonoid, AppSessionContainer, Lock, Session}
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
+import org.menthal.model.EventType
 import org.menthal.model.events._
 import org.scalatest._
 import org.apache.spark.{SparkConf, SparkContext}
@@ -39,7 +40,8 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
     val inputPath = "src/test/resources/raw_events_with_wsc"
     Try(File(outputPath).deleteRecursively())
     AppSessionAggregations.dumpToAppSessions(sc, inputPath, outputPath)
-    val result:Array[AppSession] = ParquetIO.read(outputPath + "/app_sessions", sc).collect()
+    val result:Array[AppSession] = ParquetIO.readEventType(sc, outputPath, EventType.TYPE_APP_SESSION).collect()
+//    val result:Array[AppSession] = ParquetIO.read(outputPath + "/app_sessions", sc).collect()
     val correct = Array(
           new AppSession(22812L,  1390427044719L, 120000L, "com.whatsapp")
         , new AppSession(22812L, 1390427164719L, 69590949L, "pussycat.james.bond")

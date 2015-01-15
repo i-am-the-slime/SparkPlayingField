@@ -40,7 +40,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new AppInstall(7L, 8L, 11L, "frederik", "209")
     ))
     ParquetIO.write(sc, data, path, AppInstall.getClassSchema)
-    val readResult = ParquetIO.read(path, sc)
+    val readResult = ParquetIO.read(sc, path)
     readResult zip data foreach ParquetIOSpec.compareThem
   }
 
@@ -50,7 +50,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new WindowStateChanged(7L,8L,11L, "frederik", "209", "schnarbeltir")
     ))
     ParquetIO.write(sc, data, path, WindowStateChanged.getClassSchema)
-    val readResult = ParquetIO.read(path, sc)
+    val readResult = ParquetIO.read(sc, path)
 
     readResult zip data foreach ParquetIOSpec.compareThem
   }
@@ -67,7 +67,7 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST)
     )
 
-    val readResult = ParquetIO.read(path, sc, Some(classOf[ParquetIOSpec.SomeFilter])).collect()
+    val readResult = ParquetIO.read(sc, path, Some(classOf[ParquetIOSpec.SomeFilter])).collect()
     readResult shouldBe filteredData
   }
 
@@ -76,14 +76,14 @@ class ParquetIOSpec extends FlatSpec with Matchers with BeforeAndAfterEach{
       new CCWindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new CCWindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")
     ))
-    ParquetIO.filterAndWriteToParquet(sc, data, TYPE_WINDOW_STATE_CHANGED, path)
+    ParquetIO.filterAndWriteToParquet(sc, path, EventType.TYPE_APP_SESSION, data)
 
     val readData = sc.parallelize(Seq(
       new WindowStateChanged(1L, 2L, 3L, "appName", "pkgName", KNACKWURST),
       new WindowStateChanged(7L, 8L, 11L, "frederik", "209", "slllllljltir")
     ))
 
-    val readResult = ParquetIO.read(path + "/" + EventType.toPath(TYPE_WINDOW_STATE_CHANGED), sc)
+    val readResult = ParquetIO.readEventType(sc, path, TYPE_WINDOW_STATE_CHANGED)
     readResult zip readData foreach ParquetIOSpec.compareThem
   }
 }

@@ -17,14 +17,14 @@ object CombineAppSessions {
     }
     val (master, input1, input2, output) = (args(0), args(1), args(2), args(3))
     val sc = new SparkContext(master, "Combine AppSessions", System.getenv("SPARK_HOME"))
-    combineAndWrite(input1, input2, output, sc)
+//    combineAndWrite(input1, input2, output, sc)
     sc.stop()
   }
 
-  def combineAndWrite(input1:String, input2:String, output: String,  sc: SparkContext) = {
-    def read(inputPath:String) = ParquetIO.read[AppSession](inputPath, sc)
-    val combined = read(input1) ++ read(input2)
-    ParquetIO.write(sc, combined, output, AppSession.getClassSchema)
-  }
+//  def combineAndWrite(input1:String, input2:String, output: String,  sc: SparkContext) = {
+//    def read(inputPath:String) = ParquetIO.read[AppSession](sc, inputPath)
+//    val combined = read(input1) ++ read(input2)
+//    ParquetIO.write(sc, combined, output, AppSession.getClassSchema)
+//  }
 
 }

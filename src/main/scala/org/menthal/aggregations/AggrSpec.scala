@@ -66,9 +66,9 @@ object AggrSpec {
   }
 
   def aggregateAggregationsFromParquet(datadir: String, aggrName: String, granularity: TimePeriod, subgranularity:TimePeriod, sc: SparkContext) = {
-    val subAggregates = ParquetIO.read[AggregationEntry](datadir + "/" + aggrName + Granularity.asString(subgranularity),sc).map(toCCAggregationEntry)
+    val subAggregates = ParquetIO.readAggrType(sc, datadir, aggrName, subgranularity).map(toCCAggregationEntry)
     val aggregates = GeneralAggregations.aggregateAggregations(subAggregates, granularity, subgranularity)
-    ParquetIO.write(sc, aggregates.map(_.toAvro), datadir + "/" + aggrName + Granularity.asString(granularity), AggregationEntry.getClassSchema)
+    ParquetIO.writeAggrType(sc, datadir, aggrName, granularity, aggregates.map(_.toAvro))
   }
 
   type EventConverter[A] = A ⇒ MenthalEvent
@@ -82,15 +82,17 @@ object AggrSpec {
   def aggregateFromParquet[A <: SpecificRecord]:ParquetEventsAggregator[A] =
     aggregateEventsFromParquet(GeneralAggregations.aggregateLength)
 
+
+
   def aggregateEventsFromParquet[A <: SpecificRecord]
   (aggregator:MenthalEventsAggregator)
   (toMenthalEvent:A ⇒ MenthalEvent)
   (datadir: String, eventType: Int, granularity: TimePeriod, outputName: String, sc: SparkContext)
   (implicit ct:ClassTag[A]) = {
 
-    val events = ParquetIO.readEventType[A](datadir, eventType, sc).map(toMenthalEvent)
+    val events = ParquetIO.readEventType[A](sc, datadir, eventType).map(toMenthalEvent)
     val aggregates = aggregator(events, granularity)
-    ParquetIO.write(sc, aggregates.map(_.toAvro), datadir + "/" + outputName + Granularity.asString(granularity), AggregationEntry.getClassSchema)
+    ParquetIO.writeAggrType(sc, datadir, outputName, granularity, aggregates.map(_.toAvro))
   }
 }
 

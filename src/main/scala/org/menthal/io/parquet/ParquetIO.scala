@@ -7,8 +7,9 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.menthal.model.events.{CCScreenOn, MenthalEvent}
-import org.menthal.model.EventType
+import org.menthal.model.Granularity.TimePeriod
+import org.menthal.model.events.{AggregationEntry, CCScreenOn, MenthalEvent}
+import org.menthal.model.{Granularity, EventType}
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
 import parquet.hadoop.{ParquetInputFormat, ParquetOutputFormat}
@@ -18,31 +19,37 @@ import scala.util.Try
 
 object ParquetIO {
 
+  def pathFromEventType(dirPath: String, eventType: Int):String = s"$dirPath/${EventType.toPath(eventType)}"
+  def pathFromAggrType(dirPath: String, aggrName: String, timePeriod: TimePeriod):String = s"$dirPath/$aggrName/${Granularity.asString(timePeriod)}"
 
-  def filterAndWriteToParquet(sc:SparkContext, events: RDD[_ <:MenthalEvent], eventType: Int, dirPath:String ) = {
-//    val filteredEvents = events.filter  {e => EventType.fromMenthalEvent(e) == eventType }.map(_.toAvro)
+
+  def filterAndWriteToParquet(sc: SparkContext, dirPath: String, eventType: Int, events: RDD[_ <: MenthalEvent]) = {
     val filteredEvents = for (e ← events if EventType.fromMenthalEvent(e) == eventType) yield e.toAvro
-    val path = s"$dirPath/${EventType.toPath(eventType)}"
-    val schema = EventType.toSchema(eventType)
-    ParquetIO.write(sc, filteredEvents, path, schema)
+    writeEventType(sc, dirPath, eventType, filteredEvents)
   }
 
-//  def MapByTypesAndWriteToParquet(sc:SparkContext, events: RDD[_ <:MenthalEvent], eventType: Int, dirPath:String ) = {
-//    val filteredEvents = events.map(e => (EventType.fromMenthalEvent(e), e))
-//    val filterdEvents =
-////    val path = s"$dirPath/${EventType.toPath(eventType)}"
-//    val schema = EventType.toSchema(eventType)
-//    ParquetIO.write(sc, filteredEvents, path, schema)
-//  }
+  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry]) =
+    ParquetIO.write(sc, aggregates, pathFromAggrType(dirPath, aggrName, timePeriod), AggregationEntry.getClassSchema)
 
+  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A])(implicit ct:ClassTag[A])= {
+    val path = pathFromEventType(dirPath, eventType)
+    val schema = EventType.toSchema(eventType)
+    ParquetIO.write[A](sc, events, path, schema)(ct)
+  }
+
+  def readAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, recordFilter: Option[Class[_ <: UnboundRecordFilter]] = None) = {
+    val path = pathFromAggrType(dirPath, aggrName, timePeriod)
+    read(sc, path, recordFilter)
+  }
 
   def readEventType[A <: SpecificRecord](
-    path: String,
-    eventType: Int,
     sc: SparkContext,
+    dirPath: String,
+    eventType: Int,
     recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)
       (implicit ct:ClassTag[A]): RDD[A] = {
-    read(path + "/" + EventType.toPath(eventType),sc, recordFilter)(ct)
+    val path = pathFromEventType(dirPath,eventType)
+    read(sc, path, recordFilter)(ct)
   }
 
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) = {
@@ -65,7 +72,7 @@ object ParquetIO {
     }
   }
 
-  def read[A <: SpecificRecord](path: String, sc: SparkContext, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
+  def read[A <: SpecificRecord](sc: SparkContext, path: String, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {
     val readJob = Job.getInstance(new Configuration)
     ParquetInputFormat.setReadSupportClass(readJob, classOf[AvroReadSupport[A]])
 
