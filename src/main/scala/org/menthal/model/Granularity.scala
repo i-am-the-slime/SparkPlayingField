@@ -21,9 +21,9 @@ object Granularity {
     timePeriod match {
       case Hourly  ⇒  base withHourOfDay time.getHourOfDay
       case Daily   ⇒  base
-      case Weekly  ⇒  base withDayOfWeek  0
-      case Monthly ⇒  base withDayOfMonth 0
-      case Yearly  ⇒  base withDayOfYear  0
+      case Weekly  ⇒  base withDayOfWeek  1
+      case Monthly ⇒  base withDayOfMonth 1
+      case Yearly  ⇒  base withDayOfYear  1
     }
   }
 
