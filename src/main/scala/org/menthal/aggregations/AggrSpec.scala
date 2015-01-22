@@ -60,21 +60,13 @@ object AggrSpec {
         case None ⇒ aggregateEventsToParquet(aggrName, aggregator, eventType, events, granularity).map(_.asInstanceOf[MenthalEvent])
       }
     }
-//    for {
-//      AggrSpec(eventType, converter, aggrs) ← suite
-//      (aggregator, aggrName) ← aggrs
-//      granularityTree ← granularities
-//    }  {
-//val events = ParquetIO.readEventType(sc, datadir, eventType).map(converter)
-//  .traverseTree(events)(parquetAggregator) }
-
-    val granularities = Leaf(Granularity.Hourly)
-    val simpleAggrSpecs = List(
-      AggrSpec(TYPE_APP_SESSION, toCCAppSession _, agCount("app", "starts")))
-    val parquetAggregator = aggregateToParquetForGranularity("app_starts", GeneralAggregations.aggregateCount, TYPE_APP_SESSION) _
-    val events:RDD[MenthalEvent] = ParquetIO.readEventType[AppSession](sc, datadir, TYPE_APP_SESSION).map(toCCAppSession)
-    granularities.traverseTree(events)(parquetAggregator)
-
+    for {
+      AggrSpec(eventType, converter, aggrs) ← suite
+      events = ParquetIO.readEventType(sc, datadir, eventType).map(converter)
+      (aggregator, aggrName) ← aggrs
+      granularityTree ← granularities
+      parquetAggregator = aggregateToParquetForGranularity(aggrName, aggregator, eventType) _
+    }   granularityTree.traverseTree(events)(parquetAggregator)
 
   }
 
