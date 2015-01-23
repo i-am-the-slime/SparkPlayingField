@@ -39,7 +39,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
     val outputPath = "src/test/resources/appSessionsParquetted"
     val inputPath = "src/test/resources/raw_events_with_wsc"
     Try(File(outputPath).deleteRecursively())
-    AppSessionAggregations.dumpToAppSessions(sc, inputPath, outputPath)
+    AppSessionAggregation.dumpToAppSessions(sc, inputPath, outputPath)
     val result:Array[AppSession] = ParquetIO.readEventType(sc, outputPath, EventType.TYPE_APP_SESSION).collect()
 //    val result:Array[AppSession] = ParquetIO.read(outputPath + "/app_sessions", sc).collect()
     val correct = Array(
@@ -67,7 +67,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
       CCScreenOff(0, 0, 4)
     )
     val sparkEvents:RDD[MenthalEvent] = sc.parallelize(events)
-    val result = AppSessionAggregations.eventsToAppSessions(sparkEvents).collect()
+    val result = AppSessionAggregation.eventsToAppSessions(sparkEvents).collect()
     val expected = Array(
       new AppSession(0L, 1L, 1L, "A"),
       new AppSession(0L, 2L, 2L, "B")
@@ -83,7 +83,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
       CCScreenOff(3, 0, 4)
     )
     val sparkEvents:RDD[MenthalEvent] = sc.parallelize(events)
-    val result = AppSessionAggregations.eventsToAppSessions(sparkEvents).collect()
+    val result = AppSessionAggregation.eventsToAppSessions(sparkEvents).collect()
     val expected = Array(
       new AppSession(0L, 1L, 1L, "A"),
       new AppSession(0L, 2L, 2L, "B")
@@ -101,7 +101,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
       CCScreenOff(5, 1, 4)
     )
     val sparkEvents:RDD[MenthalEvent] = sc.parallelize(events)
-    val result = AppSessionAggregations.eventsToAppSessions(sparkEvents).collect()
+    val result = AppSessionAggregation.eventsToAppSessions(sparkEvents).collect()
     val expected = Array(
       new AppSession(0L, 1L, 1L, "A"),
       new AppSession(0L, 2L, 2L, "B"),
@@ -118,7 +118,7 @@ class AppSessionAggregationsSpec extends FlatSpec with Matchers with BeforeAndAf
     CCWindowStateChanged(3,0,  3, "", "C", ""),
     CCScreenOff(4,0,  4)
     )
-    val result = AppSessionAggregations.transformToAppSessionsContainer(events)
+    val result = AppSessionAggregation.transformToAppSessionsContainer(events)
     result shouldBe AppSessionContainer(
       Session(1, 2, Some("A")),
       Session(2, 3, Some("B")),

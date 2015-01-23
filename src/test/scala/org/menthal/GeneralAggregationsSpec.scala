@@ -1,7 +1,8 @@
 package org.menthal
 
 import org.joda.time.DateTime
-import org.menthal.aggregations.GeneralAggregations._
+import org.menthal.aggregations.tools.{GeneralAggregators, EventTransformers}
+import GeneralAggregators._
 import org.menthal.aggregations.tools.EventTransformers
 import org.menthal.model.{Granularity}
 import org.menthal.model.events.{CCAggregationEntry, CCAppSession, MenthalEvent}

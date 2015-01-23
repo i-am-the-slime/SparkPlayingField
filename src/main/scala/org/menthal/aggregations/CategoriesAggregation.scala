@@ -1,43 +1,43 @@
 package org.menthal.aggregations
 
-import org.apache.avro.specific.SpecificRecord
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.menthal.aggregations.AggrSpec._
+import org.menthal.aggregations.tools.AggrSpec
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.Granularity
-import org.menthal.model.EventType._
 import org.menthal.model.Granularity.TimePeriod
 import org.menthal.model.events.CCAggregationEntry
 import org.menthal.model.events.Implicits._
+import org.menthal.spark.SparkHelper.getSparkContext
 
-import scala.collection
 import scala.util.Try
 
 /**
  * Created by konrad on 20.01.15.
  */
 object CategoriesAggregation {
-
+  def name = "CategoriesAggregation"
   var categoriesLookup:collection.Map[String, String] = collection.Map()
 
   def main(args: Array[String]) {
-    if (args.length == 0) {
-      System.err.println("Usage: CategoriesAggregations <master> lookupDirectory dataDirectory")
-      System.exit(1)
+    val (master, datadir, lookupFile) = args match {
+      case Array(m, d, l) => (m,d, l)
+      case Array(m, d) => (m,d, d + "/categories.csv")
+      case _ =>
+        val errorMessage = "First argument is master, second datdir path, optional third argument is categories lookup path"
+        throw new IllegalArgumentException(errorMessage)
     }
-    implicit val sc = new SparkContext(args(0), "Aggregations", System.getenv("SPARK_HOME"))
-    categoriesLookup = readLookupFromFile(args(1))
-    val datadir = args(2)
+    implicit val sc = getSparkContext(master, name)
+    categoriesLookup = readLookupFromFile(lookupFile)
     aggregate(sc, datadir)
     sc.stop()
   }
 
   def aggregate(sc:SparkContext, datadir : String): Unit = {
     for (granularity <- granularities) {
-      categorizeInParquet(sc, datadir, "appStarts", "categoryStarts", granularity)
-      categorizeInParquet(sc, datadir, "appUsage", "categoryUsage", granularity)
+      categorizeInParquet(sc, datadir, "app_starts", "category_starts", granularity)
+      categorizeInParquet(sc, datadir, "app_usage", "category_usage", granularity)
     }
   }
 
@@ -48,8 +48,6 @@ object CategoriesAggregation {
     Granularity.Monthly,
     Granularity.Yearly)
 
-  val suite: List[AggrSpec[_ <: SpecificRecord]] = List(
-    AggrSpec(TYPE_APP_SESSION, toCCAppSession, agDuration("app", "usage"), agCount("app", "starts")))
 
   def categorize(packageName: String): String = {
     categoriesLookup.getOrElse(packageName, "unknown")

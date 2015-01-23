@@ -2,7 +2,7 @@ package org.menthal.io
 
 import org.apache.spark.SparkContext
 import org.menthal.model.EventType._
-import org.menthal.spark.SparkHelper
+import org.menthal.spark.SparkHelper._
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
 
@@ -16,7 +16,7 @@ object PostgresDumpToParquet {
         val errorMessage = "First argument is master, second input path, third argument is output path"
         throw new IllegalArgumentException(errorMessage)
     }
-    val sc = SparkHelper.getSparkContext(master, "AppSessionsAggregation")
+    val sc = getSparkContext(master, "AppSessionsAggregation")
     parseFromDumpAndWriteToParquet(sc, dumpFile, outputFile)
     sc.stop()
   }

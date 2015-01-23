@@ -7,11 +7,13 @@ import org.menthal.aggregations.tools.{AppSessionMonoid, AppSessionContainer}
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
 import org.menthal.model.EventType
-import org.menthal.model.events.{AppSession, MenthalEvent}
+import org.menthal.model.events._
+import org.menthal.model.events.Implicits._
+
 import EventType._
 import org.menthal.spark.SparkHelper._
 
-object AppSessionAggregations {
+object AppSessionAggregation {
 
   def main(args: Array[String]) {
     val (master, dumpFile, outputFile) = args match {
@@ -24,6 +26,16 @@ object AppSessionAggregations {
     val sc = getSparkContext(master, "AppSessionsAggregation")
     dumpToAppSessions(sc, dumpFile, outputFile)
     sc.stop()
+  }
+
+  def aggregate(sc:SparkContext, datadir:String, outputPath:String) = {
+    val screenOff:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_OFF).map(toCCScreenOff)
+    val windowStateChanged:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_WINDOW_STATE_CHANGED).map(toCCWindowStateChanged)
+    val screenUnlock:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_UNLOCK).map(toScreenUnlock)
+    val dreamingStarted:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_DREAMING_STARTED).map(toDreamingStarted)
+    val processedEvents = screenOff ++ windowStateChanged ++ screenUnlock ++ dreamingStarted
+    val sessions = eventsToAppSessions(processedEvents)
+    ParquetIO.writeEventType(sc, outputPath, TYPE_APP_SESSION, sessions)
   }
 
   def dumpToAppSessions(sc:SparkContext, dumpFilePath:String, outputPath:String) = {

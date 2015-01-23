@@ -7,9 +7,10 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.menthal.io.hdfs.HDFSFileService
 import org.menthal.model.Granularity.TimePeriod
-import org.menthal.model.events.{AggregationEntry, CCScreenOn, MenthalEvent}
-import org.menthal.model.{Granularity, EventType}
+import org.menthal.model.events.{Summary, AggregationEntry, MenthalEvent}
+import org.menthal.model.{AggregationType, Granularity, EventType}
 import parquet.avro._
 import parquet.filter.UnboundRecordFilter
 import parquet.hadoop.{ParquetInputFormat, ParquetOutputFormat}
@@ -28,12 +29,23 @@ object ParquetIO {
     writeEventType(sc, dirPath, eventType, filteredEvents)
   }
 
-  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry]) =
-    ParquetIO.write(sc, aggregates, pathFromAggrType(dirPath, aggrName, timePeriod), AggregationEntry.getClassSchema)
-
-  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A])(implicit ct:ClassTag[A])= {
+  def writeSummary(sc: SparkContext, dirPath: String, timePeriod: TimePeriod, aggregates: RDD[Summary], force:Boolean = true) = {
+    val path = pathFromAggrType(dirPath, AggregationType.Summary, timePeriod)
+    if (force && HDFSFileService.exists(path))
+      HDFSFileService.removeDir(path)
+    ParquetIO.write(sc, aggregates, path, Summary.getClassSchema)
+  }
+  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry], force:Boolean = true) = {
+    val path = pathFromAggrType(dirPath, aggrName, timePeriod)
+    if (force && HDFSFileService.exists(path))
+      HDFSFileService.removeDir(path)
+    ParquetIO.write(sc, aggregates, path, AggregationEntry.getClassSchema)
+  }
+  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A], force:Boolean = true)(implicit ct:ClassTag[A])= {
     val path = pathFromEventType(dirPath, eventType)
     val schema = EventType.toSchema(eventType)
+    if (force && HDFSFileService.exists(path))
+      HDFSFileService.removeDir(path)
     ParquetIO.write[A](sc, events, path, schema)(ct)
   }
 

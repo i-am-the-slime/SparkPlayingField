@@ -1,67 +1,62 @@
 package org.menthal.aggregations
 
-import com.twitter.algebird.Operators._
 import org.apache.avro.specific.SpecificRecord
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import org.joda.time.DateTime
-import org.menthal.aggregations.tools.EventTransformers._
-import org.menthal.io.parquet.ParquetIO
-import org.menthal.model.Granularity
-import org.menthal.model.Granularity.TimePeriod
-import org.menthal.model.events.Implicits._
-import org.menthal.model.events.{AggregationEntry, CCAggregationEntry, MenthalEvent}
-import org.menthal.model.implicits.DateImplicits.{dateToLong, longToDate}
-
-import scala.collection.mutable.{Map => MMap}
-import scala.reflect.ClassTag
 import org.menthal.model.EventType._
+import org.menthal.model.events.Implicits._
+import org.apache.spark.SparkContext
+import org.menthal.aggregations.tools.AggrSpec
+import org.menthal.model.Granularity
+import AggrSpec._
+import org.menthal.model.AggregationType
+import org.menthal.spark.SparkHelper.getSparkContext
 
 /**
- * Created by mark on 18.05.14.
+ * Created by mark on 09.01.15.
  */
 object GeneralAggregations {
 
-  type PerUserBucketsRDD[K, V] = RDD[(((Long, DateTime, K), V))]
-  type MenthalEventsAggregator = (RDD[MenthalEvent], TimePeriod) => RDD[CCAggregationEntry]
+  val name: String = "Aggregations"
 
-
-  def aggregateLength:MenthalEventsAggregator = aggregateEvents(getMessageLength) _
-  def aggregateDuration:MenthalEventsAggregator = aggregateEvents(getDuration) _
-  def aggregateCount:MenthalEventsAggregator = aggregateEvents(_ => 1L) _
-
-
-  def aggregateAggregations(aggrs: RDD[MenthalEvent], granularity: TimePeriod, subgranularity: TimePeriod): RDD[CCAggregationEntry] = {
-      val buckets = for {
-        CCAggregationEntry(user, time, `subgranularity`, key, value) ← aggrs
-        timeBucket = Granularity.roundTimeFloor(time, granularity)
-      } yield ((user, timeBucket, key), value)
-      buckets reduceByKey (_ + _) map { case ((user, time, key), value) =>
-        CCAggregationEntry(user, time, granularity.toInt, key, value)
-      }
+  def main(args: Array[String]) {
+    val (master, datadir) = args match {
+      case Array(m, d) => (m,d)
+      case _ =>
+        val errorMessage = "First argument is master, second input/output path"
+        throw new IllegalArgumentException(errorMessage)
+    }
+    val sc = getSparkContext(master, name)
+    aggregate(sc, datadir)
+    sc.stop()
   }
 
-  def aggregateEvents(fn:MenthalEvent ⇒ Long)
-                     (events: RDD[MenthalEvent], granularity: TimePeriod)
-                     :RDD[CCAggregationEntry] = {
-    val buckets = reduceToPerUserAggregations(fn)(events, granularity)
-    buckets.map {case ((user, time, key), value) ⇒
-      CCAggregationEntry(user, time, granularity.toInt, key, value)}
+  def aggregate(sc: SparkContext, datadir: String): Unit = {
+    AggrSpec.aggregate(sc, datadir, suite, Granularity.fullGranularitiesForest)
   }
 
-  def reduceToPerUserAggregations(getValFunction: MenthalEvent => Long)
-                                 (events: RDD[MenthalEvent], granularity: TimePeriod)
-                                 :PerUserBucketsRDD[String, Long] = {
-    val buckets = for {
-      event ← events
-      e ← splitEventByRoundedTime(event, granularity)
-      id = e.userId
-      timeBucket = Granularity.roundTimeFloor(e.time, granularity)
-      key = getKeyFromEvent(e)
-    } yield ((id, timeBucket, key), getValFunction(e))
-    buckets reduceByKey (_ + _)
-  }
+
+
+  val suite:List[AggrSpec[_ <: SpecificRecord]] = List(
+    //Apps
+    AggrSpec(TYPE_APP_SESSION, toCCAppSession _, countAndDuration(AggregationType.AppTotalDuration, AggregationType.AppTotalCount)),
+    //Calls
+    AggrSpec(TYPE_CALL_MISSED, toCCCallMissed _, count(AggregationType.CallMissCount)),
+    AggrSpec(TYPE_CALL_OUTGOING, toCCCallOutgoing _, countAndDuration(AggregationType.CallOutCount, AggregationType.CallOutDuration)),
+    AggrSpec(TYPE_CALL_RECEIVED, toCCCallReceived _, countAndDuration(AggregationType.CallInCount, AggregationType.CallInDuration)),
+    //Notifications
+    AggrSpec(TYPE_NOTIFICATION_STATE_CHANGED, toCCNotificationStateChanged _, count(AggregationType.NotificationCount)),
+    //Screen
+    AggrSpec(TYPE_SCREEN_OFF, toCCScreenOff _, count(AggregationType.ScreenOffCount)),
+    AggrSpec(TYPE_SCREEN_ON, toCCScreenOn _, count(AggregationType.ScreenOnCount)),
+    AggrSpec(TYPE_SCREEN_UNLOCK, toCCScreenUnlock _, count(AggregationType.ScreenUnlocksCount)),
+    //SMS
+    AggrSpec(TYPE_SMS_RECEIVED, toCCSmsReceived _, countAndLength(AggregationType.SmsInCount, AggregationType.SmsInLength)),
+    AggrSpec(TYPE_SMS_SENT, toCCSmsSent _, countAndLength(AggregationType.SmsOutCount, AggregationType.SmsOutLength)),
+    //WhatsApp
+    AggrSpec(TYPE_WHATSAPP_RECEIVED, toCCWhatsAppReceived _, countAndLength(AggregationType.WhatsAppInCount, AggregationType.WhatsAppInLength)),
+    AggrSpec(TYPE_WHATSAPP_SENT, toCCWhatsAppSent _, countAndLength(AggregationType.WhatsAppOutCount, AggregationType.WhatsAppOutLength)),
+    //Phone
+    AggrSpec(TYPE_PHONE_SHUTDOWN, toCCPhoneShutdown _, count(AggregationType.PhoneShutdownsCount)),
+    AggrSpec(TYPE_PHONE_BOOT, toCCPhoneBoot _, count(AggregationType.PhoneBootsCount))
+  )
 
 }
-

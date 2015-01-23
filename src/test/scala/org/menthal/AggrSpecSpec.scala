@@ -1,13 +1,13 @@
 package org.menthal
 
 import org.apache.spark.SparkContext
-import org.menthal.aggregations.AggrSpec
-import org.menthal.aggregations.AggrSpec._
-import org.menthal.aggregations.tools.Leaf
+import org.menthal.aggregations.tools.AggrSpec
+import org.menthal.aggregations.tools.AggrSpec._
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.EventType._
-import org.menthal.model.{EventType, Granularity}
-import org.menthal.model.events.{AppSession, CCAggregationEntry}
+import org.menthal.model.Granularity.Leaf
+import org.menthal.model.{AggregationType, EventType, Granularity}
+import org.menthal.model.events.CCAggregationEntry
 import org.menthal.model.events.Implicits._
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec, Matchers}
@@ -39,7 +39,7 @@ class AggrSpecSpec extends FlatSpec with GeneratorDrivenPropertyChecks with Matc
 
   val granularities = List(Leaf(Granularity.Hourly))
   val simpleAggrSpecs = List(
-    AggrSpec(TYPE_APP_SESSION, toCCAppSession _, agCount("app", "starts")))
+    AggrSpec(TYPE_APP_SESSION, toCCAppSession _, count(AggregationType.AppTotalCount)))
 
   "aggregateSuiteForGranularity should read data from postgres and then aggregate in package" should "be possible" in {
     forAll(Generators.nonEmptyListOfAppSessions) { sessions ⇒
@@ -49,7 +49,7 @@ class AggrSpecSpec extends FlatSpec with GeneratorDrivenPropertyChecks with Matc
         ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, sessionsRdd)
 //        ParquetIO.readEventType(sc, datadir, EventType.TYPE_APP_SESSION)
         AggrSpec.aggregate(sc, datadir, simpleAggrSpecs, granularities)
-      val result = ParquetIO.readAggrType(sc, datadir, "app_starts", timePeriod).map(toCCAggregationEntry).collect()
+      val result = ParquetIO.readAggrType(sc, datadir, AggregationType.AppTotalCount, timePeriod).map(toCCAggregationEntry).collect()
       val keyVals = Generators.splitToBucketsWithCount(timePeriod, sessions)
       val expected = for (((user, pn, time), count) <- keyVals)
       yield CCAggregationEntry(user, time, timePeriod, pn, count)
