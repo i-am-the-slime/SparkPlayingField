@@ -1,10 +1,10 @@
 package org.menthal.io
 
 import org.apache.spark.SparkContext
-import org.menthal.model.EventType._
-import org.menthal.spark.SparkHelper._
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.io.postgres.PostgresDump
+import org.menthal.model.EventType._
+import org.menthal.spark.SparkHelper._
 
 
 object PostgresDumpToParquet {

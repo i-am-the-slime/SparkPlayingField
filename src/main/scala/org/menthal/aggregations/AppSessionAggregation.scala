@@ -29,13 +29,17 @@ object AppSessionAggregation {
   }
 
   def aggregate(sc:SparkContext, datadir:String, outputPath:String) = {
+    val sessions = parquetToAppSessions(sc, datadir)
+    ParquetIO.writeEventType(sc, outputPath, TYPE_APP_SESSION, sessions)
+  }
+
+  def parquetToAppSessions(sc:SparkContext, datadir:String):RDD[AppSession] = {
     val screenOff:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_OFF).map(toCCScreenOff)
     val windowStateChanged:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_WINDOW_STATE_CHANGED).map(toCCWindowStateChanged)
     val screenUnlock:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_UNLOCK).map(toScreenUnlock)
     val dreamingStarted:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_DREAMING_STARTED).map(toDreamingStarted)
     val processedEvents = screenOff ++ windowStateChanged ++ screenUnlock ++ dreamingStarted
-    val sessions = eventsToAppSessions(processedEvents)
-    ParquetIO.writeEventType(sc, outputPath, TYPE_APP_SESSION, sessions)
+    eventsToAppSessions(processedEvents)
   }
 
   def dumpToAppSessions(sc:SparkContext, dumpFilePath:String, outputPath:String) = {

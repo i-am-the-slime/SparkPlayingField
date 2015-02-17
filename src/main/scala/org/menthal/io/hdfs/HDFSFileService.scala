@@ -4,11 +4,9 @@ package org.menthal.io.hdfs
  * Created by konrad on 23.01.15.
  */
 
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
+import java.io._
 import org.apache.hadoop.conf._
+import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs._
 
 import scala.util.{Try, Random}
@@ -18,20 +16,21 @@ object HDFSFileService {
   private val conf = new Configuration
 
   private val fileSystem = FileSystem.get(conf)
+  private val fileUtil =  new FileUtil()
 
-  def saveFile(filepath: String): Unit = {
-    val file = new File(filepath)
-    val out = fileSystem.create(new Path(file.getName))
-    val in = new BufferedInputStream(new FileInputStream(file))
-    var b = new Array[Byte](1024)
-    var numBytes = in.read(b)
-    while (numBytes > 0) {
-      out.write(b, 0, numBytes)
-      numBytes = in.read(b)
-    }
-    in.close()
-    out.close()
-  }
+//  def saveFile(filepath: String): Unit = {
+//    val file = new File(filepath)
+//    val out = fileSystem.create(new Path(file.getName))
+//    val in = new BufferedInputStream(new FileInputStream(file))
+//    var b = new Array[Byte](1024)
+//    var numBytes = in.read(b)
+//    while (numBytes > 0) {
+//      out.write(b, 0, numBytes)
+//      numBytes = in.read(b)
+//    }
+//    in.close()
+//    out.close()
+//  }
 
   def removeFile(filename: String): Boolean = {
     val path = new Path(filename)
@@ -58,28 +57,40 @@ object HDFSFileService {
     fileSystem.mkdirs(path)
   }
 
-  def createTmp(root: String = "/tmp"):Option[String] = {
-    val folderPath = root + "/" + Random.nextString(8)
-    if (createFolder(folderPath))
-      return Some(folderPath)
-    else None
+  def createTmp(root: String = "/tmp", prefix: String = ""):Option[String] = {
+    val folderPath = root + "/" + prefix + randomString(20)
+    if (createFolder(folderPath)) Some(folderPath) else None
   }
 
   def createTmps(n: Int, root: String = "/tmp"):List[String] = {
     (1 to n) flatMap (_ => createTmp(root)) toList
   }
 
-  def rename(originalPath:String, newPath: String) = {
+  def rename(originalPath:String, newPath: String):Boolean = {
     val src = new Path(originalPath)
     val dest = new Path(newPath)
     fileSystem.rename(src, dest)
   }
 
-  def forceRename(originalPath:String, newPath: String) = {
+  def forceRename(originalPath:String, newPath: String):Boolean = {
     if (exists(newPath))
       removeDir(newPath)
     val src = new Path(originalPath)
     val dest = new Path(newPath)
     fileSystem.rename(src, dest)
   }
+
+  def copy(originalPath:String, newPath: String, deleteSource: Boolean = false, overwrite: Boolean = false):Boolean = {
+    val src = new Path(originalPath)
+    val dest = new Path(newPath)
+    FileUtil.copy(fileSystem, src, fileSystem, dest, deleteSource, overwrite, conf)
+    true
+  }
+
+  def copyToTmp(originalPath: String, tmpRoot: String = "/tmp", prefix: String = ""): Option[String] = {
+    createTmp(tmpRoot, prefix).filter(newPath => copy(originalPath, newPath, false, false))
+  }
+
+  def randomString(length: Int) = util.Random.alphanumeric take length mkString
 }
+

@@ -41,6 +41,7 @@ val excludeHadoop = ExclusionRule(organization = "org.apache.hadoop")
 //val excludeThrift = ExclusionRule(organization = "org.apache.thrift")
 val excludeServletApi = ExclusionRule(organization = "javax.servlet", artifact = "servlet-api")
 //val excludeJUnit = ExclusionRule(organization = "junit")
+val excludeJackson = ExclusionRule(organization = "org.codehaus.jackson")
 
 libraryDependencies ++= Seq( //Dates and Times
   "org.joda" % "joda-convert" % "1.6"
@@ -48,20 +49,20 @@ libraryDependencies ++= Seq( //Dates and Times
 )
 
 //libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.15"
-libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.21"
+libraryDependencies += "org.menthal" % "menthal-models_2.10" % "0.21" excludeAll excludeJackson
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.0" //Monads
 
-libraryDependencies += "com.twitter" % "parquet-avro" % "1.5.0" //Columnar Storage for Hadoop
+//libraryDependencies += "com.twitter" % "parquet-avro" % "1.6.0rc3"  % "provided" //Columnar Storage for Hadoop
 
-libraryDependencies += "com.twitter" %% "algebird-core" % "0.8.1" //Monoids
+libraryDependencies += "com.twitter" %% "algebird-core" % "0.9.0" //Monoids
 
-libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.4.0").
+libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.5.2").
   exclude("com.esotericsoftware.minlog", "minlog")
 
-libraryDependencies += "com.twitter" % "chill-avro" % "0.4.0"
+libraryDependencies += "com.twitter" %% "chill-avro" % "0.5.2" excludeAll excludeJackson
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test" //Testing
 
@@ -93,3 +94,5 @@ fork in Test := true
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
 
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
+
+test in assembly := {}

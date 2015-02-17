@@ -29,24 +29,24 @@ object ParquetIO {
     writeEventType(sc, dirPath, eventType, filteredEvents)
   }
 
-  def writeSummary(sc: SparkContext, dirPath: String, timePeriod: TimePeriod, aggregates: RDD[Summary], force:Boolean = true) = {
+  def writeSummary(sc: SparkContext, dirPath: String, timePeriod: TimePeriod, aggregates: RDD[Summary]) = {
     val path = pathFromAggrType(dirPath, AggregationType.Summary, timePeriod)
-    if (force && HDFSFileService.exists(path))
-      HDFSFileService.removeDir(path)
     ParquetIO.write(sc, aggregates, path, Summary.getClassSchema)
   }
-  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry], force:Boolean = true) = {
+  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry]) = {
     val path = pathFromAggrType(dirPath, aggrName, timePeriod)
-    if (force && HDFSFileService.exists(path))
-      HDFSFileService.removeDir(path)
     ParquetIO.write(sc, aggregates, path, AggregationEntry.getClassSchema)
   }
-  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A], force:Boolean = true)(implicit ct:ClassTag[A])= {
+  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A])(implicit ct:ClassTag[A])= {
     val path = pathFromEventType(dirPath, eventType)
     val schema = EventType.toSchema(eventType)
-    if (force && HDFSFileService.exists(path))
-      HDFSFileService.removeDir(path)
     ParquetIO.write[A](sc, events, path, schema)(ct)
+  }
+
+  def overwrite[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) ={
+    if (HDFSFileService.exists(path))
+          HDFSFileService.removeDir(path)
+    ParquetIO.write[A](sc, data, path, schema)(ct)
   }
 
   def readAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, recordFilter: Option[Class[_ <: UnboundRecordFilter]] = None) = {

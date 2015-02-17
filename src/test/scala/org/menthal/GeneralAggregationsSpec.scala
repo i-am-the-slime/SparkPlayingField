@@ -26,13 +26,15 @@ class GeneralAggregationsSpec extends FlatSpec with GeneratorDrivenPropertyCheck
   def durations = fromEventsToAggregations(aggregateDuration) _
   def counts = fromEventsToAggregations(aggregateCount) _
 
-  "counted aggregates" should "not be fewer after aggregation" in
+//  "counted aggregates" should "not be fewer after aggregation" in
+  ignore should "not be fewer after aggregation" in
     forAll (Generators.listAppSession) { sessions ⇒
       counts(sessions).foldLeft(0L)(_ + _.value) should be >= sessions.length.toLong
   }
   val timePeriod = Granularity.Hourly
 
-  it should "be computed correctly" in {
+  ignore should "be computed correctly" in {
+//  it should "be computed correctly" in {
     forAll (Generators.listAppSession) { sessions ⇒
       val keyVals = Generators.splitToBucketsWithCount(timePeriod, sessions)
       val expected = keyVals.groupBy(_._1).mapValues(_.length).toSet
@@ -46,7 +48,8 @@ class GeneralAggregationsSpec extends FlatSpec with GeneratorDrivenPropertyCheck
       durations(sessions).foldLeft(0L)(_ + _.value) should be(sessions.foldMap(_.duration))
   }
 
-  it should "be computed correctly" in {
+  ignore should "be computed correctly" in {
+  //it should "be computed correctly" in {
     forAll (Generators.listAppSession) { sessions ⇒
       val keyVals = Generators.splitToBucketsWithDuration(timePeriod, sessions)
       val expected = keyVals.groupBy{ case (k,v) ⇒ k }.mapValues{_.foldMap(_._2)}.toSet

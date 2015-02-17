@@ -28,13 +28,13 @@ object CategoriesAggregation {
         val errorMessage = "First argument is master, second datdir path, optional third argument is categories lookup path"
         throw new IllegalArgumentException(errorMessage)
     }
-    implicit val sc = getSparkContext(master, name)
-    categoriesLookup = readLookupFromFile(lookupFile)
-    aggregate(sc, datadir)
+    val sc = getSparkContext(master, name)
+    aggregate(sc, datadir, lookupFile)
     sc.stop()
   }
 
-  def aggregate(sc:SparkContext, datadir : String): Unit = {
+  def aggregate(sc:SparkContext, datadir : String, lookupFile:String): Unit = {
+    categoriesLookup = readLookupFromFile(sc, lookupFile)
     for (granularity <- granularities) {
       categorizeInParquet(sc, datadir, "app_starts", "category_starts", granularity)
       categorizeInParquet(sc, datadir, "app_usage", "category_usage", granularity)
@@ -53,7 +53,7 @@ object CategoriesAggregation {
     categoriesLookup.getOrElse(packageName, "unknown")
   }
 
-  def readLookupFromFile(path:String)(implicit sc:SparkContext):collection.Map[String, String] = {
+  def readLookupFromFile(sc:SparkContext, path:String):collection.Map[String, String] = {
     val file = sc.textFile(path)
     (for {
       line ← file

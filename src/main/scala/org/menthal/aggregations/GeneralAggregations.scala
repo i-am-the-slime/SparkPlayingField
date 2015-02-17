@@ -34,7 +34,6 @@ object GeneralAggregations {
   }
 
 
-
   val suite:List[AggrSpec[_ <: SpecificRecord]] = List(
     //Apps
     AggrSpec(TYPE_APP_SESSION, toCCAppSession _, countAndDuration(AggregationType.AppTotalDuration, AggregationType.AppTotalCount)),
