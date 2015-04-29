@@ -79,7 +79,8 @@ val hadoopExcludes = Seq(excludeJBossNetty, excludeEclipseJetty, excludeMortbayJ
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.5.0" % "provided"  excludeAll(hadoopExcludes:_*),
-  "org.apache.spark" %% "spark-core" % "1.3.1" % "provided"  excludeAll excludeHadoop
+  "org.apache.spark" %% "spark-core" % "1.3.1" % "provided"  excludeAll excludeHadoop,
+  "org.apache.spark" %% "spark-sql" % "1.3.1" % "provided"  excludeAll excludeHadoop
   //  exclude("log4j", "log4j").
   //  exclude("commons-beanutils", "commons-beanutils").
   //  exclude("commons-beanutils", "commons-beanutils-core").
