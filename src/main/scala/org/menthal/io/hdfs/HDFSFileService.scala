@@ -88,7 +88,8 @@ object HDFSFileService {
   }
 
   def copyToTmp(originalPath: String, tmpRoot: String = "/tmp", prefix: String = ""): Option[String] = {
-    createTmp(tmpRoot, prefix).filter(newPath => copy(originalPath, newPath, false, false))
+    val newPath = tmpRoot + "/" + prefix + randomString(20)
+    if (copy(originalPath, newPath, false, false)) Some(newPath) else None
   }
 
   def randomString(length: Int) = util.Random.alphanumeric take length mkString

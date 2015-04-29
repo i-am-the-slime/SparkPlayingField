@@ -61,9 +61,9 @@ class MenthalUtilsSpec extends FlatSpec with Matchers{
     Granularity.roundTimeCeiling(date3, Granularity.Hourly) shouldBe correctDate3
   }
 
-  val date = DateTime.parse("2014-01-01T21:58:44.752+01")
-  val nextDate = DateTime.parse("2014-01-01T22:00:00.000+01")
-  val endDate = DateTime.parse("2014-01-01T23:00:00.000+01")
+  val date = DateTime.parse("2014-01-01T21:58:44.752+01").getMillis
+  val nextDate = DateTime.parse("2014-01-01T22:00:00.000+01").getMillis
+  val endDate = DateTime.parse("2014-01-01T23:00:00.000+01").getMillis
   val correctlySplitDates = List( (date, 75248), (nextDate, 3600000), (endDate, 3524752) ).reverse
 
   "getSplittingTime" should "yield durations that span over full hours should be split" in {

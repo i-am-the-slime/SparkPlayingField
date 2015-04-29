@@ -24,7 +24,7 @@ class PostgresDumpToParquetSpec extends FlatSpec with Matchers with BeforeAndAft
   val outputPath = basePath + "PostgresDumpToParquetSpecTestFile"
 
   override def beforeEach() {
-//    Try(File(outputPath).deleteRecursively())
+    Try(File(outputPath).deleteRecursively())
     sc = SparkTestHelper.localSparkContext
   }
 

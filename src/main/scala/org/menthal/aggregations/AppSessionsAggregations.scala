@@ -9,6 +9,7 @@ import org.menthal.aggregations.tools.AggrSpec._
 import org.menthal.io.hdfs.HDFSFileService
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.EventType._
+import org.menthal.model.Granularity.Timestamp
 import org.menthal.model.events.AppSession
 import org.menthal.model.events.Implicits._
 import org.menthal.model.implicits.DateImplicits._
@@ -36,10 +37,13 @@ object AppSessionsAggregations  {
     sc.stop()
   }
 
+  val filterStart:Timestamp = new DateTime(2013, 1, 1, 0, 0).getMillis
+  val filterEnd : Timestamp = DateTime.now().getMillis
+
   def goodSessionFilter(appSession: AppSession): Boolean = {
     val time = appSession.getTime
     val durationInS = appSession.getDuration / 1000
-    val condition =  (time > new DateTime(2013, 1, 1, 0, 0)) && (time < DateTime.now()) && (durationInS < 3600)
+    val condition =  (time > filterStart) && (time < filterEnd) && (durationInS < 3600)
     condition
   }
 
@@ -56,26 +60,33 @@ object AppSessionsAggregations  {
 
 
   def aggregate(sc: SparkContext, datadir:String) = {
+    movePhoneCollectedSessions(sc, datadir)
     val phoneCollectedSessions: RDD[AppSession] = ParquetIO.read(sc, phoneAppSessionsPath(datadir))
     val calculatedAppSessions = AppSessionAggregation.parquetToAppSessions(sc, datadir) filter goodSessionFilter
     calculatedAppSessions.cache()
-    ParquetIO.write(sc, calculatedAppSessions, calculatedAppSessionsPath(datadir), AppSession.getClassSchema)
+    ParquetIO.overwrite(sc, calculatedAppSessions, calculatedAppSessionsPath(datadir), AppSession.getClassSchema)
     val finalSessions = combineAppSessions(sc, phoneCollectedSessions, calculatedAppSessions)
-    ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, finalSessions)
+    ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, finalSessions, overwrite = true)
   }
 
   def combineAppSessions(sc:SparkContext, phoneCollectedSessions: RDD[AppSession], calculatedAppSessions: RDD[AppSession]): RDD[AppSession] = {
     val filteredPhoneSessions = phoneCollectedSessions filter goodSessionFilter
     val sessionStarts = filteredPhoneSessions.map(s => (s.getUserId, s.getTime)).reduceByKey(min(_, _))
-    val phoneCollectionStarts = sc.broadcast(sessionStarts.collect().toMap)
-    val filteredCalculatedSessions = calculatedAppSessions filter (s => s.getTime < phoneCollectionStarts.value(s.getUserId))
+    val phoneCollectionStarts = sessionStarts.collectAsMap()
+    val broadcastStarts = sc.broadcast(phoneCollectionStarts)
+
+    def timeBeforePhoneCollectionStart(s:AppSession):Boolean =
+      if (broadcastStarts.value.contains(s.getUserId))
+        s.getTime < broadcastStarts.value(s.getUserId)
+      else true
+    val filteredCalculatedSessions = calculatedAppSessions filter timeBeforePhoneCollectionStart
     filteredPhoneSessions ++ filteredCalculatedSessions
   }
 
   def aggregateFurtherFromAppSessions(sc : SparkContext, datadir:String, lookupFile: String) = {
     val suite = List(AggrSpec(TYPE_APP_SESSION, toCCAppSession _, countAndDuration(AggregationType.AppTotalDuration, AggregationType.AppTotalCount)))
     AggrSpec.aggregate(sc, datadir, suite, Granularity.fullGranularitiesForest)
-    CategoriesAggregation.aggregate(sc, datadir, lookupFile)
+    CategoriesAggregation.aggregateCategories(sc, datadir, lookupFile)
   }
 
 }

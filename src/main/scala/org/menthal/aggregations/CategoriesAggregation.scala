@@ -2,8 +2,8 @@ package org.menthal.aggregations
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
-import org.menthal.aggregations.tools.AggrSpec
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.Granularity
 import org.menthal.model.Granularity.TimePeriod
@@ -18,7 +18,6 @@ import scala.util.Try
  */
 object CategoriesAggregation {
   def name = "CategoriesAggregation"
-  var categoriesLookup:collection.Map[String, String] = collection.Map()
 
   def main(args: Array[String]) {
     val (master, datadir, lookupFile) = args match {
@@ -29,36 +28,8 @@ object CategoriesAggregation {
         throw new IllegalArgumentException(errorMessage)
     }
     val sc = getSparkContext(master, name)
-    aggregate(sc, datadir, lookupFile)
+    aggregateCategories(sc, datadir, lookupFile, List(Granularity.Hourly, Granularity.Daily, Granularity.Weekly, Granularity.Monthly, Granularity.Yearly))
     sc.stop()
-  }
-
-  def aggregate(sc:SparkContext, datadir : String, lookupFile:String): Unit = {
-    categoriesLookup = readLookupFromFile(sc, lookupFile)
-    for (granularity <- granularities) {
-      categorizeInParquet(sc, datadir, "app_starts", "category_starts", granularity)
-      categorizeInParquet(sc, datadir, "app_usage", "category_usage", granularity)
-    }
-  }
-
-  val granularities = List(
-    Granularity.Hourly,
-    Granularity.Daily,
-    Granularity.Weekly,
-    Granularity.Monthly,
-    Granularity.Yearly)
-
-
-  def categorize(packageName: String): String = {
-    categoriesLookup.getOrElse(packageName, "unknown")
-  }
-
-  def readLookupFromFile(sc:SparkContext, path:String):collection.Map[String, String] = {
-    val file = sc.textFile(path)
-    (for {
-      line ← file
-      (packageName, category) ← csvLineToMapTuple(line)
-    } yield (packageName, category)).collectAsMap()
   }
 
   def csvLineToMapTuple(line:String):Option[(String, String)] = Try{
@@ -66,24 +37,47 @@ object CategoriesAggregation {
     (split(1), split(2))
   }.toOption
 
-  def transformAggregationsInParquet(fn:  RDD[CCAggregationEntry] => RDD[CCAggregationEntry])
-                                    (sc: SparkContext, datadir: String, inputAggrName: String, outputAggrName: String, granularity:TimePeriod): Unit = {
+  def readLookupFromFile(sc:SparkContext, path:String):collection.Map[String, String] = {
+    val file = sc.textFile(path)
+    val mapTuples = for {
+      line ← file
+      (packageName, category) ← csvLineToMapTuple(line)
+    } yield (packageName, category)
+    mapTuples.collectAsMap()
+  }
+
+  def transformAggregationsInParquet(sc: SparkContext,
+                                     categorizeFunction: RDD[CCAggregationEntry] => RDD[CCAggregationEntry],
+                                     datadir:String)(inputAggrName: String, outputAggrName: String, granularity:TimePeriod)
+                                    : Unit = {
     val inputRDD = ParquetIO.readAggrType(sc, datadir, inputAggrName, granularity).map(toCCAggregationEntry)
-    val outputRDD = fn(inputRDD)
+    val outputRDD = categorizeFunction(inputRDD)
     ParquetIO.writeAggrType(sc, datadir, outputAggrName, granularity, outputRDD.map(_.toAvro))
   }
 
-  def categorizeAggregations(aggregation: RDD[CCAggregationEntry]):RDD[CCAggregationEntry] = {
-    val categories = for (
-      CCAggregationEntry(userId, time, granularity, packageName, value) <- aggregation
-    ) yield ((userId, time, granularity, categorize(packageName)), value)
+  def aggregateCategories(sc:SparkContext,
+                          datadir : String,
+                          lookupFile:String,
+                          granularities:List[TimePeriod] = Granularity.all): Unit = {
+    val categoriesLookup:Broadcast[collection.Map[String, String]] = sc.broadcast(readLookupFromFile(sc, lookupFile))
+    def categorize(packageName: String): String = {
+      categoriesLookup.value.getOrElse(packageName, "unknown")
+    }
+    def categorizeAggregations(aggregation: RDD[CCAggregationEntry]):RDD[CCAggregationEntry] = {
+      val categories = for (
+        CCAggregationEntry(userId, time, granularity, packageName, value) <- aggregation
+      ) yield ((userId, time, granularity, categorize(packageName)), value)
+      categories.foldByKey(0)(_ + _) map { case ((userId, time, granularity, category), value) =>
+        CCAggregationEntry(userId, time, granularity, category, value)
+      }
+    }
+    def transformAggregations = transformAggregationsInParquet(sc, categorizeAggregations, datadir) _
 
-    categories.foldByKey(0)(_ + _).map { case ((userId, time, granularity, category), value) =>
-      CCAggregationEntry(userId, time, granularity, category, value)
+    for (granularity <- granularities) {
+      transformAggregations("app_starts", "category_starts", granularity)
+      transformAggregations("app_usage", "category_usage", granularity)
     }
   }
-
-  def categorizeInParquet = transformAggregationsInParquet(categorizeAggregations) _
 }
 
 

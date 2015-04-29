@@ -50,12 +50,12 @@ object GeneralAggregations {
     //SMS
     AggrSpec(TYPE_SMS_RECEIVED, toCCSmsReceived _, countAndLength(AggregationType.SmsInCount, AggregationType.SmsInLength)),
     AggrSpec(TYPE_SMS_SENT, toCCSmsSent _, countAndLength(AggregationType.SmsOutCount, AggregationType.SmsOutLength)),
-    //WhatsApp
-    AggrSpec(TYPE_WHATSAPP_RECEIVED, toCCWhatsAppReceived _, countAndLength(AggregationType.WhatsAppInCount, AggregationType.WhatsAppInLength)),
-    AggrSpec(TYPE_WHATSAPP_SENT, toCCWhatsAppSent _, countAndLength(AggregationType.WhatsAppOutCount, AggregationType.WhatsAppOutLength)),
     //Phone
     AggrSpec(TYPE_PHONE_SHUTDOWN, toCCPhoneShutdown _, count(AggregationType.PhoneShutdownsCount)),
     AggrSpec(TYPE_PHONE_BOOT, toCCPhoneBoot _, count(AggregationType.PhoneBootsCount))
+    //WhatsApp
+    //AggrSpec(TYPE_WHATSAPP_RECEIVED, toCCWhatsAppReceived _, countAndLength(AggregationType.WhatsAppInCount, AggregationType.WhatsAppInLength)),
+    //AggrSpec(TYPE_WHATSAPP_SENT, toCCWhatsAppSent _, countAndLength(AggregationType.WhatsAppOutCount, AggregationType.WhatsAppOutLength))
   )
 
 }

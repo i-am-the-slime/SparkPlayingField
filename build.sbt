@@ -55,7 +55,7 @@ libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.0" //Monads
 
-//libraryDependencies += "com.twitter" % "parquet-avro" % "1.6.0rc3"  % "provided" //Columnar Storage for Hadoop
+libraryDependencies += "com.twitter" % "parquet-avro" % "1.6.0rc7"
 
 libraryDependencies += "com.twitter" %% "algebird-core" % "0.9.0" //Monoids
 
@@ -79,7 +79,7 @@ val hadoopExcludes = Seq(excludeJBossNetty, excludeEclipseJetty, excludeMortbayJ
 
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "2.5.0" % "provided"  excludeAll(hadoopExcludes:_*),
-  "org.apache.spark" %% "spark-core" % "1.2.0" % "provided"  excludeAll excludeHadoop
+  "org.apache.spark" %% "spark-core" % "1.3.1" % "provided"  excludeAll excludeHadoop
   //  exclude("log4j", "log4j").
   //  exclude("commons-beanutils", "commons-beanutils").
   //  exclude("commons-beanutils", "commons-beanutils-core").

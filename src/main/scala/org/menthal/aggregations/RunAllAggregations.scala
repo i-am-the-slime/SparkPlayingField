@@ -29,7 +29,7 @@ object RunAllAggregations {
 
     AppSessionsAggregations.aggregate(sc, workingDir)
     GeneralAggregations.aggregate(sc, workingDir)
-    CategoriesAggregation.aggregate(sc, workingDir, lookupFile)
+    CategoriesAggregation.aggregateCategories(sc, workingDir, lookupFile)
     SummaryAggregation.aggregate(sc, workingDir)
 
     output.map(path => HDFSFileService.copy(workingDir, path))

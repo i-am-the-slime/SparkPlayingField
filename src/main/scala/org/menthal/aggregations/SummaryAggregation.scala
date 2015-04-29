@@ -35,7 +35,7 @@ object SummaryAggregation {
   def aggregate(sc: SparkContext, datadir: String) = {
     def aggregateAggregationsToParquet(subAggregates: RDD[Summary], granularity: TimePeriod) :RDD[Summary] = {
       val summaries = aggregateSummaries(subAggregates, granularity)
-      ParquetIO.writeSummary(sc, datadir, granularity, summaries)
+      ParquetIO.writeSummary(sc, datadir, granularity, summaries, overwrite = true)
       summaries
     }
     for (granularityTree ← Granularity.fullGranularitiesForest) {
@@ -109,8 +109,8 @@ object SummaryAggregation {
       val screenOffCount: RDD[CCAggregationEntry] = sumValues(List(ScreenOffCount), ScreenOffCount, granularity)
       val screenOnCount: RDD[CCAggregationEntry] = sumValues(List(ScreenOnCount), ScreenOnCount, granularity)
       //Phone
-      val phoneShutdownsCount: RDD[CCAggregationEntry] = sumValues(List(PhoneShutdownsCount), PhoneShutdownsCount, granularity)
-      val phoneBootsCount: RDD[CCAggregationEntry] = sumValues(List(PhoneBootsCount), PhoneBootsCount, granularity)
+      //val phoneShutdownsCount: RDD[CCAggregationEntry] = sumValues(List(PhoneShutdownsCount), PhoneShutdownsCount, granularity)
+      //val phoneBootsCount: RDD[CCAggregationEntry] = sumValues(List(PhoneBootsCount), PhoneBootsCount, granularity)
 
       val all = smsInCount ++ smsOutCount ++ smsTotalCount ++
         smsInParticipants ++ smsOutParticipants ++ smsTotalParticipants ++
@@ -119,8 +119,8 @@ object SummaryAggregation {
         callInParticipants ++ callOutParticipants ++ callTotalParticipants ++
         callInDuration ++ callOutDuration ++ callTotalDuration ++
         appTotalCountUnique ++ appTotalCount ++ appTotalDuration ++
-        screenUnlocksCount ++ screenOffCount ++ screenOnCount ++
-        phoneShutdownsCount ++ phoneBootsCount
+        screenUnlocksCount ++ screenOffCount ++ screenOnCount// ++
+        //phoneShutdownsCount ++ phoneBootsCount
 
       all.groupBy(a => (a.userId, a.time, a.granularity))
         .mapValues(_.map(e => (e.key, e.value)).toMap.withDefaultValue(0L))

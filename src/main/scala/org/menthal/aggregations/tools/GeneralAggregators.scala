@@ -5,7 +5,7 @@ import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 import org.menthal.aggregations.tools.EventTransformers._
 import org.menthal.model.Granularity
-import org.menthal.model.Granularity.TimePeriod
+import org.menthal.model.Granularity.{Timestamp, TimePeriod}
 import org.menthal.model.events.{CCAggregationEntry, MenthalEvent}
 import org.menthal.model.implicits.DateImplicits.{dateToLong, longToDate}
 
@@ -16,7 +16,7 @@ import scala.collection.mutable.{Map => MMap}
  */
 object GeneralAggregators {
 
-  type PerUserBucketsRDD[K, V] = RDD[(((Long, DateTime, K), V))]
+  type PerUserBucketsRDD[K, V] = RDD[(((Long, Timestamp, K), V))]
   type MenthalEventsAggregator = (RDD[MenthalEvent], TimePeriod) => RDD[CCAggregationEntry]
 
 
@@ -46,13 +46,19 @@ object GeneralAggregators {
   def reduceToPerUserAggregations(getValFunction: MenthalEvent => Long)
                                  (events: RDD[MenthalEvent], granularity: TimePeriod)
                                  :PerUserBucketsRDD[String, Long] = {
-    val buckets = for {
+    //val distinctEvents = events.map(e => (e.time, e.userId, getKeyFromEvent(e), getValFunction(e)))
+    val tuples = for {
       event ← events
       e ← splitEventByRoundedTime(event, granularity)
       id = e.userId
-      timeBucket = Granularity.roundTimeFloor(e.time, granularity)
-      key = getKeyFromEvent(e)
-    } yield ((id, timeBucket, key), getValFunction(e))
+      time = e.time
+      k = getKeyFromEvent(e)
+      v = getValFunction(e)
+    } yield (id, time, k, v)
+    val buckets = for {
+      (id, time, k, v) <- tuples.distinct
+      timeBucket = Granularity.roundTimestamp(time, granularity)
+    } yield ((id, timeBucket, k), v)
     buckets reduceByKey (_ + _)
   }
 

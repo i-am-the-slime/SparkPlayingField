@@ -29,18 +29,27 @@ object ParquetIO {
     writeEventType(sc, dirPath, eventType, filteredEvents)
   }
 
-  def writeSummary(sc: SparkContext, dirPath: String, timePeriod: TimePeriod, aggregates: RDD[Summary]) = {
+  def writeSummary(sc: SparkContext, dirPath: String, timePeriod: TimePeriod, aggregates: RDD[Summary], overwrite:Boolean = false) = {
     val path = pathFromAggrType(dirPath, AggregationType.Summary, timePeriod)
-    ParquetIO.write(sc, aggregates, path, Summary.getClassSchema)
+    if (overwrite)
+      ParquetIO.overwrite(sc, aggregates, path, Summary.getClassSchema)
+    else
+      ParquetIO.write(sc, aggregates, path, Summary.getClassSchema)
   }
-  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry]) = {
+  def writeAggrType(sc: SparkContext, dirPath: String, aggrName: String, timePeriod: TimePeriod, aggregates: RDD[AggregationEntry], overwrite:Boolean = false) = {
     val path = pathFromAggrType(dirPath, aggrName, timePeriod)
-    ParquetIO.write(sc, aggregates, path, AggregationEntry.getClassSchema)
+    if (overwrite)
+      ParquetIO.overwrite[AggregationEntry](sc, aggregates, path, AggregationEntry.getClassSchema)
+    else
+      ParquetIO.write[AggregationEntry](sc, aggregates, path, AggregationEntry.getClassSchema)
   }
-  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A])(implicit ct:ClassTag[A])= {
+  def writeEventType[A <: SpecificRecord](sc:SparkContext, dirPath:String,  eventType: Int, events: RDD[A], overwrite:Boolean = false)(implicit ct:ClassTag[A])= {
     val path = pathFromEventType(dirPath, eventType)
     val schema = EventType.toSchema(eventType)
-    ParquetIO.write[A](sc, events, path, schema)(ct)
+    if (overwrite)
+      ParquetIO.overwrite[A](sc, events, path, schema)(ct)
+    else
+      ParquetIO.write[A](sc, events, path, schema)(ct)
   }
 
   def overwrite[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) ={
@@ -66,9 +75,9 @@ object ParquetIO {
 
   def write[A <: SpecificRecord](sc: SparkContext, data: RDD[A], path: String, schema:Schema)(implicit ct:ClassTag[A]) = {
     //val isEmpty = data.fold(0)
-    val isEmpty = Try(data.first()).isFailure
+    //val isEmpty = Try(data.first()).isFailure
 
-    if (!isEmpty) {
+    //if (!isEmpty) {
       val writeJob = Job.getInstance(new Configuration)
       ParquetOutputFormat.setWriteSupportClass(writeJob, classOf[AvroWriteSupport])
       val pairs: RDD[(Void, A)] = data.map((null, _))
@@ -81,7 +90,7 @@ object ParquetIO {
         classOf[ParquetOutputFormat[A]],
         writeJob.getConfiguration)
 
-    }
+    //}
   }
 
   def read[A <: SpecificRecord](sc: SparkContext, path: String, recordFilter:Option[Class[_ <: UnboundRecordFilter]]=None)(implicit ct:ClassTag[A]): RDD[A] = {

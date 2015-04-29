@@ -4,7 +4,7 @@ import java.util.{List => JList, Map => JMap}
 import com.twitter.algebird.Operators._
 import org.joda.time.DateTime
 import org.menthal.model.Granularity
-import org.menthal.model.Granularity.TimePeriod
+import org.menthal.model.Granularity.{TimePeriod, Timestamp}
 import org.menthal.model.events._
 import org.menthal.model.implicits.DateImplicits._
 
@@ -15,6 +15,8 @@ import scala.collection.mutable.{Map => MMap}
  * Created by konrad on 21.07.2014.
  */
 object EventTransformers {
+
+
 
   def eventAsKeyValuePairs(event: MenthalEvent): List[(String, Long)] = {
     event match {
@@ -74,13 +76,13 @@ object EventTransformers {
   }
 
 
-  def getSplittingTime(start: DateTime, durationInMillis: Long, timePeriod: TimePeriod): List[(DateTime, Long)] = {
+  def getSplittingTime(start: Timestamp, durationInMillis: Long, timePeriod: TimePeriod): List[(Timestamp, Long)] = {
     @tailrec
-    def go(start: DateTime, durationInMillis: Long, result:List[(DateTime, Long)]):List[(DateTime, Long)] = {
-      val endTimeRounded   = Granularity.roundTimeFloor(start.plus(durationInMillis), timePeriod)
-      val startTimeRounded = Granularity.roundTimeFloor(start, timePeriod)
-      if (endTimeRounded isAfter startTimeRounded) {
-        val newStart = Granularity.roundTimeCeiling(start, timePeriod)
+    def go(start: Timestamp, durationInMillis: Long, result:List[(Timestamp, Long)]):List[(Timestamp, Long)] = {
+      val endTimeRounded   = Granularity.roundTimestamp(start + durationInMillis, timePeriod)
+      val startTimeRounded = Granularity.roundTimestamp(start, timePeriod)
+      if (endTimeRounded > startTimeRounded) {
+        val newStart = Granularity.roundTimestampCeiling(start, timePeriod)
         val currentDuration = newStart - start
         val newDuration = durationInMillis - currentDuration
         go(newStart, newDuration, (start, currentDuration) :: result)
@@ -92,15 +94,15 @@ object EventTransformers {
   def splitEventByRoundedTime(event: MenthalEvent, timePeriod: TimePeriod): List[_ <: MenthalEvent] = {
     event match {
       case e: CCAppSession ⇒
-        for ((start, duration) ← getSplittingTime(new DateTime(e.time), e.duration, timePeriod))
+        for ((start, duration) ← getSplittingTime(e.time, e.duration, timePeriod))
         yield e.copy(time = start, duration = duration)
 
       case e: CCCallOutgoing ⇒
-        for ((start, duration) ← getSplittingTime(new DateTime(e.time), e.durationInMillis, timePeriod))
+        for ((start, duration) ← getSplittingTime(e.time, e.durationInMillis, timePeriod))
         yield e.copy(time = start, startTimestamp = start, durationInMillis = duration)
 
       case e: CCCallReceived ⇒
-        for ((start, duration) ← getSplittingTime(new DateTime(e.startTimestamp), e.durationInMillis, timePeriod))
+        for ((start, duration) ← getSplittingTime(e.startTimestamp, e.durationInMillis, timePeriod))
         yield e.copy(time = start, startTimestamp = start, durationInMillis = duration)
 
       case _ ⇒ List(event)

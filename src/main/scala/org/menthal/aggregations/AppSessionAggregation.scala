@@ -36,8 +36,8 @@ object AppSessionAggregation {
   def parquetToAppSessions(sc:SparkContext, datadir:String):RDD[AppSession] = {
     val screenOff:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_OFF).map(toCCScreenOff)
     val windowStateChanged:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_WINDOW_STATE_CHANGED).map(toCCWindowStateChanged)
-    val screenUnlock:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_UNLOCK).map(toScreenUnlock)
-    val dreamingStarted:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_DREAMING_STARTED).map(toDreamingStarted)
+    val screenUnlock:RDD[MenthalEvent] = ParquetIO.readEventType(sc, datadir, TYPE_SCREEN_UNLOCK).map(toCCScreenUnlock)
+    val dreamingStarted:RDD[MenthalEvent]  = ParquetIO.readEventType(sc, datadir, TYPE_DREAMING_STARTED).map(toCCDreamingStarted)
     val processedEvents = screenOff ++ windowStateChanged ++ screenUnlock ++ dreamingStarted
     eventsToAppSessions(processedEvents)
   }
