@@ -73,7 +73,7 @@ object Granularity {
 
   def millisPerMinute:Long = 60 * 1000
   def millisPerHour:Long = 60 * millisPerMinute
-  def millisPerDay:Long = 24 * millisPerDay
+  def millisPerDay:Long = 24 * millisPerHour
 
 
   def durationInMillis(timePeriod:TimePeriod): Long =

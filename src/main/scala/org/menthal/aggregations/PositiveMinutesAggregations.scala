@@ -86,6 +86,7 @@ object PositiveMinutesAggregations {
     val userChangesGrouped:RDD[((Long,Long), Iterable[CCActivityChange])] =
       activityChanges.groupBy(activityChange => (activityChange.userId, begginingDayTime(activityChange.time)))
 //    val userChangesGrouped = activityChanges.map(a => ((a.userId, begginingDayTime(a.time)), a.time)).groupByKey
+
     val userMinutesByDay:RDD[((Long,Long), Long)] = userChangesGrouped.mapValues(getPositiveMinuteFromActivityChanges)
     for {
       ((userId, day),minutes) <- userMinutesByDay

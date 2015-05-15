@@ -5,7 +5,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.menthal.io.parquet.ParquetIO
-import org.menthal.model.Granularity
+import org.menthal.model.{AggregationType, Granularity}
 import org.menthal.model.Granularity.TimePeriod
 import org.menthal.model.events.CCAggregationEntry
 import org.menthal.model.events.Implicits._
@@ -74,8 +74,8 @@ object CategoriesAggregation {
     def transformAggregations = transformAggregationsInParquet(sc, categorizeAggregations, datadir) _
 
     for (granularity <- granularities) {
-      transformAggregations("app_starts", "category_starts", granularity)
-      transformAggregations("app_usage", "category_usage", granularity)
+      transformAggregations(AggregationType.AppTotalCount, "category_total_count", granularity)
+      transformAggregations(AggregationType.AppTotalDuration, "category_total_duration", granularity)
     }
   }
 }

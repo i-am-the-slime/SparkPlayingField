@@ -78,10 +78,10 @@ object WindowFunctions {
     if (arr.size % 2 == 0) (lower.last + upper.head) / 2.0 else upper.head
   }
 
-  def median(vals: Iterable[Long]):Long = findMedianHistogram(vals)
+  def median(vals: Iterable[Long]):Long = findMedian(vals.toArray).toLong
 
 
-  def windowFilter[A](windowFunction: Iterable[Long] => A, filterWindow: Int)(s:Iterable[Long]): List[A] = {
+  def windowFilter[A](windowFunction: List[Long] => A, filterWindow: Int)(s:List[Long]): List[A] = {
     def updateBuckets(buckets: List[List[Long]], el: Long): (A,List[List[Long]]) = {
       val updatedBuckets = List(el) :: buckets.map(el :: _)
       val finishedWindow = updatedBuckets.last
@@ -90,7 +90,7 @@ object WindowFunctions {
     }
 
     @tailrec
-    def windowFilterRec(s:Iterable[Long], buckets: List[List[Long]], results:List[A]):List[A] = {
+    def windowFilterRec(s:List[Long], buckets: List[List[Long]], results:List[A]):List[A] = {
       s match {
         case x::xs =>
           val (filteredVal, updatedBuckets) = updateBuckets(buckets, x)
@@ -106,7 +106,15 @@ object WindowFunctions {
     windowFilterRec(s, Nil, Nil)
   }
 
+  def filterListWithIndexes(filter: List[Long] => List[Long])(indexedList: List[(Long,Long)]):List[(Long,Long)] = {
+    val indexes = indexedList.map(_._1)
+    val values = indexedList.map(_._2)
+    val filtered = filter(values)
+    indexes.zip(filtered)
+  }
+
   val medianFilterWindow = 5
-  def medianFilter:Iterable[Long] => List[Long] = windowFilter[Long](median, medianFilterWindow)
+  def medianFilter:List[Long] => List[Long] = windowFilter[Long](median, medianFilterWindow)
+  def medianFilterWithIndex: List[(Long,Long)] => List[(Long,Long)] = filterListWithIndexes(medianFilter)
 
 }
