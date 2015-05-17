@@ -44,83 +44,92 @@ object SleepAggregations {
   type UserWindow = (Long,Long)
   type SignalWindow = (UserWindow, Long)
 
-  def toDiscreetSignal(windowUsage: RDD[CCAggregationEntry]): RDD[SignalWindow] = {
-    val windows = for {
+  def toDiscreetSignal(windowUsage: RDD[CCAggregationEntry]): RDD[CCSignalWindow] = {
+    val windows:RDD[(UserWindow, Long)] = for {
       CCAggregationEntry(userId, time, _, _, usage) <- windowUsage
     } yield ((userId, time), usage)
     windows.cache()
+
     val mins = windows.keys.reduceByKey(_ min _)
     val maxes = windows.keys.reduceByKey(_ max _)
     val limits = mins.join(maxes)
-    val emptyWindows = for {
+
+    val emptyWindows:RDD[(UserWindow, Long)] = for {
       (userId, (min, max)) <- limits
       time <- min to max by durationInMillis(granularity)
     } yield ((userId, time), 0L)
-    val fullSignal = (windows ++ emptyWindows).reduceByKey(_ + _)
-    fullSignal
-  }
 
-  def calculateDailyMedianProfile(usageWindows: RDD[CCSignalWindow]): RDD[CCMedianDailyProfile] = {
-    val dailyUsageWindows = for {
-      CCSignalWindow(userId, time, usage) <- usageWindows
-    } yield ((userId, time % durationInMillis(Granularity.Daily)), usage)
-    val medianDailyProfile = dailyUsageWindows.groupByKey.mapValues(WindowFunctions.median)
+    val fullSignalRDD:RDD[(UserWindow, Long)] = (windows ++ emptyWindows).reduceByKey(_ + _)
+
     for {
-      ((userId, timeWindow), medianUsage) <- medianDailyProfile
-    } yield CCMedianDailyProfile(userId, timeWindow, medianUsage)
-  }
-
-  def getDaysOfNoUsage(usageWindows: DataFrame):RDD[UserWindow] = {
-    val usageByUserDayPair = for {
-      row <- usageWindows
-      userId = row.getLong(0)
-      time = row.getLong(1)
-      usage = row.getLong(2)
-    } yield ((userId, roundTimestamp(time, Granularity.Daily)), usage)
-    val totalUsageByUserDayPairRDD = usageByUserDayPair.reduceByKey(_ + _)
-    totalUsageByUserDayPairRDD filter { case ((user, day), usage) => usage == 0 } keys
-  }
-
-
-  def filterOutDaysOfNoUsage(sc: SparkContext, usageWindows: DataFrame):RDD[CCSignalWindow] = {
-    val userDayPairWithNoUsageRDD = getDaysOfNoUsage(usageWindows)
-    val userWindowsWithNoUsageBroadcast = sc.broadcast(userDayPairWithNoUsageRDD.collect().toSet)
-    val usageByUserDayPair = for {
-      row <- usageWindows
-      userId = row.getLong(0)
-      time = row.getLong(1)
-      usage = row.getLong(2)
-    } yield ((userId, roundTimestamp(time, Granularity.Daily)), time, usage)
-    val filtered:RDD[(UserWindow,Long,Long)] = usageByUserDayPair filter { case (uw:UserWindow, time: Long, usage:Long) =>
-                                !userWindowsWithNoUsageBroadcast.value.contains(uw)}
-    for {
-      ((userId, timeWindow), time,usage) <- filtered
+      ((userId, time), usage) <- fullSignalRDD
     } yield CCSignalWindow(userId, time, usage)
   }
 
-  def calculateDailyMedianProfileFromDF(usageWindows: DataFrame): RDD[CCMedianDailyProfile] = {
-    val dailyUsageWindows = for {
-       row <- usageWindows
-       userId = row.getLong(0)
-       time = row.getLong(1)
-       usage = row.getLong(2)
+  def calculateDailyMedianProfile(usageWindows: RDD[CCSignalWindow]): RDD[CCMedianDailyProfile] = {
+    val dailyUsageWindows:RDD[(UserWindow, Long)] = for {
+      CCSignalWindow(userId, time, usage) <- usageWindows
     } yield ((userId, time % durationInMillis(Granularity.Daily)), usage)
-    val medianDailyProfile = dailyUsageWindows.groupByKey.mapValues(WindowFunctions.median)
+
+    val medianDailyProfile:RDD[(UserWindow, Long)] = dailyUsageWindows.groupByKey.mapValues(WindowFunctions.median)
     for {
       ((userId, timeWindow), medianUsage) <- medianDailyProfile
     } yield CCMedianDailyProfile(userId, timeWindow, medianUsage)
   }
 
+  def getDaysOfNoUsage(usageWindows: RDD[CCSignalWindow]):RDD[UserWindow] = {
+    val usageByUserDailyWindow:RDD[(UserWindow, Long)] = for {
+      CCSignalWindow(userId, time, usage) <- usageWindows
+    } yield ((userId, roundTimestamp(time, Granularity.Daily)), usage)
 
-  def calculateMedianFilter(usageWindows: RDD[SignalWindow]):RDD[CCSignalWindow] = {
+    val usageByUserDailyWindowReduced = usageByUserDailyWindow.reduceByKey(_ + _)
+    usageByUserDailyWindowReduced filter { case ((user, day), usage) => usage == 0 } keys
+  }
+
+
+  def filterOutDaysOfNoUsage(sc: SparkContext, usageWindows: RDD[CCSignalWindow]):RDD[CCSignalWindow] = {
+    val userWindowsWithNoUsage:RDD[UserWindow] = getDaysOfNoUsage(usageWindows)
+    val userWindowsWithNoUsageBroadcast = sc.broadcast(userWindowsWithNoUsage.collect().toSet)
+
+    val  usageByUserDayPair:RDD[(UserWindow,Long,Long)] = for {
+      CCSignalWindow(userId, time, usage) <- usageWindows
+    } yield ((userId, roundTimestamp(time, Granularity.Daily)), time, usage)
+
+    val filtered =
+      usageByUserDayPair filter { case (uw:UserWindow, time: Long, usage:Long) =>
+                                !userWindowsWithNoUsageBroadcast.value.contains(uw)}
+
+    for {
+      ((userId, timeWindow), time, usage) <- filtered
+    } yield CCSignalWindow(userId, time, usage)
+  }
+
+//  def calculateDailyMedianProfileFromDF(usageWindows: DataFrame): RDD[CCMedianDailyProfile] = {
+//    val dailyUsageWindows = for {
+//       row <- usageWindows
+//       userId = row.getLong(0)
+//       time = row.getLong(1)
+//       usage = row.getLong(2)
+//    } yield ((userId, time % durationInMillis(Granularity.Daily)), usage)
+//    val medianDailyProfile = dailyUsageWindows.groupByKey.mapValues(WindowFunctions.median)
+//    for {
+//      ((userId, timeWindow), medianUsage) <- medianDailyProfile
+//    } yield CCMedianDailyProfile(userId, timeWindow, medianUsage)
+//  }
+
+
+  def calculateMedianFilter(usageWindows: RDD[CCSignalWindow]):RDD[CCSignalWindow] = {
     val dailyUsageWindows = for {
-      ((userId, time), usage) <- usageWindows
+      CCSignalWindow(userId, time, usage) <- usageWindows
     } yield (userId, (time , usage))
-    val windowsGroupedBeUsers = dailyUsageWindows.groupByKey
+    val windowsGroupedByUsers = dailyUsageWindows.groupByKey
+
     val sortedWindowsGroupedByUsers:RDD[(Long,List[(Long,Long)])] =
-      windowsGroupedBeUsers.mapValues(_.toList sortBy {case (time,usage) => time})
+      windowsGroupedByUsers.mapValues(_.toList sortBy {case (time,usage) => time})
+
     val medianDailyProfilesGroupedByUser:RDD[(Long,List[(Long,Long)])] =
       sortedWindowsGroupedByUsers.mapValues(WindowFunctions.medianFilterWithIndex)
+
     for {
       (userId, timeIndexedFilteredUsage) <- medianDailyProfilesGroupedByUser
       (time, medianUsage) <- timeIndexedFilteredUsage
@@ -143,58 +152,54 @@ object SleepAggregations {
                  .flatMap(SleepFinder.findLongestSleepTimes(granularity))
   }
 
+
+
   def aggregateSleep(sc : SparkContext, dataPath: String):Unit = {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
+    //to signal
+    val aggregations = ParquetIO.readAggrType(sc, dataPath, AggregationType.AppTotalDuration, granularity).map(toCCAggregationEntry)
+    val signalRDD:RDD[CCSignalWindow] = toDiscreetSignal(aggregations)
 
-    //val aggregations = ParquetIO.readAggrType(sc, dataPath, AggregationType.AppTotalDuration, granularity).map(toCCAggregationEntry)
-    //val signal = toDiscreetSignal(aggregations)
+    //NO FILTERS
+    val cleanNoFilterSignal = filterOutDaysOfNoUsage(sc, signalRDD)
+    cleanNoFilterSignal.cache()
+    cleanNoFilterSignal.toDF().saveAsParquetFile(dataPath + "/noFilterSignal")
 
+    val noFilterDailySleep = calculateSleep(cleanNoFilterSignal)
+    noFilterDailySleep.toDF().saveAsParquetFile(dataPath + "/noFilterDailySleep")
 
-    ////val medianDailyProfile = calculateDailyMedianProfile(signal)
-    ////medianDailyProfile.cache()
-    ////medianDailyProfile.toDF().saveAsParquetFile(dataPath + "/medianDailyProfile")
+    val noFilterMedianDailyProfile = calculateDailyMedianProfile(cleanNoFilterSignal)
+    noFilterMedianDailyProfile.cache()
+    cleanNoFilterSignal.unpersist()
+    noFilterMedianDailyProfile.toDF().saveAsParquetFile(dataPath + "/noFilterMedianDailyProfile")
 
-    //val filteredSignal = calculateMedianFilter(signal)
+    val noFilterMedianSleep = calculateMedianSleep(noFilterMedianDailyProfile)
+    noFilterMedianSleep.toDF().saveAsParquetFile(dataPath + "/noFilterMedianDailySleep")
+    noFilterMedianDailyProfile.unpersist()
+
+    //MEDIAN FILTER
+    val medianFilteredSignal = calculateMedianFilter(signalRDD)
     //Saving and caching
-    //filteredSignal.cache()
-    //filteredSignal.toDF().saveAsParquetFile(dataPath + "/medianFilteredSignal")
+    //medianFilteredSignal.cache()
+    //medianFilteredSignal.toDF().saveAsParquetFile(dataPath + "/medianFilteredSignal")
 
-    //val dailySleep = calculateSleep(filteredSignal)
-    ////Saving and caching
-    //dailySleep.toDF().saveAsParquetFile(dataPath + "/dailySleep")
+    val cleanSignal = filterOutDaysOfNoUsage(sc, medianFilteredSignal)
+    cleanSignal.cache()
+    cleanSignal.toDF().saveAsParquetFile(dataPath + "/cleanMedianFilteredSignal")
 
-    val medianFilteredSignal = sqlContext.parquetFile(dataPath + "/medianFilteredSignal")
-    val cleaneadSignal = filterOutDaysOfNoUsage(sc, medianFilteredSignal)
-    val medianDailyProfile = calculateDailyMedianProfile(cleaneadSignal)
-    //val medianDailyProfile = calculateDailyMedianProfile(filteredSignal)
-    ////Saving and caching
+    val dailySleep = calculateSleep(cleanSignal)
+    dailySleep.toDF().saveAsParquetFile(dataPath + "/dailySleep")
+
+    val medianDailyProfile = calculateDailyMedianProfile(cleanSignal)
     medianDailyProfile.cache()
+    cleanSignal.unpersist()
     medianDailyProfile.toDF().saveAsParquetFile(dataPath + "/medianDailyProfile")
 
     val medianSleep = calculateMedianSleep(medianDailyProfile)
-    ////Saving and caching
     medianSleep.toDF().saveAsParquetFile(dataPath + "/medianDailySleep")
     medianDailyProfile.unpersist()
-
-
-
-    val aggregations = ParquetIO.readAggrType(sc, dataPath, AggregationType.AppTotalDuration, granularity).map(toCCAggregationEntry)
-    val discreetSignal = for {
-      ((userId, time), usage) <- toDiscreetSignal(aggregations)
-    } yield CCSignalWindow(userId, time, usage)
-    val cleanedNoFilteredSignal = filterOutDaysOfNoUsage(sc, discreetSignal.toDF())
-    cleanedNoFilteredSignal.cache()
-    cleanedNoFilteredSignal.toDF().saveAsParquetFile(dataPath + "/nonfilteredSignal")
-    val simpleMedianDailyProfile = calculateDailyMedianProfile(cleanedNoFilteredSignal)
-    simpleMedianDailyProfile.cache()
-    cleanedNoFilteredSignal.unpersist()
-    simpleMedianDailyProfile.toDF().saveAsParquetFile(dataPath + "/simpleMedianDailyProfile")
-    val simpleMedianSleep = calculateMedianSleep(simpleMedianDailyProfile)
-    ////Saving and caching
-    simpleMedianSleep.toDF().saveAsParquetFile(dataPath + "/simpleMedianDailySleep")
-    simpleMedianDailyProfile.unpersist()
 
   }
 }
