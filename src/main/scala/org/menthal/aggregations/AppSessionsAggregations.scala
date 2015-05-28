@@ -34,6 +34,7 @@ object AppSessionsAggregations  {
   }
     val sc = getSparkContext(master, name)
     aggregate(sc, datadir)
+    //combineOnly(sc, datadir)
     sc.stop()
   }
 
@@ -65,6 +66,13 @@ object AppSessionsAggregations  {
     val calculatedAppSessions = AppSessionAggregation.parquetToAppSessions(sc, datadir) filter goodSessionFilter
     calculatedAppSessions.cache()
     ParquetIO.overwrite(sc, calculatedAppSessions, calculatedAppSessionsPath(datadir), AppSession.getClassSchema)
+    val finalSessions = combineAppSessions(sc, phoneCollectedSessions, calculatedAppSessions)
+    ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, finalSessions, overwrite = true)
+  }
+
+  def combineOnly(sc: SparkContext, datadir:String) = {
+    val phoneCollectedSessions: RDD[AppSession] = ParquetIO.read(sc, phoneAppSessionsPath(datadir))
+    val calculatedAppSessions: RDD[AppSession] = ParquetIO.read(sc, calculatedAppSessionsPath(datadir))
     val finalSessions = combineAppSessions(sc, phoneCollectedSessions, calculatedAppSessions)
     ParquetIO.writeEventType(sc, datadir, EventType.TYPE_APP_SESSION, finalSessions, overwrite = true)
   }
