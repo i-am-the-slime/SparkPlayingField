@@ -102,11 +102,17 @@ object Granularity {
   val fullGranularitiesForest: GranularityForest = List(
     Leaf(Granularity.FiveMin),
     Leaf(Granularity.FifteenMin),
-    Node(Granularity.Hourly, List(
-      Node(Granularity.Daily, List(
+    Leaf(Granularity.Hourly),
+    Node(Granularity.Daily, List(
         Node(Granularity.Monthly, List(
           Leaf(Granularity.Yearly))),
-        Leaf(Granularity.Weekly))))))
+        Leaf(Granularity.Weekly))))
+  val granularityForestFromDaily: GranularityForest = List(
+    Node(Granularity.Daily, List(
+    Node(Granularity.Monthly, List(
+      Leaf(Granularity.Yearly))),
+    Leaf(Granularity.Weekly))))
+
 
   type Forest[A] = List[Tree[A]]
   trait Tree[A] {

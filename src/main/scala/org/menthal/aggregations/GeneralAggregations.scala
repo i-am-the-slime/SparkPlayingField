@@ -15,7 +15,7 @@ import org.menthal.spark.SparkHelper.getSparkContext
  */
 object GeneralAggregations {
 
-  val name: String = "Aggregations"
+  val name: String = "GeneralAggregations"
 
   def main(args: Array[String]) {
     val (master, datadir) = args match {
@@ -26,11 +26,16 @@ object GeneralAggregations {
     }
     val sc = getSparkContext(master, name)
     aggregate(sc, datadir)
+    //fixFromHourly(sc, datadir)
     sc.stop()
   }
 
   def aggregate(sc: SparkContext, datadir: String): Unit = {
     AggrSpec.aggregate(sc, datadir, suite, Granularity.fullGranularitiesForest)
+  }
+
+  def fixFromHourly(sc: SparkContext, datadir: String): Unit = {
+    AggrSpec.aggregate(sc, datadir, suite, Granularity.granularityForestFromDaily)
   }
 
 

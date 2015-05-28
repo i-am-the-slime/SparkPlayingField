@@ -21,4 +21,17 @@ object SparkHelper {
     )
   }
 
+  def getSparkContext(master:String, name: String, env: Map[String,String]) = {
+    val completeEnv =  Map(
+      "spark.serializer" -> classOf[KryoSerializer].getCanonicalName,
+      "spark.kryo.registrator" -> classOf[MenthalKryoRegistrator].getCanonicalName,
+      "spark.kryo.referenceTracking" -> "false") ++ env
+
+    new SparkContext(master,
+      name,
+      System.getenv("SPARK_HOME"),
+      Nil,
+      completeEnv)
+  }
+
 }
