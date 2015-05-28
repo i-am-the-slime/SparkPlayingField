@@ -1,7 +1,7 @@
 package org.menthal.aggregations
 
 import org.apache.spark.SparkContext
-
+import scala.collection.mutable.Map
 
 import org.apache.spark.rdd.RDD
 import org.menthal.io.parquet.ParquetIO
@@ -31,18 +31,18 @@ object PositiveMinutesAggregations {
   }
 
   case class CCActivityChange(val userId:Long, val time:Long, val actionType:Short)
-  case class CCPositiveMinutes(val userId:Long, val day:Long, val minutes: Long)
+  case class CCPositiveMinutes(val userId:Long, val day:Long, val interval: Int, val minutes: Long)
 
-  def endingDayTime(time:Long):Long = Granularity.roundTimestampCeiling(time, Granularity.Daily) -1
-  def begginingDayTime(time:Long):Long = Granularity.roundTimestamp(time, Granularity.Daily)
+  def endOfDayTime(time:Long):Long = Granularity.roundTimestampCeiling(time, Granularity.Daily) -1
+  def startOfDayTime(time:Long):Long = Granularity.roundTimestamp(time, Granularity.Daily)
 
   def splitAppSessionsFunction(appSession:CCAppSession):List[CCActivityChange] = {
     val currentEndingEventTime = appSession.time + appSession.duration
     val evStart = CCActivityChange(appSession.userId, appSession.time, 1)
     val evEnd = CCActivityChange(appSession.userId, currentEndingEventTime, 0)
-    if (currentEndingEventTime > endingDayTime(appSession.time)) {
-      val evTillMidnight = evEnd.copy(time = endingDayTime(appSession.time))
-      val evFromMidnight = evStart.copy(time = begginingDayTime(currentEndingEventTime))
+    if (currentEndingEventTime > endOfDayTime(appSession.time)) {
+      val evTillMidnight = evEnd.copy(time = endOfDayTime(appSession.time))
+      val evFromMidnight = evStart.copy(time = startOfDayTime(currentEndingEventTime))
       List(evStart, evTillMidnight, evFromMidnight, evEnd)
     } else {
       List(evStart,evEnd)
@@ -61,36 +61,58 @@ object PositiveMinutesAggregations {
 //
 //  }
 
-  def getPositiveMinuteFromActivityChanges(activityTimes:Iterable[CCActivityChange]):Long = {
+  val START_TYPE = 1
+  val STOP_TYPE = 0
+
+  val millisInMin = 60 * 1000
+  val minIntervals = List(0, 5, 10, 15, 20, 30, 60)
+
+  def getPositiveTimeFromActivityChanges(activityTimes:Iterable[CCActivityChange]):Map[Int,Long] = {
     val sortedArrayActivityTimes:Array[CCActivityChange] = activityTimes.toArray.sortBy(_.time)
-    var posMinutes:Long = 0L
+    //var posMinutes:Long = 0L
+    val posTime: Map[Int, Long] = Map()
+
     var i:Int = 0
-    while (sortedArrayActivityTimes(i).actionType != 1){
+
+    //Skipping entries until first action type is stop
+    do {
       i=i+1
-    }
+    } while (sortedArrayActivityTimes(i).actionType == START_TYPE)
     var currentEventTime:Long = sortedArrayActivityTimes(i).time
+
     for (j <- i until activityTimes.size) {
-      if (sortedArrayActivityTimes(j).actionType == 1){
-        currentEventTime = sortedArrayActivityTimes(j).time
-      } else {
-        posMinutes += sortedArrayActivityTimes(j).time - currentEventTime
-        currentEventTime = sortedArrayActivityTimes(j).time
+      //write an explanation if this works
+      if (sortedArrayActivityTimes(j).actionType == START_TYPE &&
+        sortedArrayActivityTimes(j - 1).actionType == STOP_TYPE)
+      {
+        val breakTime:Long = sortedArrayActivityTimes(j).time - currentEventTime //how long time off phone was
+        for (interval <- minIntervals) {
+          val timeAfterBreak:Long = math.max(breakTime - interval * millisInMin, 0L)
+          val newPosTime = timeAfterBreak + posTime.getOrElse(interval, 0L)
+          posTime(interval) = newPosTime
+        }
       }
+      currentEventTime = sortedArrayActivityTimes(j).time
     }
-    posMinutes
+    posTime
   }
+
+  type User = Long
+  type Day = Long
+
 
   def transformAppSessionsToPosMinutes (appSessions: RDD[CCAppSession]):RDD[CCPositiveMinutes] = {
     val activityChanges = splitAppSessionsByDays(appSessions)
     //types are not necessary - only for help
-    val userChangesGrouped:RDD[((Long,Long), Iterable[CCActivityChange])] =
-      activityChanges.groupBy(activityChange => (activityChange.userId, begginingDayTime(activityChange.time)))
+    val userChangesGrouped:RDD[((User, Day), Iterable[CCActivityChange])] =
+      activityChanges.groupBy(activityChange => (activityChange.userId, startOfDayTime(activityChange.time)))
 //    val userChangesGrouped = activityChanges.map(a => ((a.userId, begginingDayTime(a.time)), a.time)).groupByKey
 
-    val userMinutesByDay:RDD[((Long,Long), Long)] = userChangesGrouped.mapValues(getPositiveMinuteFromActivityChanges)
+    val userPosTimeByDay:RDD[((User,Day), Map[Int,Long])] = userChangesGrouped.mapValues(getPositiveTimeFromActivityChanges)
     for {
-      ((userId, day),minutes) <- userMinutesByDay
-    } yield CCPositiveMinutes(userId,day,minutes)
+      ((userId, day), posTime) <- userPosTimeByDay
+      (interval, posTimeForInterval) <- posTime
+    } yield CCPositiveMinutes(userId,day, interval, posTimeForInterval)
   }
 
   def aggregatePosMinutes(sc: SparkContext, dataDir: String ):Unit = {
