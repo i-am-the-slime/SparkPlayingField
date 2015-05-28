@@ -41,11 +41,18 @@ object SleepAggregations {
 
   case class CCNoInteractionPeriod(userId:Long, startTime:Long, endTime:Long, duration:Long)
 
-  type UserWindow = (Long,Long)
-  type SignalWindow = (UserWindow, Long)
+  type User = Long
+  type Usage = Long
+  type Time = Long
+  type UserWindow = (User, Usage)
+  type Signal = (Time, Usage)
+  type SignalWindow = (User, Time, Usage)
+  type SignalWindowPairByUserWindow = (UserWindow, Usage)
+  type SignalWindowPairByUser = (User, Signal)
+
 
   def toDiscreetSignal(windowUsage: RDD[CCAggregationEntry]): RDD[CCSignalWindow] = {
-    val windows:RDD[(UserWindow, Long)] = for {
+    val windows:RDD[SignalWindowPairByUserWindow] = for {
       CCAggregationEntry(userId, time, _, _, usage) <- windowUsage
     } yield ((userId, time), usage)
     windows.cache()
@@ -54,12 +61,12 @@ object SleepAggregations {
     val maxes = windows.keys.reduceByKey(_ max _)
     val limits = mins.join(maxes)
 
-    val emptyWindows:RDD[(UserWindow, Long)] = for {
+    val emptyWindows:RDD[SignalWindowPairByUserWindow] = for {
       (userId, (min, max)) <- limits
       time <- min to max by durationInMillis(granularity)
     } yield ((userId, time), 0L)
 
-    val fullSignalRDD:RDD[(UserWindow, Long)] = (windows ++ emptyWindows).reduceByKey(_ + _)
+    val fullSignalRDD:RDD[SignalWindowPairByUserWindow] = (windows ++ emptyWindows).reduceByKey(_ + _)
 
     for {
       ((userId, time), usage) <- fullSignalRDD
@@ -67,18 +74,18 @@ object SleepAggregations {
   }
 
   def calculateDailyMedianProfile(usageWindows: RDD[CCSignalWindow]): RDD[CCMedianDailyProfile] = {
-    val dailyUsageWindows:RDD[(UserWindow, Long)] = for {
+    val dailyUsageWindows:RDD[SignalWindowPairByUserWindow] = for {
       CCSignalWindow(userId, time, usage) <- usageWindows
     } yield ((userId, time % durationInMillis(Granularity.Daily)), usage)
 
-    val medianDailyProfile:RDD[(UserWindow, Long)] = dailyUsageWindows.groupByKey.mapValues(WindowFunctions.median)
+    val medianDailyProfile:RDD[SignalWindowPairByUserWindow] = dailyUsageWindows.groupByKey.mapValues(WindowFunctions.median)
     for {
       ((userId, timeWindow), medianUsage) <- medianDailyProfile
     } yield CCMedianDailyProfile(userId, timeWindow, medianUsage)
   }
 
   def getDaysOfNoUsage(usageWindows: RDD[CCSignalWindow]):RDD[UserWindow] = {
-    val usageByUserDailyWindow:RDD[(UserWindow, Long)] = for {
+    val usageByUserDailyWindow:RDD[SignalWindowPairByUserWindow] = for {
       CCSignalWindow(userId, time, usage) <- usageWindows
     } yield ((userId, roundTimestamp(time, Granularity.Daily)), usage)
 
@@ -91,7 +98,7 @@ object SleepAggregations {
     val userWindowsWithNoUsage:RDD[UserWindow] = getDaysOfNoUsage(usageWindows)
     val userWindowsWithNoUsageBroadcast = sc.broadcast(userWindowsWithNoUsage.collect().toSet)
 
-    val  usageByUserDayPair:RDD[(UserWindow,Long,Long)] = for {
+    val  usageByUserDayPair:RDD[(UserWindow, Time, Usage)] = for {
       CCSignalWindow(userId, time, usage) <- usageWindows
     } yield ((userId, roundTimestamp(time, Granularity.Daily)), time, usage)
 
@@ -124,10 +131,10 @@ object SleepAggregations {
     } yield (userId, (time , usage))
     val windowsGroupedByUsers = dailyUsageWindows.groupByKey
 
-    val sortedWindowsGroupedByUsers:RDD[(Long,List[(Long,Long)])] =
+    val sortedWindowsGroupedByUsers:RDD[(User,List[(Time, Usage)])] =
       windowsGroupedByUsers.mapValues(_.toList sortBy {case (time,usage) => time})
 
-    val medianDailyProfilesGroupedByUser:RDD[(Long,List[(Long,Long)])] =
+    val medianDailyProfilesGroupedByUser:RDD[(User,List[(Time, Usage)])] =
       sortedWindowsGroupedByUsers.mapValues(WindowFunctions.medianFilterWithIndex)
 
     for {
