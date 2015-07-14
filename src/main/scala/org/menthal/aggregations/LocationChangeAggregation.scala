@@ -35,7 +35,7 @@ object LocationChangeAggregation {
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
-    val phoneSessions = sqlContext.parquetFile(datadir + "/phoneSessions")
+    val phoneSessions = sqlContext.parquetFile(datadir + "/phone_sessions")
     val sessions:RDD[MenthalEvent] = for {
       row <- phoneSessions
       userId = row.getLong(0)
@@ -62,7 +62,7 @@ object LocationChangeAggregation {
     } yield CCLocalisation(clusterId, userId, time, signalType , accuracy, lng, lat)
     val processedEvents:RDD[MenthalEvent] = sessions ++ locations
     val locationChangeFragments = eventsToLocationChangeFragments(processedEvents)
-    locationChangeFragments.toDF().saveAsParquetFile(datadir + "/locationSessions")
+    locationChangeFragments.toDF().saveAsParquetFile(datadir + "/location_sessions")
   }
 
 
@@ -74,7 +74,8 @@ object LocationChangeAggregation {
     val (state, sessions) = acc
     val (currentLocation, locationStartTime) = state
 
-    if (currentLocation != -1) event match {
+    //if (currentLocation != -1)
+    event match {
       case CCAppSession(userId, time, duration, name) =>
         (state, CCLocationChangeFragment(userId,locationStartTime, currentLocation,
                                         time, duration, name) :: sessions)
@@ -83,15 +84,15 @@ object LocationChangeAggregation {
       case CCLocalisation(clusterId, userId, time, _, accuracy, _,_) =>  ((clusterId.toInt, time), sessions)
 
       case _ => (state, sessions)
-    } else event match {
-      case CCLocalisation(clusterId, _, _, _, 0, _,_) =>  (state, sessions)
-      case CCLocalisation(clusterId, userId, time, _, accuracy, _,_) =>  ((clusterId.toInt, time), sessions)
-
-      case _ => (state, sessions)
+    //} else event match {
+    //  case CCLocalisation(clusterId, _, _, _, 0, _,_) =>  (state, sessions)
+    //  case CCLocalisation(clusterId, userId, time, _, accuracy, _,_) =>  ((clusterId.toInt, time), sessions)
+    //
+    //  case _ => (state, sessions)
     }
   }
 
-  val startingState: LocationState = (-1, 0)
+  val startingState: LocationState = (999999, 0)
   val foldEmptyAcc: LocationSessionAccumulator = (startingState, Nil)
 
   def transformToLocationChangeFragments(events: Iterable[_ <: MenthalEvent]): List[CCLocationChangeFragment] = {

@@ -15,7 +15,7 @@ import org.apache.spark.SparkContext._
 /**
  * Created by johnny on 29.04.15.
  */
-object PositiveMinutesAggregations {
+object PositiveMinutesAggregationOld {
 
   def main(args: Array[String]) {
     val (master, dataDir) = args match {

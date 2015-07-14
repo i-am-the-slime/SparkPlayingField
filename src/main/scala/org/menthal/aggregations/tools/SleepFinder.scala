@@ -9,48 +9,41 @@ import org.menthal.model.Granularity.TimePeriod
  */
 object SleepFinder {
 
-  def updateNoInteractionWindows(granularity: TimePeriod)(windows: List[CCNoInteractionPeriod], signal: CCSignalWindow): List[CCNoInteractionPeriod] = {
+  def updateNoInteractionWindows(windowGranularity: TimePeriod)(windows: List[CCNoInteractionPeriod], signal: CCSignalWindow): List[CCNoInteractionPeriod] = {
     signal match {
       case CCSignalWindow(userId, startTime, 0) => {
-        val windowDuration = Granularity.durationInMillis(granularity)
+        val windowDuration = Granularity.durationInMillis(windowGranularity)
         val endTime = startTime + windowDuration
         windows match {
-          case x :: xs =>
-            if (x.endTime == startTime) {
-              x.copy(endTime = endTime, duration = x.duration + windowDuration) :: xs
-            } else {
-              val duration = endTime - startTime
-              CCNoInteractionPeriod(userId, startTime, endTime, duration) :: xs
-            }
-          case Nil => List(CCNoInteractionPeriod(userId, startTime, endTime, windowDuration))
+          case CCNoInteractionPeriod(userId, lastStartTime, `startTime`, lastWindowDuration) :: xs =>
+              CCNoInteractionPeriod(userId, lastStartTime, endTime, lastWindowDuration + windowDuration) :: xs
+          case _ => CCNoInteractionPeriod(userId, startTime, endTime, windowDuration) :: windows
         }
       }
       case _ => windows
     }
   }
 
-  def findLongest(longest: CCNoInteractionPeriod, window: CCNoInteractionPeriod):CCNoInteractionPeriod = {
-    if ((window.startTime - window.endTime) > (longest.startTime - longest.endTime))
-      window
-    else
-      longest
+  def findNoInteractionPeriods(windowGranularity: TimePeriod)(signal: Iterable[CCSignalWindow]):Iterable[CCNoInteractionPeriod] = {
+    val sortedSignal = signal.toList.sortWith(_.timeWindow < _.timeWindow)
+    def noInteractionsFolder = updateNoInteractionWindows(windowGranularity) _
+    sortedSignal.foldLeft[List[CCNoInteractionPeriod]](Nil)(noInteractionsFolder)
   }
 
-  def findLongestNoInteractionWindow(windows: Iterable[CCNoInteractionPeriod]):CCNoInteractionPeriod = {
-    windows.reduce(findLongest)
-  }
-
-
-  def findNoInteractionPeriods(signal: Iterable[CCSignalWindow], granularity: TimePeriod):Iterable[CCNoInteractionPeriod] = {
-    signal.foldLeft[List[CCNoInteractionPeriod]](List())(updateNoInteractionWindows(granularity))
-  }
-
-  def findLongestSleepTimes(granularity: TimePeriod)(signal: Iterable[CCSignalWindow]):Iterable[CCNoInteractionPeriod] = {
-    val noInteractionPeriods = findNoInteractionPeriods(signal, granularity)
+  def findDailySleep(noInteractionPeriods: Iterable[CCNoInteractionPeriod]):Iterable[CCNoInteractionPeriod] = {
+    def findLongest(longest: CCNoInteractionPeriod, window: CCNoInteractionPeriod):CCNoInteractionPeriod =
+      if ((window.duration) > (longest.duration)) window else longest
     val groupedByDay = noInteractionPeriods
-      .groupBy(period =>  Granularity.roundTimestamp(period.endTime, granularity))
+      .groupBy(period => Granularity.roundTimestamp(period.endTime, Granularity.Daily))
       .values
-    val longestWindows = groupedByDay map findLongestNoInteractionWindow
-    longestWindows
+    val longestWindowsByDays = groupedByDay map { _.reduce(findLongest)}
+    longestWindowsByDays
   }
+
+  def findDailySleepTimeFromSignal(windowGranularity: TimePeriod)(signal: Iterable[CCSignalWindow]):Iterable[CCNoInteractionPeriod] = {
+    val noInteractionPeriods = findNoInteractionPeriods(windowGranularity)(signal)
+    findDailySleep(noInteractionPeriods)
+  }
+
+
 }

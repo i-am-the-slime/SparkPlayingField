@@ -3,8 +3,10 @@ package org.menthal.aggregations
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
+import org.joda.time.DateTime
 import org.menthal.io.parquet.ParquetIO
 import org.menthal.model.EventType._
+import org.menthal.model.Granularity._
 import org.menthal.model.events.Implicits._
 import org.menthal.model.events._
 import org.menthal.spark.SparkHelper._
@@ -16,6 +18,8 @@ object PhoneSessionsAggregation {
 
   val name: String = "PhoneSessionsAggregation"
 
+
+
   def main(args: Array[String]) {
     val (master, datadir) = args match {
       case Array(m, d) => (m,d)
@@ -23,13 +27,18 @@ object PhoneSessionsAggregation {
         val errorMessage = "First argument is master, second input/output path"
         throw new IllegalArgumentException(errorMessage)
     }
-    val sc = getSparkContext(master, name, Map("spark.akka.frameSize" -> "30"))
+    val sc = getSparkContext(master, name)
+    //val sc = getSparkContext(master, name, Map("spark.akka.frameSize" -> "30"))
     //aggregate(sc, datadir)
     parquetToPhoneSessions(sc, datadir)
     sc.stop()
   }
 
+  val phoneSessionsPath:String =  "/phone_sessions"
+  val phoneInactiveSessionsPath:String = "/phone_inactivity_sessions"
+
   case class CCPhoneSessionFragment(userId: Long, sessionStart: Long, time: Long, duration: Long, app: String)
+  case class CCPhoneInactiveSession(userId: Long, time: Long, duration: Long)
 
   def parquetToPhoneSessions(sc: SparkContext, datadir: String): Unit = {
     val sqlContext = new SQLContext(sc)
@@ -47,13 +56,18 @@ object PhoneSessionsAggregation {
     val processedEvents = appSession ++ screenOff ++ screenUnlock ++ dreamingStarted ++
        callMissed ++ callOutgoing ++ callReceived ++ smsReceived ++ smsSent
 
-    val phoneSessions = eventsToPhoneSessions(processedEvents)
-    phoneSessions.toDF().saveAsParquetFile(datadir + "/phoneSessions")
+    val phoneSessionsFragmentsGroupedByUsers = eventsToPhoneSessions(processedEvents).cache()
+    val phoneSessionFragments:RDD[CCPhoneSessionFragment] = phoneSessionsFragmentsGroupedByUsers.flatMap(x => x)
+    val phoneInactiveSessions = phoneSessionsFragmentsGroupedByUsers.flatMap(phoneSessionsToPhoneInactiveSessions)
+    phoneSessionFragments.toDF().saveAsParquetFile(datadir + phoneSessionsPath)
+    phoneInactiveSessions.toDF().saveAsParquetFile(datadir + phoneInactiveSessionsPath)
 
   }
 
   type PhoneSessionState = (Long, Boolean)
   type PhoneSessionAccumulator = (PhoneSessionState, List[CCPhoneSessionFragment])
+  type PhoneInactiveState = (Long, Long)
+  type PhoneInactiveSessionAccumulator = (PhoneInactiveState, List[CCPhoneInactiveSession])
 
   def phoneSessionsFold(acc: PhoneSessionAccumulator, event: MenthalEvent): PhoneSessionAccumulator = {
     val (state, sessions) = acc
@@ -81,8 +95,9 @@ object PhoneSessionsAggregation {
     }
   }
 
-  val startingStartingState: PhoneSessionState = (0, false)
-  val foldEmptyAcc: PhoneSessionAccumulator = (startingStartingState, Nil)
+
+  val startingPhoneSessionState: PhoneSessionState = (0, false)
+  val foldEmptyAcc: PhoneSessionAccumulator = (startingPhoneSessionState, Nil)
 
   def transformToPhoneSessions(events: Iterable[_ <: MenthalEvent]): List[CCPhoneSessionFragment] = {
     val sortedEvents = events.toList.sortBy(_.time)
@@ -90,14 +105,36 @@ object PhoneSessionsAggregation {
     phoneSessions
   }
 
-  def eventsToPhoneSessions(events: RDD[_ <: MenthalEvent]): RDD[CCPhoneSessionFragment] = {
-    events.map { e => (e.userId, e) }
+  def eventsToPhoneSessions(events: RDD[_ <: MenthalEvent]): RDD[List[CCPhoneSessionFragment]] = {
+      events.map { e => (e.userId, e) }
       .groupByKey()
       .values
-      .flatMap(transformToPhoneSessions)
+      .map(transformToPhoneSessions)
   }
 
 
+  def phoneInactiveSessionFold(acc: PhoneInactiveSessionAccumulator, session: CCPhoneSessionFragment) = {
+    val (state, inactivitySessions) = acc
+    val (currentSessionStart, currentSessionEnd) = state
+    session match {
+      case CCPhoneSessionFragment(userId, `currentSessionStart`, time, duration, _) =>
+        val newState = (currentSessionStart, time + duration)
+        (newState, inactivitySessions)
+      case CCPhoneSessionFragment(userId, newSessionStart, time, duration, _) =>
+        val newState = (newSessionStart, time + duration)
+        val newInactivitySession = CCPhoneInactiveSession(userId, currentSessionEnd, newSessionStart - currentSessionStart)
+        (newState, newInactivitySession :: inactivitySessions)
+      case _ => (state, inactivitySessions)
+    }
+  }
+
+  def phoneSessionsToPhoneInactiveSessions(phoneSessions: List[CCPhoneSessionFragment]) = {
+    val sortedPhoneSessions = phoneSessions.sortBy(_.time)
+    val startingPhoneInactiveState: PhoneInactiveState = (0, 0)
+    val acc: PhoneInactiveSessionAccumulator = (startingPhoneInactiveState, Nil)
+    val (state, inactivitySessions) = sortedPhoneSessions.foldLeft(acc)(phoneInactiveSessionFold)
+    inactivitySessions
+  }
 
 }
 

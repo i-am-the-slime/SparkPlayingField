@@ -3,6 +3,7 @@ package org.menthal.io.serialization
 import com.twitter.bijection.avro.SpecificAvroCodecs
 import com.twitter.chill.InjectiveSerializer
 import org.apache.avro.specific.SpecificRecordBase
+import org.apache.spark.SparkConf
 import org.apache.spark.serializer.KryoRegistrator
 import com.esotericsoftware.kryo.Kryo
 import org.menthal.model.events._
@@ -15,7 +16,7 @@ object AvroSerializer {
 }
 import AvroSerializer._
 
-class MenthalKryoRegistrator extends KryoRegistrator {
+class MenthalKryoRegistratorOldSpark extends KryoRegistrator {
   override def registerClasses(kryo: Kryo) {
     kryo.register(classOf[AccessibilityServiceUpdate], asAvroSerializer[AccessibilityServiceUpdate])
     kryo.register(classOf[AggregationEntry], asAvroSerializer[AggregationEntry])
@@ -47,4 +48,42 @@ class MenthalKryoRegistrator extends KryoRegistrator {
     kryo.register(classOf[WhatsAppSent], asAvroSerializer[WhatsAppSent])
     kryo.register(classOf[WindowStateChanged], asAvroSerializer[WindowStateChanged])
   }
+}
+
+object MenthalKryoRegistrator {
+//  def registerClasses(conf: SparkConf): SparkConf ={
+//    conf.registerKryoClasses(Array(
+//      classOf[AccessibilityServiceUpdate],
+//      classOf[AggregationEntry],
+//      classOf[AppInstall],
+//      classOf[AppList],
+//      classOf[AppRemoval],
+//      classOf[AppUpgrade],
+//      classOf[CallMissed],
+//      classOf[CallOutgoing],
+//      classOf[CallReceived],
+//      classOf[DeviceFeatures],
+//      classOf[DreamingStarted],
+//      classOf[DreamingStopped],
+//      classOf[Localisation],
+//      classOf[MenthalAppEvent],
+//      classOf[Mood],
+//      classOf[PhoneBoot],
+//      classOf[PhoneShutdown],
+//      classOf[Questionnaire],
+//      classOf[ScreenOff],
+//      classOf[ScreenOn],
+//      classOf[ScreenUnlock],
+//      classOf[SmsReceived],
+//      classOf[SmsSent],
+//      classOf[TimeZone],
+//      classOf[TrafficData],
+//      classOf[Unknown],
+//      classOf[WhatsAppReceived],
+//      classOf[WhatsAppSent],
+//      classOf[WindowStateChanged]))
+//    conf
+//  }
+
+
 }
