@@ -8,10 +8,10 @@ import org.menthal.model.events.{CCWindowStateChanged, WindowStateChanged, AppIn
 import org.menthal.model.EventType
 import org.menthal.model.EventType._
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import parquet.column.ColumnReader
-import parquet.filter.{RecordFilter, UnboundRecordFilter}
-import parquet.filter.ColumnRecordFilter._
-import parquet.filter.ColumnPredicates._
+import org.apache.parquet.column.ColumnReader
+import org.apache.parquet.filter.{RecordFilter, UnboundRecordFilter}
+import org.apache.parquet.filter.ColumnRecordFilter._
+import org.apache.parquet.filter.ColumnPredicates._
 
 
 import scala.reflect.io.File

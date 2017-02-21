@@ -29,8 +29,8 @@ object SleepAggregations {
         throw new IllegalArgumentException(errorMessage)
     }
     val sc = getSparkContext(master, "SleepAggregation")
-    //fixSleep(sc, dataDir)
-    aggregateSleep(sc, dataDir)
+    fixSleep(sc, dataDir)
+    //aggregateSleep(sc, dataDir)
     sc.stop()
   }
 
@@ -282,18 +282,53 @@ object SleepAggregations {
     //val noInteractionPeriodsFromInactivity = getInactivitySessionsAsNoInteractionPeriods(sqlContext, dataPath)
     //calculateSleep(noInteractionPeriodsFromInactivity).toDF().saveAsParquetFile(dataPath + "/inactivityBasedDailySleep")
 
-    val signal = signalFromFile(sqlContext, dataPath + "/clean_no_filter_signal")
-    val noFilterDailySleep = calculateSleepFromSignal(signal)
-    noFilterDailySleep.toDF().saveAsParquetFile(dataPath + "/no_filter_daily_sleep")
+    val signalRDD = signalFromFile(sqlContext, dataPath + "/clean_no_filter_signal")
+    //val noFilterDailySleep = calculateSleepFromSignal(signal)
+    //noFilterDailySleep.toDF().saveAsParquetFile(dataPath + "/no_filter_daily_sleep")
 
     ////val dailySleep = calculateSleepFromSignal(cleanSignal)
-    val medianFilteredSignal = signalFromFile(sqlContext, dataPath + "/clean_median_filter_signal")
-    val dailySleep = calculateSleepFromSignal(medianFilteredSignal)
-    dailySleep.toDF().saveAsParquetFile(dataPath + "/median_filter_daily_sleep")
+    //val medianFilteredSignal = signalFromFile(sqlContext, dataPath + "/clean_median_filter_signal")
 
-    val medianDailyProfile = toCCMedianDailyProfile(signalFromFile(sqlContext, dataPath + "/no_filter_median_daily_profile"))
+
+    val medianFilteredSignal = calculateMedianFilter(signalRDD)
+    //Saving and caching
+    medianFilteredSignal.cache()
+    medianFilteredSignal.toDF().saveAsParquetFile(dataPath + "/median_filter_signal")
+
+    signalRDD.unpersist()
+
+    val cleanSignal = filterOutDaysOfNoUsage(sc, medianFilteredSignal)
+    cleanSignal.cache()
+    cleanSignal.toDF().saveAsParquetFile(dataPath + "/clean_median_filter_signal")
+
+    ////val dailySleep = calculateSleepFromSignal(cleanSignal)
+    //val dailySleep = calculateSleepFromSignal(medianFilteredSignal)
+    //dailySleep.toDF().saveAsParquetFile(dataPath + "/median_filter_daily_sleep")
+    val noInteractionPeriods = calculateNonInteractionPeriods(medianFilteredSignal)
+    noInteractionPeriods.cache()
+    noInteractionPeriods.toDF().saveAsParquetFile(dataPath + "/median_filter_no_interaction_period")
+    calculateSleep(noInteractionPeriods).toDF().saveAsParquetFile(dataPath + "/median_filter_daily_sleep")
+
+    noInteractionPeriods.unpersist()
+    medianFilteredSignal.unpersist()
+
+    val medianDailyProfile = calculateDailyMedianProfile(cleanSignal)
+    medianDailyProfile.cache()
+    medianDailyProfile.toDF().saveAsParquetFile(dataPath + "/median_filter_median_daily_profile")
+
+    cleanSignal.unpersist()
+
     val medianSleep = calculateMedianSleep(medianDailyProfile)
-    medianSleep.toDF().saveAsParquetFile(dataPath + "/no_filter_median_daily_sleep")
+    medianSleep.toDF().saveAsParquetFile(dataPath + "/median_filter_median_daily_sleep")
+
+    medianDailyProfile.unpersist()
+
+    //val dailySleep = calculateSleepFromSignal(medianFilteredSignal)
+    //dailySleep.toDF().saveAsParquetFile(dataPath + "/median_filter_daily_sleep")
+
+    //val medianDailyProfile = toCCMedianDailyProfile(signalFromFile(sqlContext, dataPath + "/no_filter_median_daily_profile"))
+    //val medianSleep = calculateMedianSleep(medianDailyProfile)
+    //medianSleep.toDF().saveAsParquetFile(dataPath + "/no_filter_median_daily_sleep")
 
 
   }

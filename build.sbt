@@ -8,7 +8,7 @@ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 name := "sparkplayingfield"
 
-version := "0.1"
+version := "0.3"
 
 scalaVersion := "2.10.4"
 
@@ -55,9 +55,14 @@ libraryDependencies += "io.spray" %%  "spray-json" % "1.2.6" //JSON
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.0" //Monads
 
-libraryDependencies += "com.twitter" % "parquet-avro" % "1.6.0rc7"
 
-libraryDependencies += "com.twitter" %% "algebird-core" % "0.9.0" //Monoids
+libraryDependencies += "org.apache.parquet" % "parquet-avro" % "1.8.1"
+//libraryDependencies += "com.twitter" % "parquet-avro" % "1.6.0rc7"
+
+libraryDependencies += "com.databricks" % "spark-csv_2.10" % "1.2.0"
+
+libraryDependencies += "com.twitter" % "algebird-core_2.10" % "0.11.0"
+//libraryDependencies += "com.twitter" %% "algebird-core" % "0.9.0" //Monoids
 
 libraryDependencies += ("com.twitter" %% "chill-bijection" % "0.5.2").
   exclude("com.esotericsoftware.minlog", "minlog")
@@ -78,9 +83,10 @@ val hadoopExcludes = Seq(excludeJBossNetty, excludeEclipseJetty, excludeMortbayJ
   excludeCommonsLogging, excludeSLF4J, excludeOldAsm, excludeServletApi)
 
 libraryDependencies ++= Seq(
-  "org.apache.hadoop" % "hadoop-client" % "2.5.0" % "provided"  excludeAll(hadoopExcludes:_*),
-  "org.apache.spark" %% "spark-core" % "1.3.1" % "provided"  excludeAll excludeHadoop,
-  "org.apache.spark" %% "spark-sql" % "1.3.1" % "provided"  excludeAll excludeHadoop
+  "org.apache.hadoop" % "hadoop-client" % "2.6.2" % "provided"  excludeAll(hadoopExcludes:_*),
+  "org.apache.spark" %% "spark-core" % "1.6.0" % "provided"  excludeAll excludeHadoop,
+  "org.apache.spark" %% "spark-sql" % "1.6.0" % "provided"  excludeAll excludeHadoop,
+  "org.apache.spark" %% "spark-mllib" % "1.6.0" % "provided"  excludeAll excludeHadoop
   //  exclude("log4j", "log4j").
   //  exclude("commons-beanutils", "commons-beanutils").
   //  exclude("commons-beanutils", "commons-beanutils-core").

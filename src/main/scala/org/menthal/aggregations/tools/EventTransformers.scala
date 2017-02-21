@@ -14,6 +14,9 @@ import scala.collection.mutable.{Map => MMap}
 /**
  * Created by konrad on 21.07.2014.
  */
+
+case class SimpleMenthalEvent(val userId: Long, val time: Long, val key: String, val value: Long)
+
 object EventTransformers {
 
 
@@ -56,25 +59,47 @@ object EventTransformers {
     //TODO complete this function????
   }
 
-  def getDuration(event: MenthalEvent): Long = {
-    event match {
+//  def getKeyNameFromEvent(event: MenthalEvent) : String = event match {
+//    case e:CCAppSession ⇒ "apps"
+//    case e:CCCallReceived | CCCallMissed | CallOutgoing ⇒ "call_participant"
+//    case e:CCNotificationStateChanged  ⇒ "apps"
+//    case e:CCScreenOn ⇒ "screen_on"
+//    case e:CCScreenOff ⇒ "screen_off"
+//    case e:CCScreenUnlock ⇒ "screen_unlock"
+//    case e:CCSmsReceived | SmsSent ⇒ "sms_participant"
+//    case e:CCWhatsAppReceived ⇒ "whatsapp_participant"
+//    case _ ⇒ "unknown"
+//    //TODO complete this function????
+//  }
+
+  def getDuration(event: MenthalEvent): Long = event match {
       case e:CCCallReceived => e.durationInMillis
       case e:CCCallOutgoing => e.durationInMillis
       case e:CCAppSession => e.duration
       case _ => 0
     }
-  }
 
-  def getMessageLength(event: MenthalEvent): Long = {
-    event match {
+
+  def getMessageLength(event: MenthalEvent): Long = event match {
       case e:CCSmsReceived => e.msgLength
       case e:CCSmsSent => e.msgLength
       case e:CCWhatsAppReceived => e.messageLength
       case e:CCWhatsAppSent => e.messageLength
       case _ => 0
-    }
   }
 
+
+  def getValueFromEvent(event:MenthalEvent): Long =
+   event match {
+    case e:CCCallReceived => e.durationInMillis
+    case e:CCCallOutgoing => e.durationInMillis
+    case e:CCAppSession => e.duration
+    case e:CCSmsReceived => e.msgLength
+    case e:CCSmsSent => e.msgLength
+    case e:CCWhatsAppReceived => e.messageLength
+    case e:CCWhatsAppSent => e.messageLength
+    case _ => 0
+  }
 
   def getSplittingTime(start: Timestamp, durationInMillis: Long, timePeriod: TimePeriod): List[(Timestamp, Long)] = {
     @tailrec
@@ -95,17 +120,35 @@ object EventTransformers {
     event match {
       case e: CCAppSession ⇒
         for ((start, duration) ← getSplittingTime(e.time, e.duration, timePeriod))
-        yield e.copy(time = start, duration = duration)
+          yield e.copy(time = start, duration = duration)
 
       case e: CCCallOutgoing ⇒
         for ((start, duration) ← getSplittingTime(e.time, e.durationInMillis, timePeriod))
-        yield e.copy(time = start, startTimestamp = start, durationInMillis = duration)
+          yield e.copy(time = start, startTimestamp = start, durationInMillis = duration)
 
       case e: CCCallReceived ⇒
         for ((start, duration) ← getSplittingTime(e.startTimestamp, e.durationInMillis, timePeriod))
-        yield e.copy(time = start, startTimestamp = start, durationInMillis = duration)
+          yield e.copy(time = start, startTimestamp = start, durationInMillis = duration)
 
       case _ ⇒ List(event)
+    }
+  }
+
+  def splitEventToTuplesByRoundedTime[T <: MenthalEvent](event: T, timePeriod: TimePeriod): List[SimpleMenthalEvent] = {
+    event match {
+      case e: CCAppSession ⇒
+        for ((start, duration) ← getSplittingTime(e.time, e.duration, timePeriod))
+          yield SimpleMenthalEvent(e.userId, start, getKeyFromEvent(e), duration)
+
+      case e: CCCallOutgoing ⇒
+        for ((start, duration) ← getSplittingTime(e.time, e.durationInMillis, timePeriod))
+          yield SimpleMenthalEvent(e.userId, start, getKeyFromEvent(e), duration)
+
+      case e: CCCallReceived ⇒
+        for ((start, duration) ← getSplittingTime(e.startTimestamp, e.durationInMillis, timePeriod))
+          yield SimpleMenthalEvent(e.userId, start, getKeyFromEvent(e), duration)
+
+      case e ⇒ List(SimpleMenthalEvent(e.userId, e.time, getKeyFromEvent(e), getValueFromEvent(e)))
     }
   }
 }

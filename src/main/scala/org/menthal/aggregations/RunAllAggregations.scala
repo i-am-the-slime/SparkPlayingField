@@ -1,6 +1,10 @@
 package org.menthal.aggregations
 
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SQLContext
 import org.menthal.io.hdfs.HDFSFileService
+import org.menthal.io.parquet.ParquetIO
+import org.menthal.model.EventType
 import org.menthal.spark.SparkHelper.getSparkContext
 
 /**
@@ -22,16 +26,19 @@ object RunAllAggregations {
     }
 
     val sc = getSparkContext(master, name)
+    val sqlContext = SQLContext.getOrCreate(sc)
     val workingDir= tmpPrefix match {
       case Some(prefix) => HDFSFileService.copyToTmp(datadir, "/tmp", prefix).getOrElse(fail("Cannot create tmp directory"))
       case None => datadir
     }
 
-    AppSessionsAggregations.aggregate(sc, workingDir)
-    GeneralAggregations.aggregate(sc, workingDir)
-    CategoriesAggregation.aggregateCategories(sc, workingDir, lookupFile)
-    SleepAggregations.aggregateSleep(sc, workingDir)
-    SummaryAggregation.aggregate(sc, workingDir)
+//    AppSessionsAggregations.aggregate(sc, workingDir)
+    AppSessionsAggregations.filterPhoneOnly(sqlContext, workingDir)
+    DistanceCoveredAggregation.aggregate(sc, workingDir)
+    GeneralAggregations.aggregate(sqlContext, workingDir)
+    CategoriesAggregation.aggregate(sqlContext, workingDir, lookupFile)
+//    SleepAggregations.aggregateSleep(sc, workingDir)
+//    SummaryAggregation.aggregate(sc, workingDir)
 
     output.map(path => HDFSFileService.copy(workingDir, path))
     sc.stop()

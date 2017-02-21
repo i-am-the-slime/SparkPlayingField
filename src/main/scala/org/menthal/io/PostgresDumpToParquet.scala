@@ -50,8 +50,8 @@ object PostgresDumpToParquet {
     TYPE_TRAFFIC_DATA,
     TYPE_WHATSAPP_SENT,
     TYPE_WHATSAPP_RECEIVED,
-    TYPE_WINDOW_STATE_CHANGED,
-    TYPE_WINDOW_STATE_CHANGED_BASIC,
+    //TYPE_WINDOW_STATE_CHANGED,
+    //TYPE_WINDOW_STATE_CHANGED_BASIC,
     TYPE_QUESTIONNAIRE)
 
   def parseFromDumpAndWriteToParquet(sc:SparkContext, dumpDirPath:String, outputPath:String) = {
@@ -59,5 +59,13 @@ object PostgresDumpToParquet {
     menthalEvents.cache()
     for (eventType ← processedTypes)
       ParquetIO.filterAndWriteToParquet(sc, outputPath, eventType, menthalEvents)
+    val windowStateChangeEvents = for {
+      e <- menthalEvents
+      et = fromMenthalEvent(e)
+      if et == TYPE_WINDOW_STATE_CHANGED || et == TYPE_WINDOW_STATE_CHANGED_BASIC
+    } yield e.toAvro
+    ParquetIO.writeEventType(sc, outputPath, TYPE_WINDOW_STATE_CHANGED, windowStateChangeEvents)
+
   }
+
 }

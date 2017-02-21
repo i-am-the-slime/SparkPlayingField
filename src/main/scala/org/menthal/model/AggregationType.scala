@@ -48,5 +48,9 @@ object AggregationType {
   val PhoneBootsCount = "phone_boots_count"
   //Summary
   val Summary = "summary"
+  //Category Aggregations
+  val CategoryTotalCountUnique = "category_total_count_unique"
+  val CategoryTotalCount = "category_total_count"
+  val CategoryTotalDuration = "category_total_duration"
 
 }
